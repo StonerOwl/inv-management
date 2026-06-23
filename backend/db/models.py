@@ -64,6 +64,9 @@ class Invoice(Base):
     
     # Custom Categories
     category = Column(String(50), nullable=True)
+    
+    # Tracking workflow override — when set, uses this category's workflows instead of PO category
+    tracking_category_override = Column(String(100), nullable=True)
 
     # Quality
     confidence_score = Column(Float, default=0.0)

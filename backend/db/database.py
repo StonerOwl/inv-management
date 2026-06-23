@@ -36,6 +36,15 @@ def init_db() -> None:
         # Expected if column already exists
         pass
 
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE invoices ADD COLUMN tracking_category_override VARCHAR(100)"))
+            conn.commit()
+            logger.info("Added tracking_category_override column to invoices")
+    except Exception:
+        # Expected if column already exists
+        pass
+
 
 def seed_default_categories() -> None:
     """Insert the 3 default categories if they don't exist yet."""

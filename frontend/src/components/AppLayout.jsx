@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import clsx from 'clsx';
 import { Zap } from 'lucide-react';
 
 const MAIN_TABS = [
-  { id: 'inventory', label: 'Inventory', color: 'bg-[#d37042]' },
-  { id: 'track-trace', label: 'Track & Trace', color: 'bg-[#3e6648]' },
-  { id: 'purchase', label: 'Purchase', color: 'bg-[#716a3f]' },
-  { id: 'app-management', label: 'Application Management', color: 'bg-[#276fae]' },
-  { id: 'billing-payments', label: 'Billing & Payments', color: 'bg-[#673ab7]' },
+  { id: 'inventory', label: 'Inventory', color: 'bg-[#d37042]', path: '/inventory/dashboard' },
+  { id: 'track-trace', label: 'Track & Trace', color: 'bg-[#3e6648]', path: '/tracking' },
+  { id: 'purchase', label: 'Purchase', color: 'bg-[#716a3f]', path: '/purchase-orders' },
+  { id: 'app-management', label: 'Application Management', color: 'bg-[#276fae]', path: '/app-management/dashboard' },
+  { id: 'billing-payments', label: 'Billing & Payments', color: 'bg-[#673ab7]', path: '/billing/dashboard' },
 ];
 
   const SIDEBAR_OPTIONS = {
@@ -18,34 +18,29 @@ const MAIN_TABS = [
     { label: 'Register', path: '/inventory/register' },
     { label: 'Manage', path: '/invoices' },
     { label: 'Search', path: '/inventory/search' },
-    { label: 'Dashboard', path: '/inventory/dashboard' },
   ],
   'track-trace': [
     { label: 'Trace Inv', path: '/tracking/trace-inv' },
-    { label: 'Track Workflow', path: '/tracking/workflow' },
-    { label: 'Track Process', path: '/tracking/process' },
-    { label: 'Dashboard', path: '/tracking' },
+    { label: 'Trace Workflow', path: '/tracking/workflow' },
+    { label: 'Trace Process', path: '/tracking/process' },
     { label: 'Manage', path: '/tracking/manage' },
   ],
   'purchase': [
     { label: 'PO Generate', path: '/purchase/generate' },
     { label: 'PO Track', path: '/purchase/track' },
     { label: 'Search', path: '/purchase/search' },
-    { label: 'Dashboard', path: '/purchase-orders' },
     { label: 'Manage', path: '/purchase/manage' },
   ],
   'app-management': [
     { label: 'Configure', path: '/app-management/configure' },
     { label: 'User', path: '/users' },
     { label: 'Alerts / Notification', path: '/app-management/alerts' },
-    { label: 'Dashboard', path: '/app-management/dashboard' },
     { label: 'Manage', path: '/app-management/manage' },
   ],
   'billing-payments': [
     { label: 'Summary', path: '/billing/summary' },
     { label: 'History', path: '/billing/history' },
     { label: 'Register', path: '/billing/register' },
-    { label: 'Dashboard', path: '/billing/dashboard' },
     { label: 'Manage', path: '/billing/manage' },
   ],
 };
@@ -53,6 +48,7 @@ const MAIN_TABS = [
 export default function AppLayout() {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Determine active tab based on current path
   const getActiveTab = () => {
@@ -72,8 +68,9 @@ export default function AppLayout() {
     setActiveTab(getActiveTab());
   }, [location.pathname]);
 
-  const handleTabClick = (tabId) => {
+  const handleTabClick = (tabId, path) => {
     setActiveTab(tabId);
+    if (path) navigate(path);
   };
 
   const activeSidebarOptions = SIDEBAR_OPTIONS[activeTab] || [];
@@ -118,7 +115,7 @@ export default function AppLayout() {
           return (
             <button
               key={tab.id}
-              onClick={() => handleTabClick(tab.id)}
+              onClick={() => handleTabClick(tab.id, tab.path)}
               className={clsx(
                 "pb-3 text-xs font-black tracking-widest uppercase transition-colors border-b-2",
                 isActive 

@@ -124,6 +124,14 @@ export const deleteProcess = (catId, wid, pid) => api.delete(`/categories/${catI
 // ── Process Tracking ──────────────────────────────────────────────────────────
 export const getInvoiceTracking = (invoiceId) => api.get(`/tracking/invoice/${invoiceId}`)
 export const toggleProcess = (invoiceId, processId, data) => api.put(`/tracking/invoice/${invoiceId}/process/${processId}`, data)
+export const toggleWorkflow = (invoiceId, workflowId, data) => api.put(`/tracking/invoice/${invoiceId}/workflow/${workflowId}`, data)
 export const getTrackingDashboard = (params) => api.get('/tracking/dashboard', { params })
+
+// ── Tracking Manage ───────────────────────────────────────────────────────────
+export const reassignTrackingCategory = (invoiceId, data) => api.put(`/tracking/manage/invoice/${invoiceId}/reassign-category`, data)
+export const revertTrackingCategory = (invoiceId) => api.put(`/tracking/manage/invoice/${invoiceId}/revert-category`)
+export const resetTracking = (invoiceId) => api.delete(`/tracking/manage/invoice/${invoiceId}/reset`)
+export const getTrackingHistory = (invoiceId) => api.get(`/tracking/manage/invoice/${invoiceId}/history`)
+export const addTrackingNote = (invoiceId, data) => api.put(`/tracking/manage/invoice/${invoiceId}/note`, data)
 
 export default api

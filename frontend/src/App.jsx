@@ -15,6 +15,10 @@ import ItemCodes from './pages/ItemCodes'
 import POMatching from './pages/POMatching'
 import TrackingDashboard from './pages/TrackingDashboard'
 import InventoryDashboard from './pages/InventoryDashboard'
+import TraceWorkflow from './pages/TraceWorkflow'
+import TraceProcess from './pages/TraceProcess'
+import TraceInventory from './pages/TraceInventory'
+import ManageTracking from './pages/ManageTracking'
 import PlaceholderPage from './pages/PlaceholderPage'
 import RegisterInventory from './pages/RegisterInventory'
 import SearchInventory from './pages/SearchInventory'
@@ -50,10 +54,10 @@ export default function App() {
               
               {/* Track & Trace Routes */}
               <Route path="/tracking" element={<TrackingDashboard />} />
-              <Route path="/tracking/trace-inv" element={<PlaceholderPage title="Trace Inventory" />} />
-              <Route path="/tracking/workflow" element={<PlaceholderPage title="Track Workflow" />} />
-              <Route path="/tracking/process" element={<PlaceholderPage title="Track Process" />} />
-              <Route path="/tracking/manage" element={<PlaceholderPage title="Manage Tracking" />} />
+              <Route path="/tracking/trace-inv" element={<TraceInventory />} />
+              <Route path="/tracking/workflow" element={<TraceWorkflow />} />
+              <Route path="/tracking/process" element={<TraceProcess />} />
+              <Route path="/tracking/manage" element={<ManageTracking />} />
               
               {/* Purchase Routes */}
               <Route path="/purchase-orders" element={<PlaceholderPage title="Purchase Dashboard" />} />
