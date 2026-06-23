@@ -2,9 +2,11 @@ node_modules/
 dist/
 build/
 .env
+.env.production
 venv/
 __pycache__/
 *.pyc
 .pytest_cache/
 backend/data/*.db
 .DS_Store
+backend/uploads/
