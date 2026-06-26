@@ -22,6 +22,7 @@ import ManageTracking from './pages/ManageTracking'
 import PlaceholderPage from './pages/PlaceholderPage'
 import RegisterInventory from './pages/RegisterInventory'
 import SearchInventory from './pages/SearchInventory'
+import CreatePWS from './pages/CreatePWS'
 import { AuthProvider } from './context/AuthContext'
 import { UploadProvider } from './context/UploadContext'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -34,45 +35,35 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
-            
+
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              
+
               {/* Top Header Links */}
               <Route path="/help" element={<PlaceholderPage title="Help & Support" />} />
               <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
-              
+
               {/* Ask AI Link */}
               <Route path="/query" element={<NaturalQuery />} />
-              
+
               {/* Inventory Routes */}
-              <Route path="/upload" element={<ProtectedRoute requireUpload={true}><Upload /></ProtectedRoute>} />
-              <Route path="/inventory/register/:id?" element={<RegisterInventory />} />
-              <Route path="/inventory/search" element={<SearchInventory />} />
+              <Route path="/upload" element={<Navigate to="/inventory/dashboard" replace />} />
+              <Route path="/invoices" element={<Navigate to="/inventory/dashboard" replace />} />
+              <Route path="/inventory/register/:id?" element={<Navigate to="/inventory/dashboard" replace />} />
+              <Route path="/inventory/search" element={<Navigate to="/inventory/dashboard" replace />} />
               <Route path="/inventory/dashboard" element={<InventoryDashboard />} />
-              
+
               {/* Track & Trace Routes */}
               <Route path="/tracking" element={<TrackingDashboard />} />
               <Route path="/tracking/trace-inv" element={<TraceInventory />} />
               <Route path="/tracking/workflow" element={<TraceWorkflow />} />
               <Route path="/tracking/process" element={<TraceProcess />} />
               <Route path="/tracking/manage" element={<ManageTracking />} />
-              
-              {/* Purchase Routes */}
-              <Route path="/purchase-orders" element={<PlaceholderPage title="Purchase Dashboard" />} />
-              <Route path="/purchase/generate" element={<PurchaseOrders />} />
-              <Route path="/purchase/track" element={<PlaceholderPage title="Track PO" />} />
-              <Route path="/purchase/search" element={<PlaceholderPage title="Search PO" />} />
-              <Route path="/purchase/manage" element={<PlaceholderPage title="Manage Purchase" />} />
-              
               {/* App Management Routes */}
               <Route path="/users" element={<ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute>} />
-              <Route path="/app-management/configure" element={<ItemCodes />} />
-              <Route path="/app-management/alerts" element={<PlaceholderPage title="Alerts & Notifications" />} />
-              <Route path="/app-management/dashboard" element={<PlaceholderPage title="App Management Dashboard" />} />
-              <Route path="/app-management/manage" element={<PlaceholderPage title="Manage Application" />} />
-              
+              <Route path="/app-management/create-pws" element={<CreatePWS />} />
+
               {/* Billing & Payments Routes */}
               <Route path="/invoices" element={<InvoiceList />} />
               <Route path="/invoices/:id" element={<InvoiceDetail />} />
@@ -80,7 +71,7 @@ export default function App() {
               <Route path="/billing/history" element={<PlaceholderPage title="Billing History" />} />
               <Route path="/billing/register" element={<PlaceholderPage title="Billing Register" />} />
               <Route path="/billing/manage" element={<PlaceholderPage title="Manage Billing" />} />
-              
+
               {/* Other Existing Routes */}
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/preview-bg" element={<BackgroundPreview />} />

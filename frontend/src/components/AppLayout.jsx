@@ -7,8 +7,7 @@ import { Zap } from 'lucide-react';
 const MAIN_TABS = [
   { id: 'inventory', label: 'Inventory', color: 'bg-[#d37042]', path: '/inventory/dashboard' },
   { id: 'track-trace', label: 'Track & Trace', color: 'bg-[#3e6648]', path: '/tracking' },
-  { id: 'purchase', label: 'Purchase', color: 'bg-[#716a3f]', path: '/purchase-orders' },
-  { id: 'app-management', label: 'Application Management', color: 'bg-[#276fae]', path: '/app-management/dashboard' },
+  { id: 'app-management', label: 'Application Management', color: 'bg-[#276fae]', path: '/users' },
   { id: 'billing-payments', label: 'Billing & Payments', color: 'bg-[#673ab7]', path: '/billing/dashboard' },
 ];
 
@@ -25,17 +24,9 @@ const MAIN_TABS = [
     { label: 'Trace Process', path: '/tracking/process' },
     { label: 'Manage', path: '/tracking/manage' },
   ],
-  'purchase': [
-    { label: 'PO Generate', path: '/purchase/generate' },
-    { label: 'PO Track', path: '/purchase/track' },
-    { label: 'Search', path: '/purchase/search' },
-    { label: 'Manage', path: '/purchase/manage' },
-  ],
   'app-management': [
-    { label: 'Configure', path: '/app-management/configure' },
     { label: 'User', path: '/users' },
-    { label: 'Alerts / Notification', path: '/app-management/alerts' },
-    { label: 'Manage', path: '/app-management/manage' },
+    { label: 'Create P/W/S', path: '/app-management/create-pws' },
   ],
   'billing-payments': [
     { label: 'Summary', path: '/billing/summary' },
@@ -132,21 +123,23 @@ export default function AppLayout() {
       {/* Main Content Area: Sidebar + Outlet */}
       <div className="flex flex-1 overflow-hidden relative">
         {/* Sidebar */}
-        <aside className="w-56 bg-[#111] border-r border-[#333] shrink-0 overflow-y-auto flex flex-col py-4 relative z-10">
-          {activeSidebarOptions.map((opt) => (
-            <NavLink
-              key={opt.path}
-              to={opt.path}
-              className={({ isActive }) => clsx(
-                "px-8 py-4 border-b border-[#222] last:border-0 hover:bg-[#1a1a1a] transition-colors whitespace-nowrap text-xs font-bold tracking-widest uppercase flex items-center justify-between",
-                isActive ? "text-[#FCD535] bg-[#151515] border-r-2 border-r-[#FCD535]" : "text-gray-500"
-              )}
-            >
-              {opt.label}
-              {/* Optional small indicator for active state could go here, but border-r-2 handles it */}
-            </NavLink>
-          ))}
-        </aside>
+        {activeTab !== 'inventory' && (
+          <aside className="w-56 bg-[#111] border-r border-[#333] shrink-0 overflow-y-auto flex flex-col py-4 relative z-10">
+            {activeSidebarOptions.map((opt) => (
+              <NavLink
+                key={opt.path}
+                to={opt.path}
+                className={({ isActive }) => clsx(
+                  "px-8 py-4 border-b border-[#222] last:border-0 hover:bg-[#1a1a1a] transition-colors whitespace-nowrap text-xs font-bold tracking-widest uppercase flex items-center justify-between",
+                  isActive ? "text-[#FCD535] bg-[#151515] border-r-2 border-r-[#FCD535]" : "text-gray-500"
+                )}
+              >
+                {opt.label}
+                {/* Optional small indicator for active state could go here, but border-r-2 handles it */}
+              </NavLink>
+            ))}
+          </aside>
+        )}
 
         {/* Dynamic Page Content */}
         <main className="flex-1 overflow-y-auto bg-brutal-dark relative z-0">

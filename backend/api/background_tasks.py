@@ -149,19 +149,35 @@ async def _process_single_file(job_id: str, file_path_str: str) -> None:
                     )
                 raise
 
-            # Fallback to vision if confidence too low and file is an image
+            # Fallback to vision if confidence too low
             low_confidence = extracted.confidence_score < config.EXTRACTION_CONFIDENCE_THRESHOLD
             is_image = file_path.suffix.lower() in config.SUPPORTED_IMAGE_EXTENSIONS
 
-            if low_confidence and is_image:
+            if low_confidence:
                 logger.info(
                     f"Low confidence ({extracted.confidence_score:.2f}), "
                     f"trying vision LLM for {file_path.name}"
                 )
                 try:
-                    vision_result = await extract_from_image(file_path)
+                    vision_path = file_path
+                    is_temp = False
+                    if not is_image:
+                        import fitz
+                        doc = fitz.open(str(file_path))
+                        page = doc[0]
+                        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+                        temp_png = file_path.with_suffix(".temp.png")
+                        pix.save(str(temp_png))
+                        doc.close()
+                        vision_path = temp_png
+                        is_temp = True
+                        
+                    vision_result = await extract_from_image(vision_path)
                     if vision_result.confidence_score > extracted.confidence_score:
                         extracted = vision_result
+                        
+                    if is_temp:
+                        vision_path.unlink(missing_ok=True)
                 except Exception as ve:
                     logger.warning(f"Vision fallback failed: {ve} — using text extraction")
 

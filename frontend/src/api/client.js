@@ -134,4 +134,11 @@ export const resetTracking = (invoiceId) => api.delete(`/tracking/manage/invoice
 export const getTrackingHistory = (invoiceId) => api.get(`/tracking/manage/invoice/${invoiceId}/history`)
 export const addTrackingNote = (invoiceId, data) => api.put(`/tracking/manage/invoice/${invoiceId}/note`, data)
 
+// ── PWS ──────────────────────────────────────────────────────────────────────
+export const getPWSItems = () => api.get('/pws/items')
+export const createPWSItem = (data) => api.post('/pws/items', data)
+export const getPWSAssignments = () => api.get('/pws/assignments')
+export const createPWSAssignment = (data) => api.post('/pws/assignments', data)
+export const deletePWSAssignment = (parentId, childId) => api.delete(`/pws/assignments/${parentId}/${childId}`)
+
 export default api

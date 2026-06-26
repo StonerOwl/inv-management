@@ -57,6 +57,7 @@ class OllamaClient:
                 "temperature": temperature,
                 "num_predict": 1024,   # Invoice JSON fits in ~800 tokens; cap to avoid waste
                 "num_ctx": 4096,       # Invoices need ~2-3K tokens; default 32K wastes memory/time
+                "num_thread": 4,       # Limit parallel threads on CPU to prevent context switching overhead
             },
         }
         if system:
@@ -103,6 +104,7 @@ class OllamaClient:
                 "temperature": 0.1,
                 "num_predict": 1024,
                 "num_ctx": 4096,
+                "num_thread": 4,       # Limit parallel threads on CPU to prevent context switching overhead
             },
         }
         if system:

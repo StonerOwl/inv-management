@@ -363,3 +363,35 @@ class PurchaseOrder(Base):
             "approved_by_username": self.approved_by.username if self.approved_by else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
+
+
+class PWSItem(Base):
+    __tablename__ = "pws_items"
+
+    id = Column(String(50), primary_key=True, index=True)
+    type = Column(String(20), index=True, nullable=False) # 'project', 'workflow', 'state'
+    name = Column(String(200), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "type": self.type,
+            "name": self.name,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class PWSAssignment(Base):
+    __tablename__ = "pws_assignments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    parent_id = Column(String(50), ForeignKey("pws_items.id", ondelete="CASCADE"), index=True, nullable=False)
+    child_id = Column(String(50), ForeignKey("pws_items.id", ondelete="CASCADE"), index=True, nullable=False)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "parent_id": self.parent_id,
+            "child_id": self.child_id,
+        }

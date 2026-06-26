@@ -184,6 +184,29 @@ class InvoiceRepository:
         for key, val in updates.items():
             if key in allowed:
                 setattr(invoice, key, val)
+        
+        if "hsn_code" in updates:
+            hsn_val = updates["hsn_code"]
+            if invoice.line_items:
+                for li in invoice.line_items:
+                    li.hsn_code = hsn_val
+            elif hsn_val:
+                from db.models import LineItem
+                li = LineItem(invoice_id=invoice.id, name="Unknown", hsn_code=hsn_val)
+                self.db.add(li)
+                
+        if "total_tax" in updates:
+            tax_val = updates["total_tax"]
+            for t in invoice.taxes:
+                self.db.delete(t)
+            if tax_val is not None and str(tax_val).strip() != "":
+                try:
+                    from db.models import TaxEntry
+                    new_tax = TaxEntry(invoice_id=invoice.id, tax_type="TOTAL", amount=float(tax_val))
+                    self.db.add(new_tax)
+                except ValueError:
+                    pass
+
         self.db.commit()
         self.db.refresh(invoice)
         return invoice
