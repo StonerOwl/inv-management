@@ -99,7 +99,7 @@ export default function JsonPanel() {
                         <span className="truncate text-sm max-w-[200px]">{file.filename}</span>
                       </div>
                     </td>
-                    <td className="table-cell font-mono text-xs text-surface-500">{file.job_id}</td>
+                    <td className="table-cell font-sans text-xs text-surface-500">{file.job_id}</td>
                     <td className="table-cell text-xs text-surface-600">{formatBytes(file.size)}</td>
                     <td className="table-cell text-xs text-surface-600">
                       {new Date(file.created_at * 1000).toLocaleString()}
@@ -132,12 +132,12 @@ export default function JsonPanel() {
 
       {/* View Modal */}
       {viewFile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white dark:bg-gray-800/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-surface-900 border border-surface-200 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl">
             <div className="px-6 py-4 border-b border-surface-200 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-surface-50">{viewFile.filename}</h3>
-                <p className="text-xs text-surface-500 font-mono mt-1">{viewFile.job_id}</p>
+                <p className="text-xs text-surface-500 font-sans mt-1">{viewFile.job_id}</p>
               </div>
               <div className="flex gap-2">
                 <button
@@ -161,7 +161,7 @@ export default function JsonPanel() {
                   <Loader2 className="animate-spin text-brand-400" size={32} />
                 </div>
               ) : (
-                <pre className="text-sm font-mono text-emerald-400 bg-surface-900 p-4 rounded-xl overflow-x-auto">
+                <pre className="text-sm font-sans text-emerald-400 bg-surface-900 p-4 rounded-xl overflow-x-auto">
                   <code>{fileContent}</code>
                 </pre>
               )}

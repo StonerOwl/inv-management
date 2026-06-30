@@ -20,7 +20,7 @@ from core.ocr_engine import run_ocr
 logger = logging.getLogger(__name__)
 
 MIN_WORDS_FOR_NATIVE_PDF = 20  # Below this → treat as scanned PDF
-OCR_RENDER_DPI = 200  # 200 DPI is sufficient for Tesseract; 300 DPI is overkill
+OCR_RENDER_DPI = 300  # Upscaled to 300 DPI for better Tesseract accuracy on invoices
 
 
 @dataclass
@@ -82,7 +82,20 @@ def _process_pdf(file_path: Path, file_size: int, file_hash: str) -> DocumentRes
         with pdfplumber.open(str(file_path)) as pdf:
             page_count = len(pdf.pages)
             for page in pdf.pages:
+                # 1. Extract regular text
                 text = page.extract_text(x_tolerance=3, y_tolerance=3) or ""
+                
+                # 2. Extract and format tables
+                tables = page.extract_tables()
+                if tables:
+                    text += "\n\n--- TABULAR DATA ---\n"
+                    for table in tables:
+                        for row in table:
+                            # Clean up cells and join with |
+                            cleaned_row = [cell.replace('\n', ' ').strip() if cell else '' for cell in row]
+                            text += " | ".join(cleaned_row) + "\n"
+                        text += "\n"
+                        
                 pages_text.append(text)
     except Exception as e:
         logger.warning(f"pdfplumber failed on {file_path.name}: {e}")
@@ -148,9 +161,9 @@ def _process_image(file_path: Path, file_size: int, file_hash: str) -> DocumentR
     """Open image → preprocess → OCR."""
     img = Image.open(str(file_path))
 
-    # Upscale small images for better OCR
-    if img.width < 1200 or img.height < 1600:
-        img = scale_image(img)
+    # Aggressively upscale images for better Tesseract accuracy
+    if img.width < 1800 or img.height < 2400:
+        img = scale_image(img, target_dpi=300)
 
     processed = preprocess_image(img)
     result = run_ocr(processed)

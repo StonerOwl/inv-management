@@ -57,6 +57,25 @@ export const exportExcel = (params) => {
   return downloadBlob(`/invoices/export/excel${query ? '?' + query : ''}`, 'invoices.xlsx')
 }
 
+// ── Notes ─────────────────────────────────────────────────────────────────────
+export const getNotes = (targetType = null, targetId = null) => {
+  const params = {}
+  if (targetType) params.target_type = targetType
+  if (targetId) params.target_id = targetId
+  return api.get('/notes', { params })
+}
+
+export const createNote = (targetType, targetId, content, files = []) => {
+  const form = new FormData()
+  form.append('target_type', targetType)
+  form.append('target_id', targetId)
+  form.append('content', content)
+  files.forEach(f => form.append('files', f))
+  return api.post('/notes', form, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
+
 // ── Stats ─────────────────────────────────────────────────────────────────────
 export const getStats = () => api.get('/stats')
 export const getHealth = () => api.get('/health')
@@ -137,6 +156,7 @@ export const addTrackingNote = (invoiceId, data) => api.put(`/tracking/manage/in
 // ── PWS ──────────────────────────────────────────────────────────────────────
 export const getPWSItems = () => api.get('/pws/items')
 export const createPWSItem = (data) => api.post('/pws/items', data)
+export const updatePWSItem = (id, data) => api.put(`/pws/items/${id}`, data)
 export const getPWSAssignments = () => api.get('/pws/assignments')
 export const createPWSAssignment = (data) => api.post('/pws/assignments', data)
 export const deletePWSAssignment = (parentId, childId) => api.delete(`/pws/assignments/${parentId}/${childId}`)

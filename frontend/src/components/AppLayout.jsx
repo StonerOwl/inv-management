@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { useSettings } from '../context/SettingsContext';
+import { useNotes } from '../context/NotesContext';
+import NotesDrawer from './NotesDrawer';
+import { ErrorBoundary } from './ErrorBoundary';
 import clsx from 'clsx';
-import { Zap } from 'lucide-react';
+import { Zap, Moon, Sun, Database } from 'lucide-react';
 
 const MAIN_TABS = [
-  { id: 'inventory', label: 'Inventory', color: 'bg-[#d37042]', path: '/inventory/dashboard' },
-  { id: 'track-trace', label: 'Track & Trace', color: 'bg-[#3e6648]', path: '/tracking' },
-  { id: 'app-management', label: 'Application Management', color: 'bg-[#276fae]', path: '/users' },
-  { id: 'billing-payments', label: 'Billing & Payments', color: 'bg-[#673ab7]', path: '/billing/dashboard' },
+  { id: 'inventory', label: 'Inventory', color: 'bg-primary-600', path: '/inventory/dashboard' },
+  { id: 'track-trace', label: 'Track & Trace', color: 'bg-emerald-600', path: '/tracking' },
+  { id: 'app-management', label: 'Application Management', color: 'bg-indigo-600', path: '/users' },
 ];
 
-  const SIDEBAR_OPTIONS = {
+const SIDEBAR_OPTIONS = {
   'inventory': [
-    { label: 'upload', path: '/upload' },
+    { label: 'Upload', path: '/upload' },
     { label: 'Register', path: '/inventory/register' },
     { label: 'Manage', path: '/invoices' },
     { label: 'Search', path: '/inventory/search' },
@@ -27,17 +31,14 @@ const MAIN_TABS = [
   'app-management': [
     { label: 'User', path: '/users' },
     { label: 'Create P/W/S', path: '/app-management/create-pws' },
-  ],
-  'billing-payments': [
-    { label: 'Summary', path: '/billing/summary' },
-    { label: 'History', path: '/billing/history' },
-    { label: 'Register', path: '/billing/register' },
-    { label: 'Manage', path: '/billing/manage' },
-  ],
+  ]
 };
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
+  const { settings } = useSettings();
+  const { toggleDrawer } = useNotes();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -48,7 +49,6 @@ export default function AppLayout() {
     if (path.startsWith('/tracking')) return 'track-trace';
     if (path.startsWith('/purchase')) return 'purchase';
     if (path.startsWith('/app-management') || path === '/users') return 'app-management';
-    if (path.startsWith('/billing')) return 'billing-payments';
     return 'inventory'; // Default fallback
   };
 
@@ -67,40 +67,54 @@ export default function AppLayout() {
   const activeSidebarOptions = SIDEBAR_OPTIONS[activeTab] || [];
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-brutal-dark text-white font-mono selection:bg-[#FCD535] selection:text-black">
+    <ErrorBoundary>
+    <div className="flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans selection:bg-primary-100 selection:text-primary-900">
       {/* Top Header */}
-      <div className="flex items-center justify-between pt-6 px-8 pb-4 shrink-0 bg-[#111] border-b border-[#333]">
-        <Link to="/dashboard" className="text-2xl font-black tracking-tighter hover:text-[#FCD535] transition-colors flex items-center gap-2 uppercase">
-          <Zap size={24} className="text-[#FCD535]" /> /// INVOICE_AI
+      <div className="flex items-center justify-between pt-5 px-8 pb-4 shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <Link to="/dashboard" className="text-2xl font-bold tracking-tight hover:text-primary-600 transition-colors flex items-center gap-2">
+          <Zap size={24} className="text-primary-600" /> <span className="text-primary-900">INVOICE_AI</span>
         </Link>
         
-        <div className="flex items-center gap-8 text-xs font-bold tracking-widest uppercase">
-          <Link to="/query" className="text-gray-500 hover:text-[#FCD535] transition-colors">Ask AI</Link>
-          <Link to="/help" className="text-gray-500 hover:text-[#FCD535] transition-colors">Help & support</Link>
-          <Link to="/settings" className="text-gray-500 hover:text-[#FCD535] transition-colors">Settings</Link>
+        <div className="flex items-center gap-8 text-sm font-semibold text-gray-600 dark:text-gray-400">
+          <Link to="/query" className="hover:text-primary-600 transition-colors">Ask AI</Link>
+          <Link to="/help" className="hover:text-primary-600 transition-colors">Help & Support</Link>
+          <Link to="/settings" className="hover:text-primary-600 transition-colors">Settings</Link>
         </div>
 
         <div className="flex items-center gap-4">
+          <a 
+            href={`${window.location.protocol}//${window.location.hostname}:5050`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            title="Open pgAdmin"
+            className="text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <Database size={20} />
+          </a>
+          <button onClick={toggleTheme} className="text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 mr-2">
+            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+          
           {user ? (
             <>
-              <span className="text-xs font-bold tracking-widest text-[#FCD535] bg-black px-2 py-1 uppercase border border-[#333]">
+              <span className="text-sm font-semibold text-primary-700 bg-primary-50 dark:bg-primary-900/30 px-3 py-1 rounded-full border border-primary-100 dark:border-primary-900/50">
                 {user.username}
               </span>
               <button 
                 onClick={logout}
-                className="text-xs font-black tracking-widest text-red-500 hover:text-red-400 uppercase transition-colors"
+                className="text-sm font-bold text-red-500 hover:text-red-600 transition-colors"
               >
-                LOGOUT
+                Logout
               </button>
             </>
           ) : (
-            <Link to="/login" className="text-xs font-black tracking-widest text-[#FCD535] hover:text-white uppercase transition-colors">Login</Link>
+            <Link to="/login" className="text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors">Login</Link>
           )}
         </div>
       </div>
 
       {/* Lower Row / Main Tabs */}
-      <div className="flex items-end bg-[#111] border-b border-[#333] shrink-0 px-8 pt-4 gap-8">
+      <div className="flex items-end bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shrink-0 px-8 pt-2 gap-8 shadow-sm relative z-20">
         {MAIN_TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -108,10 +122,10 @@ export default function AppLayout() {
               key={tab.id}
               onClick={() => handleTabClick(tab.id, tab.path)}
               className={clsx(
-                "pb-3 text-xs font-black tracking-widest uppercase transition-colors border-b-2",
+                "pb-3 text-sm font-bold transition-colors border-b-2",
                 isActive 
-                  ? "text-[#FCD535] border-[#FCD535]" 
-                  : "text-gray-500 border-transparent hover:text-white hover:border-gray-500"
+                  ? "text-primary-600 border-primary-600" 
+                  : "text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-800 dark:text-gray-200 hover:border-gray-300"
               )}
             >
               {tab.label}
@@ -121,33 +135,46 @@ export default function AppLayout() {
       </div>
 
       {/* Main Content Area: Sidebar + Outlet */}
-      <div className="flex flex-1 overflow-hidden relative">
+      <div className={clsx("flex flex-1 overflow-hidden relative z-10", settings.sidebarLayout === 'right' ? 'flex-row-reverse' : '')}>
         {/* Sidebar */}
         {activeTab !== 'inventory' && (
-          <aside className="w-56 bg-[#111] border-r border-[#333] shrink-0 overflow-y-auto flex flex-col py-4 relative z-10">
+          <aside className="w-56 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shrink-0 overflow-y-auto flex flex-col py-4 shadow-sm z-10">
             {activeSidebarOptions.map((opt) => (
               <NavLink
                 key={opt.path}
                 to={opt.path}
                 className={({ isActive }) => clsx(
-                  "px-8 py-4 border-b border-[#222] last:border-0 hover:bg-[#1a1a1a] transition-colors whitespace-nowrap text-xs font-bold tracking-widest uppercase flex items-center justify-between",
-                  isActive ? "text-[#FCD535] bg-[#151515] border-r-2 border-r-[#FCD535]" : "text-gray-500"
+                  "px-8 py-3 transition-colors whitespace-nowrap text-sm font-semibold flex items-center justify-between",
+                  isActive ? "text-primary-600 bg-primary-50 dark:bg-primary-900/30/50 border-r-2 border-r-primary-600" : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-900 hover:text-gray-900 dark:text-gray-100"
                 )}
               >
                 {opt.label}
-                {/* Optional small indicator for active state could go here, but border-r-2 handles it */}
               </NavLink>
             ))}
           </aside>
         )}
 
         {/* Dynamic Page Content */}
-        <main className="flex-1 overflow-y-auto bg-brutal-dark relative z-0">
+        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 relative z-0">
           <div className="p-8">
             <Outlet />
           </div>
         </main>
       </div>
+      
+      {/* Global Notes Drawer & Bubble */}
+      <NotesDrawer />
+      <button
+        onClick={toggleDrawer}
+        className="fixed bottom-6 right-6 p-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-xl shadow-indigo-500/30 flex items-center justify-center z-40 transition-transform hover:scale-105 active:scale-95"
+        title="Open Discussions"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+        </svg>
+      </button>
+
     </div>
+    </ErrorBoundary>
   );
 }

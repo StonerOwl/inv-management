@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from db.database import init_db, seed_default_categories
-from api.routes import upload, invoices, stats, json_files, query, auth, po, products, categories, tracking, pws
+from api.routes import upload, invoices, stats, json_files, query, auth, po, products, categories, tracking, pws, notes
 from api.dependencies import get_current_active_user
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
@@ -68,12 +68,18 @@ app.include_router(products.router, dependencies=[Depends(get_current_active_use
 app.include_router(categories.router, dependencies=[Depends(get_current_active_user)])
 app.include_router(tracking.router, dependencies=[Depends(get_current_active_user)])
 app.include_router(pws.router, prefix="/api", dependencies=[Depends(get_current_active_user)])
+app.include_router(notes.router, prefix="/api", dependencies=[Depends(get_current_active_user)])
 
 
 @app.get("/api")
 def root():
     return {"message": "Invoice Scanner API", "docs": "/docs"}
 
+
+# ─── Serve Uploads ────────────────────────────────────────────────────────────
+notes_uploads_dir = Path(__file__).parent.parent / "uploads" / "notes"
+notes_uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/api/uploads/notes", StaticFiles(directory=str(notes_uploads_dir)), name="notes_uploads")
 
 # ─── Serve React frontend in production ───────────────────────────────────────
 frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"

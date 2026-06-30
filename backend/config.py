@@ -26,6 +26,7 @@ DATABASE_URL: str = _custom_db_url if _custom_db_url else f"sqlite:///{DATA_DIR 
 OLLAMA_HOST: str = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_TEXT_MODEL: str = os.getenv("OLLAMA_TEXT_MODEL", "qwen2.5:3b")
 OLLAMA_VISION_MODEL: str = os.getenv("OLLAMA_VISION_MODEL", "moondream:latest")
+OLLAMA_EMBEDDING_MODEL: str = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
 OLLAMA_TIMEOUT: int = int(os.getenv("OLLAMA_TIMEOUT", "180"))
 
 # ─── Directories ──────────────────────────────────────────────────────────────
@@ -45,7 +46,6 @@ TESSERACT_CMD: str = os.getenv(
     "TESSERACT_CMD",
     r"C:\Program Files\Tesseract-OCR\tesseract.exe",
 )
-
 # ─── Processing Thresholds ────────────────────────────────────────────────────
 OCR_CONFIDENCE_THRESHOLD: int = int(os.getenv("OCR_CONFIDENCE_THRESHOLD", "60"))
 EXTRACTION_CONFIDENCE_THRESHOLD: float = float(

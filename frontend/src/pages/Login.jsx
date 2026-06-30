@@ -47,7 +47,7 @@ export default function Login() {
     <div className="flex h-screen items-center justify-center bg-surface-900 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8 bg-surface-800 p-8 rounded-2xl border border-surface-700/50 shadow-xl">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-white">
+          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
             Sign in to your account
           </h2>
           <p className="mt-2 text-center text-sm text-surface-400">
@@ -68,7 +68,7 @@ export default function Login() {
                 name="username"
                 type="text"
                 required
-                className="relative block w-full rounded-xl border-0 bg-surface-900 py-3 px-4 text-white ring-1 ring-inset ring-surface-700 placeholder:text-surface-500 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-primary-500 sm:text-sm sm:leading-6"
+                className="relative block w-full rounded-xl border-0 bg-surface-900 py-3 px-4 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-surface-700 placeholder:text-surface-500 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-primary-500 sm:text-sm sm:leading-6"
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -81,7 +81,7 @@ export default function Login() {
                 name="password"
                 type="password"
                 required
-                className="relative block w-full rounded-xl border-0 bg-surface-900 py-3 px-4 text-white ring-1 ring-inset ring-surface-700 placeholder:text-surface-500 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-primary-500 sm:text-sm sm:leading-6"
+                className="relative block w-full rounded-xl border-0 bg-surface-900 py-3 px-4 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-surface-700 placeholder:text-surface-500 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-primary-500 sm:text-sm sm:leading-6"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -93,7 +93,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative flex w-full justify-center rounded-xl bg-primary-600 px-3 py-3 text-sm font-semibold text-white hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="group relative flex w-full justify-center rounded-xl bg-primary-600 px-3 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100 hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>

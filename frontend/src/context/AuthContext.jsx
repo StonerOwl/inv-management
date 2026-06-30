@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   if (loading) {
-    return <div className="flex h-screen items-center justify-center bg-surface-900 text-white">Loading...</div>
+    return <div className="flex h-screen items-center justify-center bg-surface-900 text-gray-900 dark:text-gray-100">Loading...</div>
   }
 
   return (

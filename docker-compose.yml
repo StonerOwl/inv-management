@@ -26,10 +26,46 @@ services:
     #           count: all
     #           capabilities: [gpu]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      test: [ "CMD", "curl", "-f", "http://localhost:11434/api/tags" ]
       interval: 30s
       timeout: 10s
       retries: 5
+
+  # ── PostgreSQL + pgvector ───────────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: invoiceai-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=invoiceai
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d invoiceai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── pgAdmin (Web GUI for Database) ──────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: invoiceai-pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@invoiceai.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./servers.json:/pgadmin4/servers.json
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   # ── FastAPI Backend ─────────────────────────────────────────────────────
   backend:
@@ -43,15 +79,17 @@ services:
     environment:
       - OLLAMA_HOST=http://ollama:11434
       - TESSERACT_CMD=/usr/bin/tesseract
-      - DATABASE_URL=sqlite:////app/data/invoices.db
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/invoiceai
     volumes:
       - backend_data:/app/data
       - backend_uploads:/app/uploads
     depends_on:
       ollama:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/api" ]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -76,4 +114,8 @@ volumes:
   backend_data:
     driver: local
   backend_uploads:
+    driver: local
+  postgres_data:
+    driver: local
+  pgadmin_data:
     driver: local

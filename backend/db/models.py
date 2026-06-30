@@ -9,7 +9,7 @@ from sqlalchemy import (
     Column, DateTime, Float, ForeignKey, Integer, String, Text, Boolean, func
 )
 from sqlalchemy.orm import DeclarativeBase, relationship
-
+from pgvector.sqlalchemy import Vector
 
 class Base(DeclarativeBase):
     pass
@@ -54,10 +54,12 @@ class Invoice(Base):
     # Platform & identification
     invoice_number = Column(String(200), index=True)
     invoice_date = Column(String(50))
-    order_id = Column(String(200), index=True)
+    invoice_details = Column(String(200), nullable=True)
 
     # Seller
-    seller_gstin = Column(String(20))
+    gst_registration_no = Column(String(50))
+    pan_no = Column(String(50))
+    cin_no = Column(String(50))
 
     # Financials
     grand_total = Column(Float)
@@ -77,6 +79,9 @@ class Invoice(Base):
     raw_text = Column(Text)
     raw_json = Column(Text)               # Full JSON from LLM
 
+    # AI Search capabilities
+    embedding = Column(Vector(768), nullable=True)
+
     # Purchase Order Link
     po_id = Column(Integer, ForeignKey("purchase_orders.id"), nullable=True, index=True)
 
@@ -92,39 +97,16 @@ class Invoice(Base):
 
     def to_dict(self) -> dict:
         # Flatten line items into summary fields
-        product_description = "; ".join(
-            li.name for li in self.line_items if li.name
-        ) or None
-        hsn_code = "; ".join(
-            li.hsn_code for li in self.line_items if li.hsn_code
-        ) or None
-        quantity = sum(li.quantity or 0 for li in self.line_items) or None
-
-        # Flatten tax entries
-        tax_map = {t.tax_type: t for t in self.taxes}
-        cgst = tax_map.get("CGST")
-        sgst = tax_map.get("SGST")
-        igst = tax_map.get("IGST")
-        total_tax = sum(t.amount or 0 for t in self.taxes) or None
-
         return {
             "id": self.id,
             "file_hash": self.file_hash,
             "file_name": self.file_name,
             "invoice_number": self.invoice_number,
             "invoice_date": self.invoice_date,
-            "order_id": self.order_id,
-            "product_description": product_description,
-            "hsn_code": hsn_code,
-            "quantity": quantity,
-            "seller_gstin": self.seller_gstin,
-            "cgst_rate": cgst.rate if cgst else None,
-            "cgst_amount": cgst.amount if cgst else None,
-            "sgst_rate": sgst.rate if sgst else None,
-            "sgst_amount": sgst.amount if sgst else None,
-            "igst_rate": igst.rate if igst else None,
-            "igst_amount": igst.amount if igst else None,
-            "total_tax": round(total_tax, 2) if total_tax else None,
+            "invoice_details": self.invoice_details,
+            "pan_no": self.pan_no,
+            "cin_no": self.cin_no,
+            "gst_registration_no": self.gst_registration_no,
             "grand_total": self.grand_total,
             "category": self.category,
             "confidence_score": self.confidence_score,
@@ -134,6 +116,7 @@ class Invoice(Base):
             "po_id": self.po_id,
             "po_number": self.po.po_number if self.po else None,
             "linked_po": self.po.to_dict() if self.po else None,
+            "line_items": [li.to_dict() for li in self.line_items] if self.line_items else []
         }
 
 
@@ -147,9 +130,11 @@ class LineItem(Base):
     hsn_code = Column(String(20))
     quantity = Column(Float, default=1.0)
     unit_price = Column(Float, default=0.0)
-    total_price = Column(Float, default=0.0)
+    net_amount = Column(Float, default=0.0)
     tax_rate = Column(Float)
+    tax_type = Column(String(50))
     tax_amount = Column(Float)
+    total_amount = Column(Float, default=0.0)
 
     invoice = relationship("Invoice", back_populates="line_items")
 
@@ -160,9 +145,11 @@ class LineItem(Base):
             "hsn_code": self.hsn_code,
             "quantity": self.quantity,
             "unit_price": self.unit_price,
-            "total_price": self.total_price,
+            "net_amount": self.net_amount,
             "tax_rate": self.tax_rate,
+            "tax_type": self.tax_type,
             "tax_amount": self.tax_amount,
+            "total_amount": self.total_amount,
         }
 
 
@@ -371,6 +358,7 @@ class PWSItem(Base):
     id = Column(String(50), primary_key=True, index=True)
     type = Column(String(20), index=True, nullable=False) # 'project', 'workflow', 'state'
     name = Column(String(200), nullable=False)
+    project_code = Column(String(50), nullable=True) # E.g., the 5-digit generated ID
     created_at = Column(DateTime, server_default=func.now())
 
     def to_dict(self) -> dict:
@@ -378,6 +366,7 @@ class PWSItem(Base):
             "id": self.id,
             "type": self.type,
             "name": self.name,
+            "project_code": self.project_code,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
@@ -394,4 +383,52 @@ class PWSAssignment(Base):
             "id": self.id,
             "parent_id": self.parent_id,
             "child_id": self.child_id,
+        }
+
+class Note(Base):
+    __tablename__ = "notes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    target_type = Column(String(50), index=True, nullable=False)  # 'invoice', 'workflow', etc.
+    target_id = Column(String(50), index=True, nullable=False)    # allow strings (like workflow ids)
+    content = Column(Text, nullable=False)
+    
+    # Search & AI capabilities
+    embedding = Column(Vector(768), nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    user = relationship("User")
+    attachments = relationship("NoteAttachment", back_populates="note", cascade="all, delete-orphan")
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "username": self.user.username if self.user else "Unknown",
+            "target_type": self.target_type,
+            "target_id": self.target_id,
+            "content": self.content,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "attachments": [a.to_dict() for a in self.attachments] if self.attachments else []
+        }
+
+class NoteAttachment(Base):
+    __tablename__ = "note_attachments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    note_id = Column(Integer, ForeignKey("notes.id", ondelete="CASCADE"), nullable=False)
+    file_name = Column(String(500), nullable=False)
+    file_path = Column(String(1000), nullable=False)
+    file_type = Column(String(100), nullable=True) # mime type
+    
+    note = relationship("Note", back_populates="attachments")
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "note_id": self.note_id,
+            "file_name": self.file_name,
+            "file_path": self.file_path,
+            "file_type": self.file_type
         }

@@ -36,9 +36,9 @@ const BrutalistButton = ({ children, onClick, className, icon: Icon, textClass =
       {/* Content Layer */}
       <div className="relative z-20 flex items-center gap-3">
         {Icon && (
-          <Icon size={24} className="text-[#FCD535] group-hover:text-black transition-colors duration-500" />
+          <Icon size={24} className="text-primary-600 group-hover:text-black transition-colors duration-500" />
         )}
-        <span className={clsx("text-[#FCD535] group-hover:text-black font-black tracking-widest text-glitch group-hover:[text-shadow:none] transition-all duration-500 uppercase", textClass)}>
+        <span className={clsx("text-primary-600 group-hover:text-black font-black tracking-normal text-glitch group-hover:[text-shadow:none] transition-all duration-500 ", textClass)}>
           {children}
         </span>
       </div>
@@ -89,11 +89,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-brutal-yellow text-black font-mono p-8 selection:bg-black selection:text-[#FCD535]">
+    <div className="min-h-screen bg-brutal-yellow text-black font-sans p-8 selection:bg-white dark:bg-gray-800 selection:text-primary-600">
       
       {/* Top Navigation removed, handled by AppLayout */}
 
-      <div className="flex items-center justify-between text-xs font-bold tracking-widest mb-2 uppercase">
+      <div className="flex items-center justify-between text-xs font-bold tracking-normal mb-2 ">
         <span>// AI POWERED<br/>// ENTERPRISE READY</span>
         <span>V12.40.0</span>
       </div>
@@ -107,7 +107,7 @@ export default function Dashboard() {
             Production-grade<br/>
             extraction for<br/>the web.
           </h1>
-          <div className="flex items-center gap-6 text-sm font-bold tracking-widest mb-12 uppercase">
+          <div className="flex items-center gap-6 text-sm font-bold tracking-normal mb-12 ">
             <span>&gt; AVAILABLE FOR</span>
             <span>PDF</span>
             <span>JPG</span>
@@ -126,10 +126,10 @@ export default function Dashboard() {
 
         {/* Chart Area */}
         <div className="p-4 relative">
-          <h2 className="text-sm font-bold uppercase tracking-widest mb-4">Monthly Spend Trajectory</h2>
+          <h2 className="text-sm font-bold  tracking-normal mb-4">Monthly Spend Trajectory</h2>
           <div className="h-[280px] w-full border-2 border-black bg-[#FCD535] relative z-10">
             {loading ? (
-              <div className="w-full h-full flex items-center justify-center font-bold tracking-widest">LOADING...</div>
+              <div className="w-full h-full flex items-center justify-center font-bold tracking-normal">LOADING...</div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
@@ -150,14 +150,14 @@ export default function Dashboard() {
           {/* Brutalist ruler marks */}
           <div className="absolute -bottom-6 left-4 right-4 h-4 border-t-2 border-black flex justify-between px-1">
             {Array.from({length: 50}).map((_, i) => (
-              <div key={i} className={`w-[2px] bg-black ${i % 5 === 0 ? 'h-4' : 'h-2'}`} />
+              <div key={i} className={`w-[2px] bg-white dark:bg-gray-800 ${i % 5 === 0 ? 'h-4' : 'h-2'}`} />
             ))}
           </div>
         </div>
       </div>
 
       {/* Decorative Divider */}
-      <div className="flex items-center gap-4 text-xl font-bold tracking-widest overflow-hidden mb-12 select-none">
+      <div className="flex items-center gap-4 text-xl font-bold tracking-normal overflow-hidden mb-12 select-none">
         <span>+</span>
         <div className="flex-1 whitespace-nowrap overflow-hidden tracking-tighter">
           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -179,7 +179,7 @@ export default function Dashboard() {
           return (
             <div key={item.path} className="flex flex-col">
             <span className="text-xs font-bold mb-4">0{i + 1}</span>
-            <h3 className="font-black text-xl mb-4 tracking-tight uppercase">{item.title}</h3>
+            <h3 className="font-black text-xl mb-4 tracking-tight ">{item.title}</h3>
             <p className="text-sm font-medium leading-relaxed mb-6 h-16">
               {item.desc}
             </p>

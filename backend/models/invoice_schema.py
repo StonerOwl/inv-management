@@ -16,13 +16,15 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 class LineItem(BaseModel):
     name: str
     hsn_code: Optional[str] = None
-    quantity: float = 1.0
     unit_price: float = 0.0
-    total_price: float = 0.0
-    tax_rate: Optional[float] = None  # Percentage, e.g. 18.0 for 18% GST
+    quantity: float = 1.0
+    net_amount: float = 0.0
+    tax_rate: Optional[float] = None
+    tax_type: Optional[str] = None
     tax_amount: Optional[float] = None
+    total_amount: float = 0.0
 
-    @field_validator("quantity", "unit_price", "total_price", mode="before")
+    @field_validator("quantity", "unit_price", "net_amount", "tax_amount", "total_amount", mode="before")
     @classmethod
     def parse_numeric(cls, v: Any) -> float:
         if v is None:
@@ -37,14 +39,7 @@ class LineItem(BaseModel):
             return 0.0
 
 
-class TaxBreakdown(BaseModel):
-    cgst_rate: Optional[float] = None
-    cgst_amount: Optional[float] = None
-    sgst_rate: Optional[float] = None
-    sgst_amount: Optional[float] = None
-    igst_rate: Optional[float] = None
-    igst_amount: Optional[float] = None
-    total_tax: Optional[float] = None
+# TaxBreakdown removed to simplify tax extraction as requested
 
 
 # ─── Main Invoice Schema ───────────────────────────────────────────────────────
@@ -56,57 +51,26 @@ class InvoiceExtracted(BaseModel):
     """
     # Identification
     invoice_number: Optional[str] = None
+    invoice_details: Optional[str] = None
     invoice_date: Optional[str] = None  # String first, coerced to date later
-    order_id: Optional[str] = None
 
     # Parties
-    seller_gstin: Optional[str] = None
+    pan_no: Optional[str] = None
+    gst_registration_no: Optional[str] = None
+    cin_no: Optional[str] = None
 
     # Items
     line_items: list[LineItem] = Field(default_factory=list)
 
-    # Financials
-    tax_breakdown: Optional[TaxBreakdown] = None
-    grand_total: Optional[float] = None
-
     # Metadata
     confidence_score: float = 0.0  # 0–1, set after validation
 
-    @field_validator("grand_total", mode="before")
-    @classmethod
-    def parse_amount(cls, v: Any) -> Optional[float]:
-        if v is None:
-            return None
-        if isinstance(v, (int, float)):
-            return float(v)
-        cleaned = str(v).replace(",", "").replace("₹", "").replace("Rs.", "").strip()
-        try:
-            return float(cleaned)
-        except ValueError:
-            return None
-
     @model_validator(mode="after")
-    def validate_and_fix_grand_total(self) -> InvoiceExtracted:
+    def validate_and_fix_totals(self) -> InvoiceExtracted:
         """
-        Auto-corrects hallucinated grand totals (e.g. LLM picking a phone number).
-        If the grand total is missing or wildly disproportionate to the line items,
-        it falls back to a computed sum.
+        Since we removed grand_total based on the user's images, 
+        we just validate line items here if needed.
         """
-        # Calculate expected total (line items + tax)
-        # Note: some invoices include tax in total_price, some don't.
-        # We just need a ballpark to detect massive hallucinations.
-        expected_total = sum(item.total_price for item in self.line_items)
-        if self.tax_breakdown and self.tax_breakdown.total_tax:
-            expected_total += self.tax_breakdown.total_tax
-
-        if expected_total > 0:
-            if self.grand_total is None or self.grand_total == 0.0:
-                self.grand_total = expected_total
-            else:
-                # If extracted total is > 5x the expected sum, it's likely a phone number/ID
-                if self.grand_total > (expected_total * 5):
-                    self.grand_total = expected_total
-        
         return self
 
     def compute_confidence(self) -> float:
@@ -116,18 +80,22 @@ class InvoiceExtracted(BaseModel):
         key_fields = [
             self.invoice_number,
             self.invoice_date,
-            self.grand_total,
-            self.order_id,
+            self.gst_registration_no,
+            self.pan_no,
         ]
         filled = sum(1 for f in key_fields if f is not None)
         base_score = filled / len(key_fields)
 
         # Bonus for line items
         if self.line_items:
-            base_score = min(1.0, base_score + 0.1)
+            base_score = min(1.0, base_score + 0.15)
+        else:
+            # CRITICAL FAIL-SAFE: If no line items are found (usually due to shattered OCR text),
+            # heavily penalize the score to force the backend to fall back to the Vision model.
+            base_score = base_score * 0.4  # Drop the score by 60%
 
-        # Bonus for GSTIN
-        if self.seller_gstin:
+        # Bonus for CIN
+        if self.cin_no:
             base_score = min(1.0, base_score + 0.05)
 
         return round(base_score, 3)
@@ -141,17 +109,13 @@ class InvoiceResponse(BaseModel):
     file_hash: str
     invoice_number: Optional[str]
     invoice_date: Optional[str]
-    order_id: Optional[str]
+    invoice_details: Optional[str]
     product_description: Optional[str]
     hsn_code: Optional[str]
     quantity: Optional[float]
-    seller_gstin: Optional[str]
-    cgst_rate: Optional[float]
-    cgst_amount: Optional[float]
-    sgst_rate: Optional[float]
-    sgst_amount: Optional[float]
-    igst_rate: Optional[float]
-    igst_amount: Optional[float]
+    gst_registration_no: Optional[str]
+    pan_no: Optional[str]
+    cin_no: Optional[str]
     total_tax: Optional[float]
     grand_total: Optional[float]
     confidence_score: Optional[float]

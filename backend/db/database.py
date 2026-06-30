@@ -24,6 +24,9 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db() -> None:
     """Create all tables if they don't exist."""
+    with engine.begin() as conn:
+        if "postgres" in config.DATABASE_URL:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
     Base.metadata.create_all(bind=engine)
     
     # Run simple migrations for existing tables

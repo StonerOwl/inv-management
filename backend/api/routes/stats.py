@@ -34,3 +34,4 @@ async def health_check():
             "note": "Install from https://github.com/UB-Mannheim/tesseract/wiki" if not tesseract_ok else "OK",
         },
     }
+

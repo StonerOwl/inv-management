@@ -34,6 +34,19 @@ def create_pws_item(item: PWSItemCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
     return db_item.to_dict()
 
+class PWSItemUpdate(BaseModel):
+    project_code: str
+
+@router.put("/items/{item_id}", response_model=Dict[str, Any])
+def update_pws_item(item_id: str, update: PWSItemUpdate, db: Session = Depends(get_db)):
+    item = db.query(PWSItem).filter_by(id=item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    item.project_code = update.project_code
+    db.commit()
+    db.refresh(item)
+    return item.to_dict()
+
 @router.get("/assignments", response_model=List[Dict[str, Any]])
 def get_pws_assignments(db: Session = Depends(get_db)):
     assignments = db.query(PWSAssignment).all()

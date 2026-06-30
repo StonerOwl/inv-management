@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "InvoiceAI Database",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "invoiceai",
+      "Username": "admin",
+      "SSLMode": "prefer"
+    }
+  }
+}

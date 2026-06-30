@@ -8,11 +8,11 @@ import {
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-black border-2 border-[#FCD535] px-4 py-3 font-mono">
-      <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-2">{label}</p>
+    <div className="bg-white dark:bg-gray-800 border-2 border-primary-600 px-4 py-3 font-sans">
+      <p className="text-gray-500 dark:text-gray-400 text-[10px] font-black  tracking-normal mb-2">{label}</p>
       {payload.map((p, i) => (
-        <p key={i} className="font-bold text-white text-sm uppercase">
-          {p.name}: <span className="text-[#FCD535]">
+        <p key={i} className="font-bold text-gray-900 dark:text-gray-100 text-sm ">
+          {p.name}: <span className="text-primary-600">
             {p.name === 'total' || p.name === 'spend'
               ? `₹${Number(p.value).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
               : p.value}
@@ -42,13 +42,13 @@ export default function Analytics() {
   const monthData = (stats?.by_month || []).map(m => ({ ...m, spend: m.total }))
 
   return (
-    <div className="min-h-screen bg-brutal-dark text-white font-mono flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col">
       
       <div className="max-w-7xl mx-auto w-full px-8 flex-1 pb-20">
-        <div className="mb-12 border-b border-[#333] pb-6 flex items-end justify-between">
+        <div className="mb-12 border-b border-gray-200 dark:border-gray-700 pb-6 flex items-end justify-between">
           <div>
-            <h1 className="text-7xl font-black tracking-tighter uppercase">Analytics</h1>
-            <div className="text-sm font-bold tracking-widest text-[#FCD535] mt-2 flex items-center gap-4">
+            <h1 className="text-7xl font-black tracking-tighter ">Analytics</h1>
+            <div className="text-sm font-bold tracking-normal text-primary-600 mt-2 flex items-center gap-4">
               <span>&gt; SPENDING · INSIGHTS</span>
               <div className="w-32 h-[1px] bg-[#FCD535]"></div>
             </div>
@@ -58,14 +58,14 @@ export default function Analytics() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Monthly spend */}
           <div className="card-brutal-dark">
-            <div className="px-6 py-4 border-b border-[#333]">
-              <h2 className="text-[10px] font-black text-[#FCD535] uppercase tracking-widest flex items-center gap-2">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-[10px] font-black text-primary-600  tracking-normal flex items-center gap-2">
                 &gt; MONTHLY SPEND
               </h2>
             </div>
             <div className="p-6">
               {monthData.length === 0 ? (
-                <p className="text-gray-600 text-sm font-bold tracking-widest text-center py-8">NO DATA YET.</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm font-bold tracking-normal text-center py-8">NO DATA YET.</p>
               ) : (
                 <ResponsiveContainer width="100%" height={260}>
                   <LineChart data={monthData}>
@@ -86,14 +86,14 @@ export default function Analytics() {
 
         {/* Monthly invoice count */}
         <div className="card-brutal-dark mb-8">
-          <div className="px-6 py-4 border-b border-[#333]">
-            <h2 className="text-[10px] font-black text-[#FCD535] uppercase tracking-widest flex items-center gap-2">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-[10px] font-black text-primary-600  tracking-normal flex items-center gap-2">
               &gt; MONTHLY INVOICE COUNT
             </h2>
           </div>
           <div className="p-6">
             {monthData.length === 0 ? (
-              <p className="text-gray-600 text-sm font-bold tracking-widest text-center py-8">NO DATA YET.</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm font-bold tracking-normal text-center py-8">NO DATA YET.</p>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={monthData}>

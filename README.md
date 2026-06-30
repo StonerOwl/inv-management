@@ -14,6 +14,18 @@
 
 ---
 
+## Project Structure
+
+This is a monorepo containing both the React frontend and FastAPI backend.
+
+- `/backend` - Python FastAPI backend. Handles AI processing, OCR, and the SQLite database. See `backend/README.md` for details.
+- `/frontend` - React UI frontend. Handles the dashboard and user interactions. See `frontend/README.md` for details.
+- `/test_data` - Sample PDFs and data files used for testing the system.
+- `start.bat` - 1-click startup script for Windows (starts Ollama, backend, and frontend).
+- `docker-compose.yml` - For deploying the app using Docker containers.
+
+---
+
 ## Setup Guide (For New GPU Devices)
 
 Since your new device has a GPU, the AI processing will be blazingly fast. Follow these exact steps to set up the environment.

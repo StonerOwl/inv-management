@@ -65,7 +65,7 @@ export default function Sidebar() {
       <div className="px-4 pt-4 border-t border-surface-200">
         <div className="flex items-center justify-between px-2 mb-3">
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-white">{user?.username}</span>
+            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user?.username}</span>
             <span className="text-xs text-surface-400 capitalize">{user?.role}</span>
           </div>
           <button 

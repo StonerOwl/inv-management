@@ -52,14 +52,20 @@ class InvoiceRepository:
             ocr_confidence=doc_result.ocr_confidence,
             invoice_number=extracted.invoice_number,
             invoice_date=str(extracted.invoice_date) if extracted.invoice_date else None,
-            order_id=extracted.order_id,
-            seller_gstin=extracted.seller_gstin,
-            grand_total=extracted.grand_total,
+            invoice_details=extracted.invoice_details,
+            pan_no=extracted.pan_no,
+            cin_no=extracted.cin_no,
+            gst_registration_no=extracted.gst_registration_no,
+            grand_total=sum((li.total_amount or 0) for li in extracted.line_items) if extracted.line_items else 0.0,
             confidence_score=extracted.confidence_score,
             status=status,
             raw_text=doc_result.raw_text[:50000],  # Cap raw text
             raw_json=extracted.model_dump_json(),
         )
+
+        from core.embeddings import get_embedding
+        invoice.embedding = get_embedding(doc_result.raw_text[:20000])
+
         self.db.add(invoice)
         self.db.flush()  # Get ID without committing
 
@@ -71,28 +77,13 @@ class InvoiceRepository:
                 hsn_code=item.hsn_code,
                 quantity=item.quantity,
                 unit_price=item.unit_price,
-                total_price=item.total_price,
+                net_amount=item.net_amount,
                 tax_rate=item.tax_rate,
+                tax_type=item.tax_type,
                 tax_amount=item.tax_amount,
+                total_amount=item.total_amount,
             )
             self.db.add(db_item)
-
-        # Save tax entries
-        if extracted.tax_breakdown:
-            tb = extracted.tax_breakdown
-            tax_pairs = [
-                ("CGST", tb.cgst_rate, tb.cgst_amount),
-                ("SGST", tb.sgst_rate, tb.sgst_amount),
-                ("IGST", tb.igst_rate, tb.igst_amount),
-            ]
-            for tax_type, rate, amount in tax_pairs:
-                if amount is not None:
-                    self.db.add(TaxEntry(
-                        invoice_id=invoice.id,
-                        tax_type=tax_type,
-                        rate=rate,
-                        amount=amount,
-                    ))
 
         try:
             self.db.commit()
@@ -177,35 +168,39 @@ class InvoiceRepository:
         if not invoice:
             return None
         allowed = {
-            "invoice_number", "invoice_date", "order_id",
-            "seller_gstin",
-            "grand_total", "status", "category",
+            "invoice_number", "invoice_date", "invoice_details",
+            "gst_registration_no", "pan_no", "cin_no",
+            "status", "category",
         }
         for key, val in updates.items():
             if key in allowed:
                 setattr(invoice, key, val)
         
-        if "hsn_code" in updates:
-            hsn_val = updates["hsn_code"]
-            if invoice.line_items:
-                for li in invoice.line_items:
-                    li.hsn_code = hsn_val
-            elif hsn_val:
-                from db.models import LineItem
-                li = LineItem(invoice_id=invoice.id, name="Unknown", hsn_code=hsn_val)
+        if "line_items" in updates:
+            # Delete old line items
+            for old_li in invoice.line_items:
+                self.db.delete(old_li)
+            
+            # Add new ones
+            from db.models import LineItem
+            new_grand_total = 0.0
+            for item_data in updates["line_items"]:
+                li = LineItem(
+                    invoice_id=invoice.id,
+                    name=item_data.get("name", ""),
+                    hsn_code=item_data.get("hsn_code"),
+                    quantity=float(item_data.get("quantity") or 1.0),
+                    unit_price=float(item_data.get("unit_price") or 0.0),
+                    net_amount=float(item_data.get("net_amount") or 0.0),
+                    tax_rate=float(item_data.get("tax_rate") or 0.0) if item_data.get("tax_rate") else None,
+                    tax_type=item_data.get("tax_type"),
+                    tax_amount=float(item_data.get("tax_amount") or 0.0) if item_data.get("tax_amount") else None,
+                    total_amount=float(item_data.get("total_amount") or 0.0),
+                )
                 self.db.add(li)
-                
-        if "total_tax" in updates:
-            tax_val = updates["total_tax"]
-            for t in invoice.taxes:
-                self.db.delete(t)
-            if tax_val is not None and str(tax_val).strip() != "":
-                try:
-                    from db.models import TaxEntry
-                    new_tax = TaxEntry(invoice_id=invoice.id, tax_type="TOTAL", amount=float(tax_val))
-                    self.db.add(new_tax)
-                except ValueError:
-                    pass
+                new_grand_total += li.total_amount
+            
+            invoice.grand_total = new_grand_total
 
         self.db.commit()
         self.db.refresh(invoice)

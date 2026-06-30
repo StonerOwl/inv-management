@@ -1,5 +1,6 @@
 """
 Tesseract OCR engine wrapper with confidence scoring.
+Optimized for invoices (PSM 11 - sparse text) to prevent merging columns incorrectly.
 """
 import logging
 from dataclasses import dataclass
@@ -14,8 +15,9 @@ logger = logging.getLogger(__name__)
 # Configure Tesseract path (Windows)
 pytesseract.pytesseract.tesseract_cmd = config.TESSERACT_CMD
 
-# Tesseract config: OEM 1 (LSTM only — faster than OEM 3 which adds legacy engine), PSM 6
-TESSERACT_CONFIG = r"--oem 1 --psm 6"
+# Tesseract config: OEM 1 (LSTM only), PSM 11 (Sparse text - find as much text as possible in no particular order)
+# This is drastically better for invoices with tables and scattered fields than PSM 6.
+TESSERACT_CONFIG = r"--oem 1 --psm 11"
 
 
 @dataclass
@@ -29,9 +31,6 @@ def run_ocr(image: Image.Image, lang: str = "eng") -> OCRResult:
     """
     Run Tesseract OCR on a PIL Image.
     Returns extracted text and a mean confidence score.
-
-    Uses a SINGLE image_to_data() call to get both text and confidence,
-    avoiding the costly duplicate image_to_string() call.
     """
     try:
         # Single Tesseract call — get per-word data including positions & confidence
@@ -103,3 +102,5 @@ def is_tesseract_available() -> bool:
         return True
     except Exception:
         return False
+
+
