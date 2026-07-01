@@ -22,6 +22,8 @@ import RegisterInventory from './pages/RegisterInventory'
 import SearchInventory from './pages/SearchInventory'
 import CreatePWS from './pages/CreatePWS'
 import Settings from './pages/Settings'
+import QualityManagement from './pages/QualityManagement'
+import BatchIdentityDemo from './pages/BatchIdentityDemo' // TEMP test harness, see file header
 import { AuthProvider } from './context/AuthContext'
 import { UploadProvider } from './context/UploadContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -78,6 +80,12 @@ export default function App() {
                   <Route path="/preview-bg" element={<BackgroundPreview />} />
                   <Route path="/modify" element={<ProtectedRoute requireUpload={true}><Modify /></ProtectedRoute>} />
                   <Route path="/item-codes" element={<ItemCodes />} />
+
+                  {/* Quality Management */}
+                  <Route path="/quality" element={<QualityManagement />} />
+
+                  {/* TEMP: local-only QR/Barcode test harness -- not in nav, delete once real Projects API exists */}
+                  <Route path="/dev/batch-qr-test" element={<BatchIdentityDemo />} />
                 </Route>
                 </Routes>
               </BrowserRouter>

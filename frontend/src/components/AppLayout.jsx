@@ -12,6 +12,7 @@ import { Zap, Moon, Sun, Database } from 'lucide-react';
 const MAIN_TABS = [
   { id: 'inventory', label: 'Inventory', color: 'bg-primary-600', path: '/inventory/dashboard' },
   { id: 'track-trace', label: 'Track & Trace', color: 'bg-emerald-600', path: '/tracking' },
+  { id: 'quality', label: 'Quality Management', color: 'bg-rose-600', path: '/quality' },
   { id: 'app-management', label: 'Application Management', color: 'bg-indigo-600', path: '/users' },
 ];
 
@@ -27,6 +28,9 @@ const SIDEBAR_OPTIONS = {
     { label: 'Trace Workflow', path: '/tracking/workflow' },
     { label: 'Trace Process', path: '/tracking/process' },
     { label: 'Manage', path: '/tracking/manage' },
+  ],
+  'quality': [
+    { label: 'Dashboard', path: '/quality' },
   ],
   'app-management': [
     { label: 'User', path: '/users' },
@@ -48,6 +52,7 @@ export default function AppLayout() {
     if (path.startsWith('/inventory') || path === '/upload' || path === '/invoices') return 'inventory';
     if (path.startsWith('/tracking')) return 'track-trace';
     if (path.startsWith('/purchase')) return 'purchase';
+    if (path.startsWith('/quality')) return 'quality';
     if (path.startsWith('/app-management') || path === '/users') return 'app-management';
     return 'inventory'; // Default fallback
   };

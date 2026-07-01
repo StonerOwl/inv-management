@@ -161,4 +161,31 @@ export const getPWSAssignments = () => api.get('/pws/assignments')
 export const createPWSAssignment = (data) => api.post('/pws/assignments', data)
 export const deletePWSAssignment = (parentId, childId) => api.delete(`/pws/assignments/${parentId}/${childId}`)
 
+// ── Quality Management ──────────────────────────────────────────────────────
+// Backed by backend/api/routes/quality.py (see that file for the Pydantic
+// schemas). Falls back to local optimistic state in the UI if these 404
+// because the router hasn't been registered in backend/api/main.py yet.
+export const createQualityNote = (data) => api.post('/quality/notes', data)
+export const listQualityNotes = (params) => api.get('/quality/notes', { params })
+export const approveQualityNote = (id) => api.put(`/quality/notes/${id}/approve`)
+export const getQualitySummary = () => api.get('/quality/summary')
+
+// evidenceByCategory: { visual_image: File[], nir_image: File[], ... } -- keys
+// must match EvidenceDropzone.jsx's category keys, which match the backend's
+// per-category form fields in POST /quality/notes/:id/evidence.
+export const uploadQualityEvidence = (noteId, evidenceByCategory) => {
+  const formData = new FormData()
+  let hasFiles = false
+  Object.entries(evidenceByCategory).forEach(([category, files]) => {
+    files.forEach((file) => {
+      formData.append(category, file)
+      hasFiles = true
+    })
+  })
+  if (!hasFiles) return Promise.resolve(null)
+  return api.post(`/quality/notes/${noteId}/evidence`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
+
 export default api
