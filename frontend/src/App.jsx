@@ -10,9 +10,7 @@ import NaturalQuery from './pages/NaturalQuery'
 import BackgroundPreview from './pages/BackgroundPreview'
 import Login from './pages/Login'
 import UserManagement from './pages/UserManagement'
-import PurchaseOrders from './pages/PurchaseOrders'
 import ItemCodes from './pages/ItemCodes'
-import POMatching from './pages/POMatching'
 import TrackingDashboard from './pages/TrackingDashboard'
 import InventoryDashboard from './pages/InventoryDashboard'
 import TraceWorkflow from './pages/TraceWorkflow'
@@ -80,7 +78,6 @@ export default function App() {
                   <Route path="/preview-bg" element={<BackgroundPreview />} />
                   <Route path="/modify" element={<ProtectedRoute requireUpload={true}><Modify /></ProtectedRoute>} />
                   <Route path="/item-codes" element={<ItemCodes />} />
-                  <Route path="/po-matching" element={<POMatching />} />
                 </Route>
                 </Routes>
               </BrowserRouter>

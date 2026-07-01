@@ -12,7 +12,6 @@ const NAV_ITEMS = [
   { to: '/query', icon: MessageSquare, label: 'Ask AI' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/modify', icon: Settings2, label: 'Modify', requireUpload: true },
-  { to: '/purchase-orders', icon: ShoppingCart, label: 'Purchase Orders' },
   { to: '/users', icon: Users, label: 'Users', adminOnly: true },
 ]
 

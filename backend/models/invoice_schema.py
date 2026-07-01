@@ -7,6 +7,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Optional
+import re
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -24,17 +25,29 @@ class LineItem(BaseModel):
     tax_amount: Optional[float] = None
     total_amount: float = 0.0
 
+    @field_validator("hsn_code", mode="before")
+    @classmethod
+    def clean_hsn_code(cls, v: Any) -> Optional[str]:
+        if not v:
+            return None
+        v_str = str(v)
+        # Find 4 to 10 consecutive digits
+        match = re.search(r'\d{4,10}', v_str)
+        if match:
+            return match.group(0)
+        return v_str[:20] if len(v_str) > 20 else v_str
+
     @field_validator("quantity", "unit_price", "net_amount", "tax_amount", "total_amount", mode="before")
     @classmethod
     def parse_numeric(cls, v: Any) -> float:
         if v is None:
             return 0.0
         if isinstance(v, (int, float)):
-            return float(v)
-        # Strip currency symbols and commas
+            return abs(float(v))
+        # Strip currency symbols, minus signs, and commas
         cleaned = str(v).replace(",", "").replace("₹", "").replace("Rs.", "").strip()
         try:
-            return float(cleaned)
+            return abs(float(cleaned))
         except ValueError:
             return 0.0
 
@@ -138,6 +151,7 @@ class JobStatus(BaseModel):
     pending: int
     status: str  # queued | processing | done | partial_failure
     results: list[dict] = []
+    logs: list[str] = []
 
 
 class StatsResponse(BaseModel):

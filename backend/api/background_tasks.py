@@ -12,7 +12,6 @@ from typing import Any
 import config
 from core.document_loader import load_document, compute_file_hash
 from core.extractor import extract_invoice_fields
-from core.vision_extractor import extract_from_image
 from db.database import SessionLocal
 from db.repository import InvoiceRepository
 
@@ -36,8 +35,14 @@ def create_job(file_paths: list[str]) -> str:
         "pending": len(file_paths),
         "status": "queued",
         "results": [],
+        "logs": [],
     }
     return job_id
+
+def _add_log(job_id: str, msg: str) -> None:
+    job = _jobs.get(job_id)
+    if job:
+        job.setdefault("logs", []).append(f"[{time.strftime('%H:%M:%S')}] {msg}")
 
 
 def get_job(job_id: str) -> dict | None:
@@ -133,13 +138,16 @@ async def _process_single_file(job_id: str, file_path_str: str) -> None:
             # ── Step 2: Load document (OCR if needed) ────────────────────────
             # Model availability is checked once in process_batch(), not here
             logger.info(f"Loading: {file_path.name}")
+            _add_log(job_id, f"Loading and extracting text for {file_path.name}...")
             doc_result = await asyncio.to_thread(load_document, file_path)
 
             if doc_result.error:
+                _add_log(job_id, f"Document load failed for {file_path.name}: {doc_result.error}")
                 raise RuntimeError(f"Document load failed: {doc_result.error}")
 
             # ── Step 4: LLM extraction ───────────────────────────────────────
             try:
+                _add_log(job_id, f"Ollama natively extracting data for {file_path.name} (Text Mode)...")
                 extracted = await extract_invoice_fields(doc_result.raw_text)
             except RuntimeError as e:
                 if "404" in str(e) or "not found" in str(e).lower():
@@ -148,38 +156,6 @@ async def _process_single_file(job_id: str, file_path_str: str) -> None:
                         f"it may still be downloading. Run: `ollama pull {config.OLLAMA_TEXT_MODEL}`"
                     )
                 raise
-
-            # Fallback to vision if confidence too low
-            low_confidence = extracted.confidence_score < config.EXTRACTION_CONFIDENCE_THRESHOLD
-            is_image = file_path.suffix.lower() in config.SUPPORTED_IMAGE_EXTENSIONS
-
-            if low_confidence:
-                logger.info(
-                    f"Low confidence ({extracted.confidence_score:.2f}), "
-                    f"trying vision LLM for {file_path.name}"
-                )
-                try:
-                    vision_path = file_path
-                    is_temp = False
-                    if not is_image:
-                        import fitz
-                        doc = fitz.open(str(file_path))
-                        page = doc[0]
-                        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
-                        temp_png = file_path.with_suffix(".temp.png")
-                        pix.save(str(temp_png))
-                        doc.close()
-                        vision_path = temp_png
-                        is_temp = True
-                        
-                    vision_result = await extract_from_image(vision_path)
-                    if vision_result.confidence_score > extracted.confidence_score:
-                        extracted = vision_result
-                        
-                    if is_temp:
-                        vision_path.unlink(missing_ok=True)
-                except Exception as ve:
-                    logger.warning(f"Vision fallback failed: {ve} — using text extraction")
 
             # ── Step 5: Save to DB ───────────────────────────────────────────
             invoice = repo.save_invoice(doc_result, extracted, job_id)
@@ -197,6 +173,7 @@ async def _process_single_file(job_id: str, file_path_str: str) -> None:
                 f"✓ {file_path.name}: id={invoice.id}, "
                 f"confidence={extracted.confidence_score:.2f}, {duration}ms"
             )
+            _add_log(job_id, f"Completed processing {file_path.name} successfully (Confidence: {extracted.confidence_score:.2f}).")
             result_entry.update({
                 "status": "ok",
                 "invoice_id": invoice.id,
@@ -207,6 +184,7 @@ async def _process_single_file(job_id: str, file_path_str: str) -> None:
 
         except Exception as e:
             logger.error(f"✗ {file_path.name}: {e}")
+            _add_log(job_id, f"Error processing {file_path.name}: {e}")
             result_entry.update({"status": "error", "error": str(e)})
             job["failed"] += 1
             try:

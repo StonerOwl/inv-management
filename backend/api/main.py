@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from db.database import init_db, seed_default_categories
-from api.routes import upload, invoices, stats, json_files, query, auth, po, products, categories, tracking, pws, notes
+from api.routes import upload, invoices, stats, json_files, query, auth, products, categories, tracking, pws, notes
 from api.dependencies import get_current_active_user
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
@@ -63,7 +63,7 @@ app.include_router(invoices.router, dependencies=[Depends(get_current_active_use
 app.include_router(stats.router) # Stats router handles its own dependencies if needed
 app.include_router(json_files.router, dependencies=[Depends(get_current_active_user)])
 app.include_router(query.router, dependencies=[Depends(get_current_active_user)])
-app.include_router(po.router, dependencies=[Depends(get_current_active_user)])
+
 app.include_router(products.router, dependencies=[Depends(get_current_active_user)])
 app.include_router(categories.router, dependencies=[Depends(get_current_active_user)])
 app.include_router(tracking.router, dependencies=[Depends(get_current_active_user)])

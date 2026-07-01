@@ -67,10 +67,9 @@ def advanced_search_invoices(
     limit: int = Query(50, ge=1, le=500),
     db: Session = Depends(get_db)
 ):
-    from db.models import Invoice, PurchaseOrder, LineItem, InvoiceProcessTracking, WorkflowProcess
+    from db.models import Invoice, LineItem, InvoiceProcessTracking, WorkflowProcess
     
     q = db.query(Invoice)\
-        .outerjoin(PurchaseOrder, Invoice.po_id == PurchaseOrder.id)\
         .outerjoin(LineItem, Invoice.id == LineItem.invoice_id)\
         .outerjoin(InvoiceProcessTracking, Invoice.id == InvoiceProcessTracking.invoice_id)\
         .outerjoin(WorkflowProcess, InvoiceProcessTracking.process_id == WorkflowProcess.id)
@@ -82,18 +81,12 @@ def advanced_search_invoices(
                 Invoice.invoice_number.ilike(pattern),
                 Invoice.order_id.ilike(pattern),
                 Invoice.seller_gstin.ilike(pattern),
-                PurchaseOrder.po_number.ilike(pattern),
-                PurchaseOrder.item_name.ilike(pattern),
                 LineItem.name.ilike(pattern)
             )
         )
         
     if invoice_category:
         q = q.filter(Invoice.category.ilike(f"%{invoice_category}%"))
-    if po_category:
-        q = q.filter(PurchaseOrder.category.ilike(f"%{po_category}%"))
-    if item_code:
-        q = q.filter(PurchaseOrder.item_code.ilike(f"%{item_code}%"))
     if process_name:
         q = q.filter(WorkflowProcess.name.ilike(f"%{process_name}%"))
     if status:
@@ -117,24 +110,6 @@ def advanced_search_invoices(
             }
             for inv in invoices
         ]
-    }
-
-@router.get("/unmatched")
-def list_unmatched_invoices(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=500),
-    db: Session = Depends(get_db),
-):
-    """List all invoices that do not have a linked PO yet."""
-    from db.models import Invoice
-    total = db.query(Invoice).filter(Invoice.po_id == None).count()
-    invoices = db.query(Invoice).filter(Invoice.po_id == None).order_by(Invoice.created_at.desc()).offset(skip).limit(limit).all()
-
-    return {
-        "total": total,
-        "skip": skip,
-        "limit": limit,
-        "items": [inv.to_dict() for inv in invoices],
     }
 
 
@@ -200,7 +175,6 @@ def export_csv(
         "IGST Rate", "IGST Amount",
         "Total Tax", "Grand Total",
         "Confidence Score", "Status",
-        "Linked PO Number", "Linked PO Item", "Linked PO Qty", "Linked PO Status",
     ]
     writer.writerow(headers)
 
@@ -229,10 +203,6 @@ def export_csv(
             igst.rate if igst else "", igst.amount if igst else "",
             total_tax if total_tax else "",
             inv.grand_total, inv.confidence_score, inv.status,
-            inv.po.po_number if inv.po else "",
-            inv.po.item_name if inv.po else "",
-            inv.po.quantity if inv.po else "",
-            inv.po.status if inv.po else "",
         ])
 
     output.seek(0)
@@ -268,7 +238,6 @@ def export_excel(
         "IGST Rate", "IGST Amount",
         "Total Tax", "Grand Total",
         "Confidence Score", "Status",
-        "Linked PO Number", "Linked PO Item", "Linked PO Qty", "Linked PO Status",
     ]
 
     header_fill = PatternFill(start_color="14532D", end_color="14532D", fill_type="solid")
@@ -305,10 +274,6 @@ def export_excel(
             igst.rate if igst else None, igst.amount if igst else None,
             total_tax if total_tax else None,
             inv.grand_total, inv.confidence_score, inv.status,
-            inv.po.po_number if inv.po else None,
-            inv.po.item_name if inv.po else None,
-            inv.po.quantity if inv.po else None,
-            inv.po.status if inv.po else None,
         ])
 
     # Auto-width columns
@@ -359,91 +324,4 @@ def delete_invoice(invoice_id: int, db: Session = Depends(get_db)):
     if not ok:
         raise HTTPException(status_code=404, detail="Invoice not found")
     return {"message": "Deleted"}
-
-
-@router.get("/{invoice_id}/suggest-po")
-def suggest_po_for_invoice(invoice_id: int, db: Session = Depends(get_db)):
-    """Suggest best matching POs for this invoice."""
-    import difflib
-    from db.models import Invoice, PurchaseOrder
-    
-    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
-    if not invoice:
-        raise HTTPException(status_code=404, detail="Invoice not found")
-
-    # Get all POs that are approved and NOT already linked to another invoice
-    linked_po_ids = db.query(Invoice.po_id).filter(Invoice.po_id.isnot(None)).subquery()
-    available_pos = db.query(PurchaseOrder).filter(
-        PurchaseOrder.status == "approved",
-        ~PurchaseOrder.id.in_(linked_po_ids)
-    ).all()
-
-    suggestions = []
-    inv_desc = (invoice.to_dict().get("product_description") or "").lower()
-    inv_qty = invoice.to_dict().get("quantity") or 0
-    inv_order_id = (invoice.order_id or "").lower()
-    inv_number = (invoice.invoice_number or "").lower()
-
-    for po in available_pos:
-        score = 0
-        po_num = po.po_number.lower()
-        
-        # 1. Exact PO Number match (either in order_id or invoice_number)
-        if po_num == inv_order_id or po_num == inv_number or po_num in inv_desc:
-            score = 100
-        else:
-            # 2. Keyword match (handles underscores and separate words)
-            po_name_clean = po.item_name.replace("_", " ").lower()
-            po_words = set(w for w in po_name_clean.split() if len(w) > 1)
-            inv_words = set(w for w in inv_desc.replace("-", " ").replace("_", " ").split() if len(w) > 1)
-            
-            if po_words:
-                common_words = po_words.intersection(inv_words)
-                word_match_ratio = len(common_words) / len(po_words)
-                score += word_match_ratio * 80  # Max 80 points for name match
-            
-            # 3. Quantity match
-            if inv_qty and po.quantity and abs(inv_qty - po.quantity) < 0.01:
-                score += 20  # 20 points for exact quantity match
-                
-        if score >= 40:
-            suggestions.append({
-                "po": po.to_dict(),
-                "score": round(score, 1)
-            })
-
-    # Sort by score descending
-    suggestions.sort(key=lambda x: x["score"], reverse=True)
-    
-    return {"suggestions": suggestions[:5]}  # Return top 5
-
-
-@router.put("/{invoice_id}/link-po")
-def link_po_to_invoice(invoice_id: int, po_id: int = Query(...), db: Session = Depends(get_db)):
-    """Link a specific PO to this invoice."""
-    from db.models import Invoice, PurchaseOrder
-    
-    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
-    if not invoice:
-        raise HTTPException(status_code=404, detail="Invoice not found")
-
-    po = db.query(PurchaseOrder).filter(PurchaseOrder.id == po_id).first()
-    if not po:
-        raise HTTPException(status_code=404, detail="Purchase Order not found")
-        
-    if po.status != "approved":
-        raise HTTPException(status_code=400, detail="Can only link to approved POs")
-
-    # Check if PO is already linked
-    existing_link = db.query(Invoice).filter(Invoice.po_id == po_id, Invoice.id != invoice_id).first()
-    if existing_link:
-        raise HTTPException(status_code=400, detail=f"PO already linked to invoice #{existing_link.id}")
-
-    invoice.po_id = po.id
-    db.commit()
-    db.refresh(invoice)
-    
-    return invoice.to_dict()
-
-
 

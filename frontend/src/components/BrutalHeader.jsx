@@ -7,7 +7,6 @@ import { ChevronDown } from 'lucide-react'
 export default function BrutalHeader() {
   const location = useLocation()
   const { user, logout } = useAuth()
-  
   const navLinks = [
     { 
       name: 'INVENTORY',
@@ -17,12 +16,10 @@ export default function BrutalHeader() {
         { name: 'DASHBOARD', path: '/inventory/dashboard' },
         { name: 'INVOICES', path: '/invoices' },
         { name: 'TRACKING', path: '/tracking' },
-        { name: 'PURCHASE ORDERS', path: '/purchase-orders' },
       ]
     },
     { name: 'ASK AI', path: '/query' },
     { name: 'ITEM CODES', path: '/item-codes' },
-    { name: 'PO MATCHING', path: '/po-matching' },
     { name: 'USERS', path: '/users', adminOnly: true },
   ]
 

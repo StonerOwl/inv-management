@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
 import { useUpload } from '../context/UploadContext'
@@ -22,6 +22,61 @@ function FileRow({ file, removed, onRemove }) {
       >
         <XCircle size={16} />
       </button>
+    </div>
+  )
+}
+
+function TerminalLogs({ logs }) {
+  const endRef = useRef(null)
+  const containerRef = useRef(null)
+  const [autoScroll, setAutoScroll] = useState(true)
+
+  const handleScroll = () => {
+    if (!containerRef.current) return
+    const { scrollTop, scrollHeight, clientHeight } = containerRef.current
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 20
+    if (isNearBottom && !autoScroll) {
+      setAutoScroll(true)
+    } else if (!isNearBottom && autoScroll) {
+      setAutoScroll(false)
+    }
+  }
+
+  useEffect(() => {
+    if (autoScroll) {
+      endRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [logs, autoScroll])
+
+  if (!logs || logs.length === 0) return null;
+
+  return (
+    <div className="mb-6 bg-[#0c0c0c] text-[#00ff00] font-mono text-xs border border-[#333] rounded shadow-inner relative flex flex-col">
+      <div className="flex justify-between items-center bg-[#1a1a1a] px-4 py-1 border-b border-[#333]">
+        <span className="text-gray-400 font-sans text-[10px] uppercase tracking-wider">Processing Logs</span>
+        <label className="flex items-center text-gray-400 font-sans text-[10px] uppercase tracking-wider cursor-pointer hover:text-gray-200">
+          <input 
+            type="checkbox" 
+            checked={autoScroll} 
+            onChange={(e) => setAutoScroll(e.target.checked)}
+            className="mr-1.5 w-3 h-3 accent-[#00ff00] cursor-pointer"
+          />
+          Auto-scroll
+        </label>
+      </div>
+      <div 
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="p-4 h-48 overflow-y-auto overflow-x-hidden"
+      >
+        {logs.map((log, i) => (
+          <div key={i} className="mb-1">
+            <span className="text-gray-500 mr-2">&gt;</span>
+            {log}
+          </div>
+        ))}
+        <div ref={endRef} />
+      </div>
     </div>
   )
 }
@@ -217,6 +272,9 @@ export default function Upload() {
                   style={{ width: `${processPct}%` }}
                 />
               </div>
+
+              {/* Terminal Logs */}
+              <TerminalLogs logs={job.logs} />
 
               {/* Per-file results */}
               {job.results.length > 0 && (

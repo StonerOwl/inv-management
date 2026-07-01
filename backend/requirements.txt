@@ -55,9 +55,6 @@ langchain
 langchain-community
 langchain-core
 langchain-ollama
-psycopg2-binary
-pgvector
-langchain-postgres
-
 psycopg2-binary==2.9.9
 pgvector==0.2.5
+langchain-postgres

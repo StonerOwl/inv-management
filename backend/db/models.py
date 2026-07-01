@@ -82,9 +82,6 @@ class Invoice(Base):
     # AI Search capabilities
     embedding = Column(Vector(768), nullable=True)
 
-    # Purchase Order Link
-    po_id = Column(Integer, ForeignKey("purchase_orders.id"), nullable=True, index=True)
-
     # Timestamps
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -93,7 +90,6 @@ class Invoice(Base):
     line_items = relationship("LineItem", back_populates="invoice", cascade="all, delete-orphan")
     taxes = relationship("TaxEntry", back_populates="invoice", cascade="all, delete-orphan")
     processing_logs = relationship("ProcessingLog", back_populates="invoice", cascade="all, delete-orphan")
-    po = relationship("PurchaseOrder")
 
     def to_dict(self) -> dict:
         # Flatten line items into summary fields
@@ -113,9 +109,6 @@ class Invoice(Base):
             "source_type": self.source_type,
             "ocr_confidence": self.ocr_confidence,
             "status": self.status,
-            "po_id": self.po_id,
-            "po_number": self.po.po_number if self.po else None,
-            "linked_po": self.po.to_dict() if self.po else None,
             "line_items": [li.to_dict() for li in self.line_items] if self.line_items else []
         }
 
@@ -127,7 +120,7 @@ class LineItem(Base):
     invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=False, index=True)
 
     name = Column(String(1000), nullable=False)
-    hsn_code = Column(String(20))
+    hsn_code = Column(String(255))
     quantity = Column(Float, default=1.0)
     unit_price = Column(Float, default=0.0)
     net_amount = Column(Float, default=0.0)
@@ -306,49 +299,6 @@ class InvoiceProcessTracking(Base):
             "completed_by_id": self.completed_by_id,
             "completed_by_username": self.completed_by.username if self.completed_by else None,
             "notes": self.notes,
-        }
-
-
-class PurchaseOrder(Base):
-    __tablename__ = "purchase_orders"
-
-    id = Column(Integer, primary_key=True, index=True)
-    po_number = Column(String(50), unique=True, index=True, nullable=False)
-    item_name = Column(String(500), nullable=False)
-    item_code = Column(String(50), nullable=True)    # Auto-filled from product catalog
-    category = Column(String(20), nullable=True)     # Auto-filled from product catalog
-    quantity = Column(Float, nullable=False)
-    unit = Column(String(20), default="pcs")  # pcs | kg | litre | box | other
-    notes = Column(Text, nullable=True)
-    status = Column(String(20), default="pending", index=True)  # pending | approved | rejected
-
-    # Who raised the PO
-    requested_by_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    # Admin who approved/rejected (nullable until acted on)
-    approved_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-
-    created_at = Column(DateTime, server_default=func.now())
-
-    # Relationships
-    requested_by = relationship("User", foreign_keys=[requested_by_id])
-    approved_by = relationship("User", foreign_keys=[approved_by_id])
-
-    def to_dict(self) -> dict:
-        return {
-            "id": self.id,
-            "po_number": self.po_number,
-            "item_name": self.item_name,
-            "item_code": self.item_code,
-            "category": self.category,
-            "quantity": self.quantity,
-            "unit": self.unit,
-            "notes": self.notes,
-            "status": self.status,
-            "requested_by_id": self.requested_by_id,
-            "requested_by_username": self.requested_by.username if self.requested_by else None,
-            "approved_by_id": self.approved_by_id,
-            "approved_by_username": self.approved_by.username if self.approved_by else None,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Download, Trash2, Search, Filter, Plus, FileText, Upload as UploadIcon, AlertCircle, CheckCircle, Loader2, RefreshCw, Layers, Edit, Eye, XCircle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'
@@ -6,6 +6,63 @@ import { useAuth } from '../context/AuthContext';
 import { listInvoices, getUnmatchedInvoices, deleteInvoice, updateInvoice, uploadInvoices, getJobStatus, getPWSItems, getPWSAssignments } from '../api/client'
 import { useUpload } from '../context/UploadContext'
 import NoteTarget from '../components/NoteTarget';
+
+const TerminalLogs = ({ logs }) => {
+  const endRef = useRef(null)
+  const containerRef = useRef(null)
+  const [autoScroll, setAutoScroll] = useState(true)
+
+  const handleScroll = () => {
+    if (!containerRef.current) return
+    const { scrollTop, scrollHeight, clientHeight } = containerRef.current
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 20
+    if (isNearBottom && !autoScroll) {
+      setAutoScroll(true)
+    } else if (!isNearBottom && autoScroll) {
+      setAutoScroll(false)
+    }
+  }
+
+  useEffect(() => {
+    if (autoScroll) {
+      endRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [logs, autoScroll])
+
+  return (
+    <div className="mt-4 mb-2 bg-[#0c0c0c] text-[#00ff00] font-mono text-xs border border-[#333] rounded shadow-inner relative flex flex-col">
+      <div className="flex justify-between items-center bg-[#1a1a1a] px-4 py-1 border-b border-[#333]">
+        <span className="text-gray-400 font-sans text-[10px] uppercase tracking-wider">Processing Logs</span>
+        <label className="flex items-center text-gray-400 font-sans text-[10px] uppercase tracking-wider cursor-pointer hover:text-gray-200">
+          <input 
+            type="checkbox" 
+            checked={autoScroll} 
+            onChange={(e) => setAutoScroll(e.target.checked)}
+            className="mr-1.5 w-3 h-3 accent-[#00ff00] cursor-pointer"
+          />
+          Auto-scroll
+        </label>
+      </div>
+      <div 
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="p-4 h-48 overflow-y-auto overflow-x-hidden"
+      >
+      {(!logs || logs.length === 0) ? (
+        <div className="text-gray-500 italic">Waiting for processing to begin...</div>
+      ) : (
+        logs.map((log, i) => (
+          <div key={i} className="mb-1">
+            <span className="text-gray-500 mr-2">&gt;</span>
+            {log}
+          </div>
+        ))
+      )}
+      <div ref={endRef} />
+      </div>
+    </div>
+  )
+}
 
 export default function InventoryDashboard() {
   const [registerPopupOpen, setRegisterPopupOpen] = useState(false)
@@ -260,6 +317,9 @@ export default function InventoryDashboard() {
                   {job.pending > 0 && <span>Pending: {job.pending}</span>}
                 </div>
               )}
+
+              {/* Terminal Logs */}
+              {job && <TerminalLogs logs={job.logs} />}
             </div>
           </div>
         )}

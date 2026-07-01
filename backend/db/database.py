@@ -48,6 +48,14 @@ def init_db() -> None:
         # Expected if column already exists
         pass
 
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE line_items ALTER COLUMN hsn_code TYPE VARCHAR(255)"))
+            conn.commit()
+            logger.info("Increased hsn_code length in line_items")
+    except Exception:
+        pass
+
 
 def seed_default_categories() -> None:
     """Insert the 3 default categories if they don't exist yet."""

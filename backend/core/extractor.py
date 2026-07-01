@@ -1,45 +1,19 @@
 """
 Core LLM-based invoice field extractor.
-Sends OCR text to Ollama and parses the structured JSON response using LangChain.
+Sends OCR text to Ollama and parses the structured JSON response natively.
 """
+import json
 import logging
 from typing import Optional
 
-from langchain_ollama import ChatOllama
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.exceptions import OutputParserException
-
 from models.invoice_schema import InvoiceExtracted, LineItem
+from core.ollama_client import ollama
 import config
 
 logger = logging.getLogger(__name__)
 
-# ─── Reusable LLM instance (singleton) ───────────────────────────────────────
-# Avoids creating a new HTTP connection on every extraction call.
-# LangChain's ChatOllama maintains an internal httpx client that benefits
-# from TCP connection reuse (keep-alive) across requests.
-_text_llm: Optional[ChatOllama] = None
-
-
-def _get_text_llm(model: Optional[str] = None) -> ChatOllama:
-    """Return a reusable ChatOllama instance, creating it on first call."""
-    global _text_llm
-    resolved_model = model or config.OLLAMA_TEXT_MODEL
-    # Recreate if model changed or first call
-    if _text_llm is None or _text_llm.model != resolved_model:
-        _text_llm = ChatOllama(
-            model=resolved_model,
-            base_url=config.OLLAMA_HOST,
-            temperature=0.05,
-            format="json",
-            keep_alive="10m",    # Keep model loaded in RAM between requests
-        )
-    return _text_llm
-
-
 # ─── System prompt ────────────────────────────────────────────────────────────
-SYSTEM_PROMPT = """You are an expert invoice data extraction assistant specializing in Indian invoices (B2B tax invoices, e-commerce invoices from Amazon, Flipkart, Meesho, Myntra, etc.).
+SYSTEM_PROMPT = """You are an expert invoice data extraction assistant specializing in Indian invoices (B2B tax invoices, e-commerce invoices).
 
 CRITICAL RULES:
 1. Respond with ONLY a valid JSON object. No markdown fences, no explanations, no extra text.
@@ -53,32 +27,29 @@ CRITICAL RULES:
 9. For each line item, carefully read the table columns. Map Description→name, HSN/SAC→hsn_code, Unit Price→unit_price, Qty→quantity, Net Amount→net_amount, Tax Rate→tax_rate (number only, e.g. 18 not 18%), Tax Type→tax_type (IGST/CGST/SGST), Tax Amount→tax_amount, Total Amount→total_amount.
 """
 
-# ─── Extraction prompt template ──────────────────────────────────────────────
-# Note: Double curly braces {{ }} are literal braces in LangChain templates.
-# Only {raw_text} is a real placeholder.
 EXTRACTION_TEMPLATE = """Extract structured data from this invoice. Return ONLY this JSON schema:
 
-{{
-  "invoice_number": "string|null",
-  "invoice_details": "string|null",
-  "invoice_date": "YYYY-MM-DD|null",
-  "pan_no": "10-char PAN|null",
-  "gst_registration_no": "15-char GSTIN|null",
-  "cin_no": "21-char CIN|null",
+{
+  "invoice_number": "string or null",
+  "invoice_details": "string or null",
+  "invoice_date": "YYYY-MM-DD or null",
+  "pan_no": "string or null",
+  "gst_registration_no": "string or null",
+  "cin_no": "string or null",
   "line_items": [
-    {{
+    {
       "name": "product description",
-      "hsn_code": "string|null",
+      "hsn_code": "string or null",
       "unit_price": 0.0,
       "quantity": 1,
       "net_amount": 0.0,
       "tax_rate": null,
-      "tax_type": "IGST|CGST|SGST|null",
+      "tax_type": "IGST, CGST, SGST, or null",
       "tax_amount": null,
       "total_amount": 0.0
-    }}
+    }
   ]
-}}
+}
 
 EXTRACTION HINTS:
 - invoice_number: Look for "Invoice Number", "Invoice No", "Bill No", "Tax Invoice No" near the top.
@@ -93,18 +64,7 @@ INVOICE TEXT:
 {raw_text}
 ---
 
-JSON:"""
-
-
-# ─── Build the chain once at module level ────────────────────────────────────
-# ChatPromptTemplate properly separates system and human messages,
-# so Ollama can distinguish instructions from data.
-_extraction_prompt = ChatPromptTemplate.from_messages([
-    ("system", SYSTEM_PROMPT),
-    ("human", EXTRACTION_TEMPLATE),
-])
-_json_parser = JsonOutputParser()
-
+Return ONLY JSON:"""
 
 async def extract_invoice_fields(
     raw_text: str,
@@ -112,21 +72,49 @@ async def extract_invoice_fields(
 ) -> InvoiceExtracted:
     """
     Main extraction function.
-    Sends raw text to Ollama via LangChain and returns a validated InvoiceExtracted object.
+    Sends raw text to Ollama and returns a validated InvoiceExtracted object.
     """
-    # Truncate only extremely long documents — keep enough for all line items
-    max_chars = 12000
+    # Truncate raw text to a reasonable limit for small local models to avoid massive slowdowns
+    max_chars = 6000
     text_for_llm = raw_text[:max_chars]
     if len(raw_text) > max_chars:
         logger.warning(f"Text truncated from {len(raw_text)} to {max_chars} chars for LLM")
 
-    llm = _get_text_llm(model)
-    chain = _extraction_prompt | llm | _json_parser
+    resolved_model = model or config.OLLAMA_TEXT_MODEL
+    prompt = EXTRACTION_TEMPLATE.replace("{raw_text}", text_for_llm)
 
-    logger.info(f"Sending to Ollama model={llm.model} via LangChain ({len(text_for_llm)} chars)")
+    logger.info(f"Sending to Ollama model={resolved_model} natively ({len(text_for_llm)} chars)")
 
     try:
-        extracted_dict = await chain.ainvoke({"raw_text": text_for_llm})
+        response = await ollama.generate(
+            model=resolved_model,
+            prompt=prompt,
+            system=SYSTEM_PROMPT,
+            format="json",
+            options={
+                "temperature": 0.0,
+                "num_ctx": 4096
+            }
+        )
+        
+        response_text = response.get("response", "").strip()
+        
+        if not response_text:
+            logger.error("Empty response from Ollama")
+            return InvoiceExtracted(confidence_score=0.0)
+
+        try:
+            # Strip markdown fences if present
+            import re
+            cleaned_text = response_text
+            if "```" in cleaned_text:
+                match = re.search(r'```(?:json)?(.*?)```', cleaned_text, re.DOTALL)
+                if match:
+                    cleaned_text = match.group(1).strip()
+            extracted_dict = json.loads(cleaned_text)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parse error from Ollama response: {e}\\nRaw response: {response_text}")
+            return InvoiceExtracted(confidence_score=0.0)
 
         invoice = _dict_to_invoice(extracted_dict)
         invoice.confidence_score = invoice.compute_confidence()
@@ -137,14 +125,9 @@ async def extract_invoice_fields(
         )
         return invoice
 
-    except OutputParserException as e:
-        logger.error(f"JSON parse error from LangChain: {e}")
-        # Return empty invoice with zero confidence
-        return InvoiceExtracted(confidence_score=0.0)
     except Exception as e:
-        logger.error(f"LangChain/Ollama runtime error: {e}")
-        raise RuntimeError(f"Ollama error: {e}")
-
+        logger.error(f"Ollama runtime error: {e}")
+        return InvoiceExtracted(confidence_score=0.0)
 
 def _dict_to_invoice(data: dict) -> InvoiceExtracted:
     """Convert raw dict from LLM to validated InvoiceExtracted."""
@@ -159,7 +142,6 @@ def _dict_to_invoice(data: dict) -> InvoiceExtracted:
                 logger.debug(f"Skipped malformed line item: {e}")
     data["line_items"] = line_items
 
-    # Tax breakdown has been removed from schema, ensuring any stray LLM data doesn't crash
     if "tax_breakdown" in data:
         data.pop("tax_breakdown", None)
 

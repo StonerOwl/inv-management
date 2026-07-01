@@ -51,8 +51,8 @@ def get_invoice_tracking(
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
 
-    # Use override category if set, otherwise fall back to PO category
-    category_name = invoice.tracking_category_override or (invoice.po.category if invoice.po else None)
+    # Use override category if set
+    category_name = invoice.tracking_category_override
     if not category_name:
         return {
             "invoice_id": invoice_id,
@@ -111,7 +111,7 @@ def get_invoice_tracking(
         "category": category_name,
         "invoice_category": invoice.category,
         "is_overridden": invoice.tracking_category_override is not None,
-        "original_category": invoice.po.category if invoice.po else None,
+        "original_category": None,
         "processes": process_list,
         "progress": progress,
         "completed_count": completed_count,
@@ -249,8 +249,8 @@ def tracking_dashboard(
     for inv in invoices:
         total_cost += inv.grand_total or 0
 
-        # Count by category — use override if set, otherwise PO category
-        track_category = inv.tracking_category_override or (inv.po.category if inv.po else None)
+        # Count by category — use override if set
+        track_category = inv.tracking_category_override
         cat_name = track_category or "Uncategorized"
         if cat_name not in category_stats:
             category_stats[cat_name] = {"count": 0, "total": 0, "quantity": 0}
@@ -304,13 +304,13 @@ def tracking_dashboard(
             "invoice_date": inv.invoice_date,
             "invoice_category": inv.category,
             "category": track_category,
-            "original_category": inv.po.category if inv.po else None,
+            "original_category": None,
             "is_overridden": inv.tracking_category_override is not None,
             "description": description,
             "quantity": total_quantity,
             "grand_total": inv.grand_total,
             "status": inv.status,
-            "po_number": inv.po.po_number if inv.po else None,
+            "po_number": None,
             "current_stage": current_stage,
             "progress": process_progress,
             "completed_count": completed_count,
@@ -356,7 +356,7 @@ def reassign_tracking_category(
     if not category:
         raise HTTPException(status_code=404, detail=f"Category '{data.category_name}' not found")
 
-    old_category = invoice.tracking_category_override or (invoice.po.category if invoice.po else None)
+    old_category = invoice.tracking_category_override
     invoice.tracking_category_override = data.category_name
     db.commit()
 
@@ -386,7 +386,7 @@ def revert_tracking_category(
     invoice.tracking_category_override = None
     db.commit()
 
-    original = invoice.po.category if invoice.po else None
+    original = None
     return {
         "invoice_id": invoice_id,
         "reverted_from": old_override,
@@ -451,10 +451,10 @@ def get_tracking_history(
     return {
         "invoice_id": invoice_id,
         "invoice_number": invoice.invoice_number,
-        "current_category": invoice.tracking_category_override or (invoice.po.category if invoice.po else None),
+        "current_category": invoice.tracking_category_override,
         "is_overridden": invoice.tracking_category_override is not None,
-        "original_category": invoice.po.category if invoice.po else None,
-        "po_number": invoice.po.po_number if invoice.po else None,
+        "original_category": None,
+        "po_number": None,
         "records": history,
     }
 

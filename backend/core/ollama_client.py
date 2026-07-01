@@ -54,6 +54,39 @@ class OllamaClient:
         available = [m.get("name", "") for m in models]
         return any(model_name in m for m in available)
 
+    async def generate(self, model: str, prompt: str, system: str = "", images: list[str] = None, format: str = "", options: dict = None) -> dict:
+        """
+        Call the Ollama /api/generate endpoint directly.
+        Returns the raw parsed JSON response dictionary.
+        """
+        client = self._get_client()
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "stream": False
+        }
+        if system:
+            payload["system"] = system
+        if images:
+            payload["images"] = images
+        if format:
+            payload["format"] = format
+        if options:
+            payload["options"] = options
+            
+        try:
+            # We don't want to timeout on long generations (unless explicitly set to a very high value)
+            resp = await client.post(
+                f"{self.host}/api/generate", 
+                json=payload, 
+                timeout=None
+            )
+            resp.raise_for_status()
+            return resp.json()
+        except Exception as e:
+            logger.error(f"Ollama generation failed: {e}")
+            raise
+
     async def health_check(self) -> dict:
         """Check Ollama server health and available models."""
         try:

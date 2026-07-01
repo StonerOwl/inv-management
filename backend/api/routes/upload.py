@@ -90,6 +90,7 @@ def create_job_with_id(job_id: str, file_paths: list[str]) -> None:
         "pending": len(file_paths),
         "status": "queued",
         "results": [],
+        "logs": [],
     }
 
 
