@@ -3,6 +3,7 @@ import { ScanLine, Boxes, CheckCircle2 } from 'lucide-react'
 
 import BatchIdentityCard from '../components/batch/BatchIdentityCard'
 import ScanBatchModal from '../components/batch/ScanBatchModal'
+import { parseBatchScan } from '../utils/batchScan'
 
 // Swap for a real API call (e.g. GET /api/projects/batches) once the Projects
 // module has a backend route -- this repo doesn't have one yet.
@@ -17,9 +18,10 @@ export default function ProjectBatches() {
   const [scanOpen, setScanOpen] = useState(false)
   const [lastScan, setLastScan] = useState(null)
 
-  const handleDetected = (value) => {
-    const match = MOCK_BATCHES.find((b) => b.batch_id === value)
-    setLastScan({ value, match })
+  const handleDetected = (raw) => {
+    const { batchId } = parseBatchScan(raw)
+    const match = MOCK_BATCHES.find((b) => b.batch_id === batchId)
+    setLastScan({ value: batchId, match })
   }
 
   return (

@@ -3,6 +3,7 @@ import { Boxes, ScanLine, Plus, Trash2, AlertTriangle, CheckCircle2, XCircle } f
 
 import BatchIdentityCard from '../components/batch/BatchIdentityCard'
 import ScanBatchModal from '../components/batch/ScanBatchModal'
+import { parseBatchScan } from '../utils/batchScan'
 
 /**
  * ⚠️ TEMPORARY LOCAL TEST HARNESS -- not part of the real app.
@@ -73,15 +74,7 @@ export default function BatchIdentityDemo() {
   }
 
   const handleDetected = (raw) => {
-    // QR payloads are JSON ({type, project_id, batch_id, project}); barcodes
-    // just encode the batch_id string directly. Handle both.
-    let candidateBatchId = raw
-    try {
-      const parsed = JSON.parse(raw)
-      if (parsed?.batch_id) candidateBatchId = parsed.batch_id
-    } catch {
-      // not JSON -- treat raw as the batch_id itself (barcode case)
-    }
+    const { batchId: candidateBatchId } = parseBatchScan(raw)
     const match = batches.find((b) => b.batchId === candidateBatchId || b.projectId === candidateBatchId)
     setScanResult({ raw: candidateBatchId, match })
   }

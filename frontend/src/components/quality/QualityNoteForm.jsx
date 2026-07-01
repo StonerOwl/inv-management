@@ -1,6 +1,9 @@
 import { useState } from 'react'
-import { ClipboardPlus, Loader2, AlertTriangle } from 'lucide-react'
+import { ClipboardPlus, Loader2, AlertTriangle, ScanLine } from 'lucide-react'
 import clsx from 'clsx'
+
+import ScanBatchModal from '../batch/ScanBatchModal'
+import { parseBatchScan } from '../../utils/batchScan'
 
 export const NOTE_TYPES = ['Inspection', 'Deviation', 'Audit', 'Calibration', 'Corrective Action']
 export const NOTE_STATUSES = ['Open', 'In Progress', 'Pending Approval', 'Resolved', 'Closed']
@@ -23,11 +26,14 @@ const emptyNote = {
   observation: '',
 }
 
-function Field({ label, children }) {
+function Field({ label, action, children }) {
   return (
     <label className="block">
-      <span className="block text-[11px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5">
-        {label}
+      <span className="flex items-center justify-between mb-1.5">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          {label}
+        </span>
+        {action}
       </span>
       {children}
     </label>
@@ -48,8 +54,22 @@ export default function QualityNoteForm({ onSave, projectOptions = [] }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [savedFlash, setSavedFlash] = useState(false)
+  const [scanOpen, setScanOpen] = useState(false)
 
   const update = (field) => (e) => setNote((n) => ({ ...n, [field]: e.target.value }))
+
+  // Reads whatever project/batch QR the Projects module prints (see
+  // BatchIdentityCard) and drops it straight into the form. Only backfills
+  // Project Name if the scan carried one and the field is still empty, so it
+  // never clobbers something the inspector already typed.
+  const handleScanDetected = (raw) => {
+    const { batchId, projectName } = parseBatchScan(raw)
+    setNote((n) => ({
+      ...n,
+      batch_id: batchId || n.batch_id,
+      project_name: n.project_name || projectName || n.project_name,
+    }))
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -72,6 +92,7 @@ export default function QualityNoteForm({ onSave, projectOptions = [] }) {
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="card-brutal-dark p-6">
       <div className="flex items-center gap-2 mb-5">
         <ClipboardPlus size={18} className="text-primary-600" />
@@ -94,10 +115,21 @@ export default function QualityNoteForm({ onSave, projectOptions = [] }) {
           </datalist>
         </Field>
 
-        <Field label="Batch ID">
+        <Field
+          label="Batch ID"
+          action={
+            <button
+              type="button"
+              onClick={() => setScanOpen(true)}
+              className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-primary-600 hover:text-primary-700"
+            >
+              <ScanLine size={11} /> Scan
+            </button>
+          }
+        >
           <input
             className={clsx(inputCls, 'font-mono')}
-            placeholder="e.g. PRSJ-2026-001-0001"
+            placeholder="e.g. PRSJ-2026-001-0001, or tap Scan"
             value={note.batch_id}
             onChange={update('batch_id')}
           />
@@ -175,5 +207,8 @@ export default function QualityNoteForm({ onSave, projectOptions = [] }) {
         {savedFlash && <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Saved ✓</span>}
       </div>
     </form>
+
+    <ScanBatchModal open={scanOpen} onClose={() => setScanOpen(false)} onDetected={handleScanDetected} />
+    </>
   )
 }
