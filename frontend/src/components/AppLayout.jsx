@@ -12,7 +12,6 @@ import { Zap, Moon, Sun, Database } from 'lucide-react';
 const MAIN_TABS = [
   { id: 'inventory', label: 'Inventory', color: 'bg-primary-600', path: '/inventory/dashboard' },
   { id: 'track-trace', label: 'Track & Trace', color: 'bg-emerald-600', path: '/tracking' },
-  { id: 'app-management', label: 'Application Management', color: 'bg-indigo-600', path: '/users' },
 ];
 
 const SIDEBAR_OPTIONS = {
@@ -28,9 +27,9 @@ const SIDEBAR_OPTIONS = {
     { label: 'Trace Process', path: '/tracking/process' },
     { label: 'Manage', path: '/tracking/manage' },
   ],
-  'app-management': [
+  'admin': [
     { label: 'User', path: '/users' },
-    { label: 'Create P/W/S', path: '/app-management/create-pws' },
+    { label: 'Create P/W/S', path: '/admin/create-pws' },
   ]
 };
 
@@ -48,7 +47,7 @@ export default function AppLayout() {
     if (path.startsWith('/inventory') || path === '/upload' || path === '/invoices') return 'inventory';
     if (path.startsWith('/tracking')) return 'track-trace';
     if (path.startsWith('/purchase')) return 'purchase';
-    if (path.startsWith('/app-management') || path === '/users') return 'app-management';
+    if (path.startsWith('/admin') || path === '/users') return 'admin';
     return 'inventory'; // Default fallback
   };
 
@@ -79,6 +78,9 @@ export default function AppLayout() {
           <Link to="/query" className="hover:text-primary-600 transition-colors">Ask AI</Link>
           <Link to="/help" className="hover:text-primary-600 transition-colors">Help & Support</Link>
           <Link to="/settings" className="hover:text-primary-600 transition-colors">Settings</Link>
+          {user?.role === 'admin' && (
+            <Link to="/users" className={clsx("transition-colors", activeTab === 'admin' ? "text-primary-600" : "hover:text-primary-600")}>admin</Link>
+          )}
         </div>
 
         <div className="flex items-center gap-4">

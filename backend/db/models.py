@@ -306,7 +306,7 @@ class PWSItem(Base):
     __tablename__ = "pws_items"
 
     id = Column(String(50), primary_key=True, index=True)
-    type = Column(String(20), index=True, nullable=False) # 'project', 'workflow', 'state'
+    type = Column(String(20), index=True, nullable=False) # 'project', 'workflow', 'stage', 'process'
     name = Column(String(200), nullable=False)
     project_code = Column(String(50), nullable=True) # E.g., the 5-digit generated ID
     created_at = Column(DateTime, server_default=func.now())
