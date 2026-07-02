@@ -1,210 +1,194 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 
 export default function WorkflowTimeline({ data }) {
-  const categoryName = data?.category || 'Unknown'
-  const workflowItems = data?.workflows || []
-  const stateItems = data?.states || []
+  const workflowItems = useMemo(() => data?.workflows || [], [data])
+  const stateItems = useMemo(() => data?.states || [], [data])
+  const currentWorkflow = data?.current_workflow || 'Not Started'
 
-  const uniqueStates = useMemo(() => {
-    const map = new Map()
-    stateItems.forEach((state) => {
-      const key = state.name
-      const existing = map.get(key)
-      if (!existing) {
-        map.set(key, {
-          ...state,
-          workflow_names: [state.workflow_name],
-        })
-      } else {
-        if (!existing.workflow_names.includes(state.workflow_name)) {
-          existing.workflow_names.push(state.workflow_name)
-        }
-        existing.completed = existing.completed || state.completed
-        if (state.completed_at) {
-          const existingDate = existing.completed_at ? new Date(existing.completed_at) : null
-          const newDate = new Date(state.completed_at)
-          if (!existingDate || newDate > existingDate) {
-            existing.completed_at = state.completed_at
-          }
-        }
-      }
+  const [expandedWorkflow, setExpandedWorkflow] = useState(null)
+
+  const workflowNodes = useMemo(() => {
+    return workflowItems.map(workflow => {
+      const stages = stateItems.filter(s => s.workflow_id === workflow.id)
+      const completed = stages.filter(s => s.completed).length
+      const total = stages.length || workflow.states?.length || 0
+      const progress = total > 0 ? Math.round((completed / total) * 100) : 0
+      const isActive = workflow.name === currentWorkflow
+
+      const stageNodes = (workflow.states || stages).map((state, idx) => ({
+        id: state.id || idx,
+        name: state.name,
+        completed: state.completed || false,
+        completedAt: state.completed_at || null,
+        description: state.description || null,
+        processes: [],
+      }))
+
+      return { ...workflow, stages: stageNodes, completedCount: completed, total, progress, isActive }
     })
-    return Array.from(map.values())
-  }, [stateItems])
+  }, [workflowItems, stateItems, currentWorkflow])
 
-  const workflowProgress = useMemo(() => {
-    return workflowItems.map((workflow) => ({
-      ...workflow,
-      totalStates: workflow.states?.length || 0,
-      completedCount: (workflow.states || []).filter((state) => state.completed).length,
-    }))
-  }, [workflowItems])
-
-  // Compute elapsed time based on completed states
-  const elapsedTimeStr = useMemo(() => {
-    const completedStates = uniqueStates.filter((state) => state.completed && state.completed_at).map((state) => new Date(state.completed_at).getTime())
-    if (completedStates.length < 2) return 'Just started'
-
-    const first = Math.min(...completedStates)
-    const latest = Math.max(...completedStates)
-    const diffMs = latest - first
-    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-    const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24)
-    const minutes = Math.floor((diffMs / 1000 / 60) % 60)
-    let str = ''
-    if (days > 0) str += `${days}d `
-    if (hours > 0) str += `${hours}h `
-    str += `${minutes}m`
-    return str
-  }, [uniqueStates])
-
-  const formatDate = (dateObj) => {
-    if (!dateObj) return null
-    return {
-      date: dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      time: dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-    }
+  const toggleExpand = (id) => {
+    setExpandedWorkflow(prev => (prev === id ? null : id))
   }
 
-  const currentStage = data?.invoice?.current_stage || 'Not Started'
-  const currentWorkflow = data?.current_workflow || 'Not Started'
-  const batchId = data?.invoice?.invoice_number || `Batch #${data?.invoice_id || 'N/A'}`
-  const product = data?.invoice?.description || data?.invoice?.category || categoryName
-  const stateColumnCount = Math.max(uniqueStates.length, 1)
-  const workflowColumnCount = Math.max(workflowProgress.length, 1)
-
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 overflow-hidden flex flex-col gap-8">
-      <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 shrink-0">
-        <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        Track & Track Timeline
-      </h2>
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
+          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 0v10m0-10a2 2 0 012 2h2a2 2 0 012-2V7" />
+          </svg>
+        </div>
+        <div>
+          <h2 className="text-sm font-bold text-gray-900">Workflow Timeline</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Click a workflow node to expand its stages</p>
+        </div>
+      </div>
 
-      <div className="grid gap-8">
-        <section className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">State Progress</p>
-              <p className="text-sm text-gray-700">Overview of each state across the project.</p>
-            </div>
-            <div className="text-right text-xs text-gray-500">
-              <div>Current State</div>
-              <div className="font-semibold text-gray-900">{currentStage}</div>
-            </div>
-          </div>
-          <div className="relative overflow-hidden">
-            <div className="absolute left-0 right-0 top-10 h-0.5 bg-gray-200 z-0"></div>
-            <div className={`grid gap-6 w-full py-4 px-4`} style={{ gridTemplateColumns: `repeat(${stateColumnCount}, minmax(0, 1fr))` }}>
-              {uniqueStates.map((state, idx) => {
-                const isComplete = state.completed
-                const isCurrentStage = state.name === currentStage
-                const formattedDate = formatDate(state.completed_at ? new Date(state.completed_at) : null)
-                return (
-                  <div key={state.name} className="relative z-10 flex flex-col items-center">
-                    <div className={`w-12 h-12 rounded-full border-2 shadow-sm flex items-center justify-center mb-3 bg-white ${isCurrentStage ? 'border-blue-500 text-blue-600 ring-2 ring-blue-100' : isComplete ? 'border-green-500 text-green-600' : 'border-blue-500 text-blue-600'}`}>
-                      {isComplete ? (
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                      ) : (
-                        <span className="font-bold text-sm">{idx + 1}</span>
-                      )}
-                    </div>
-                    <div className={`text-sm font-semibold text-center ${isCurrentStage ? 'text-blue-600' : 'text-gray-800'}`}>{state.name}</div>
-                    {formattedDate ? (
-                      <div className="text-[10px] text-gray-400 mt-2 text-center truncate w-full">{formattedDate.date}</div>
-                    ) : (
-                      <div className="text-[10px] text-gray-400 mt-2 uppercase">Pending</div>
+      {workflowNodes.length === 0 ? (
+        <div className="p-10 text-center text-sm text-gray-400">
+          No workflows defined for this project.
+        </div>
+      ) : (
+        <div className="px-6 py-8 overflow-x-auto">
+
+          <div className="relative flex items-start min-w-max">
+            {workflowNodes.map((workflow, idx) => {
+              const isLast = idx === workflowNodes.length - 1
+              const isExpanded = expandedWorkflow === workflow.id
+
+              return (
+                <div key={workflow.id} className="relative flex items-start">
+                  <div className="flex flex-col items-center">
+                    <button
+                      onClick={() => toggleExpand(workflow.id)}
+                      className={`group relative flex flex-col items-center focus:outline-none w-36`}
+                    >
+                      <div className={`
+                        w-14 h-14 rounded-full border-2 flex items-center justify-center shadow-sm
+                        transition-all duration-200 group-hover:scale-105
+                        ${workflow.isActive
+                          ? 'border-blue-500 bg-blue-600 text-white ring-4 ring-blue-100'
+                          : workflow.progress === 100
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-600'
+                            : 'border-gray-300 bg-white text-gray-600 group-hover:border-blue-400'
+                        }
+                      `}>
+                        {workflow.progress === 100 ? (
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <span className="text-sm font-black">{idx + 1}</span>
+                        )}
+                      </div>
+
+                      <div className="mt-3 text-center px-1">
+                        <p className={`text-xs font-bold leading-tight ${workflow.isActive ? 'text-blue-600' : 'text-gray-800'}`}>
+                          {workflow.name}
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-1">{workflow.completedCount}/{workflow.total} stages</p>
+
+                        <div className="mt-2 w-20 mx-auto bg-gray-100 rounded-full h-1 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              workflow.progress === 100 ? 'bg-emerald-500' : workflow.isActive ? 'bg-blue-500' : 'bg-gray-300'
+                            }`}
+                            style={{ width: `${workflow.progress}%` }}
+                          />
+                        </div>
+
+                        <div className={`mt-2 inline-flex items-center gap-1 text-[10px] font-semibold transition-colors ${
+                          isExpanded ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-600'
+                        }`}>
+                          {isExpanded ? (
+                            <>
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                              Collapse
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                              {workflow.stages.length} stage{workflow.stages.length !== 1 ? 's' : ''}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+
+                    {isExpanded && workflow.stages.length > 0 && (
+                      <div className="mt-4 w-36 px-1">
+                        <div className="relative flex flex-col gap-0">
+                          <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-gray-200 z-0"></div>
+                          {workflow.stages.map((stage, sIdx) => (
+                            <div key={stage.id} className="relative z-10 flex items-start gap-3 py-2">
+                              <div className={`
+                                w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 text-[10px] font-bold bg-white
+                                ${stage.completed ? 'border-emerald-400 text-emerald-600' : 'border-gray-300 text-gray-500'}
+                              `}>
+                                {stage.completed ? (
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                ) : (
+                                  <span>{sIdx + 1}</span>
+                                )}
+                              </div>
+                              <div className="pt-1 min-w-0">
+                                <p className={`text-[11px] font-semibold leading-tight ${stage.completed ? 'text-emerald-700' : 'text-gray-700'}`}>
+                                  {stage.name}
+                                </p>
+                                {stage.completedAt && (
+                                  <p className="text-[9px] text-gray-400 mt-0.5">
+                                    {new Date(stage.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                  </p>
+                                )}
+                                {!stage.completed && (
+                                  <p className="text-[9px] text-gray-300 mt-0.5 uppercase tracking-wide">Pending</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
-                )
-              })}
-            </div>
-          </div>
-        </section>
 
-        <section className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Workflow Progress</p>
-              <p className="text-sm text-gray-700">Shows process progress inside each workflow.</p>
-            </div>
-            <div className="text-right text-xs text-gray-500">
-              <div>Current Workflow</div>
-              <div className="font-semibold text-gray-900">{currentWorkflow}</div>
-            </div>
-          </div>
-          <div className="relative overflow-hidden">
-            <div className="absolute left-0 right-0 top-10 h-0.5 bg-gray-200 z-0"></div>
-            <div className={`grid gap-6 w-full py-4 px-4`} style={{ gridTemplateColumns: `repeat(${workflowColumnCount}, minmax(0, 1fr))` }}>
-              {workflowProgress.map((workflow, idx) => {
-                const total = workflow.totalStates || 1
-                const completedCount = workflow.completedCount || 0
-                const progress = Math.round((completedCount / total) * 100)
-                const isCurrentWorkflow = workflow.name === currentWorkflow
-                return (
-                  <div key={workflow.id} className="relative z-10 flex flex-col items-center">
-                    <div className={`w-12 h-12 rounded-full border-2 shadow-sm flex items-center justify-center mb-3 bg-white ${isCurrentWorkflow ? 'border-blue-500 text-blue-600 ring-2 ring-blue-100' : progress === 100 ? 'border-green-500 text-green-600' : 'border-blue-500 text-blue-600'}`}>
-                      {progress === 100 ? (
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                      ) : (
-                        <span className="font-bold text-sm">{idx + 1}</span>
-                      )}
+                  {!isLast && (
+                    <div className="flex items-center mt-7 mx-1">
+                      <div className="w-10 h-0.5 bg-gray-200 relative">
+                        <div
+                          className="h-full bg-blue-400 transition-all duration-700"
+                          style={{ width: `${workflow.progress}%` }}
+                        />
+                      </div>
+                      <svg className="w-3 h-3 text-gray-300 flex-shrink-0 -ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
                     </div>
-                    <div className={`text-sm font-semibold text-center ${isCurrentWorkflow ? 'text-blue-600' : 'text-gray-800'}`}>{workflow.name}</div>
-                    <div className="text-[10px] text-gray-500 text-center mt-1">{completedCount}/{total} states</div>
-                    <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-blue-500 h-1.5" style={{ width: `${progress}%` }} />
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
-        </section>
-      </div>
 
-      <div className="mt-auto shrink-0 bg-gray-50/50 rounded-xl border border-gray-100 p-5 flex flex-wrap gap-6 justify-between items-center text-sm">
-        <div className="flex items-center gap-3">
-          <div className="text-gray-400">
-             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-          </div>
-          <div>
-            <p className="text-gray-500 text-xs font-semibold">Batch ID</p>
-            <p className="font-bold text-blue-600">{batchId}</p>
+          <div className="mt-8 pt-5 border-t border-gray-100 flex flex-wrap gap-5 text-xs text-gray-500">
+            <LegendItem color="bg-blue-600" label="Active workflow" />
+            <LegendItem color="bg-emerald-500" label="Completed" />
+            <LegendItem color="bg-gray-300" label="Not started" />
           </div>
         </div>
+      )}
+    </div>
+  )
+}
 
-        <div className="flex items-center gap-3">
-          <div className="text-gray-400">
-             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-          </div>
-          <div>
-            <p className="text-gray-500 text-xs font-semibold">Product</p>
-            <p className="font-bold text-blue-600">{product}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="text-gray-400">
-             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-          </div>
-          <div>
-            <p className="text-gray-500 text-xs font-semibold">Current Stage</p>
-            <p className="font-bold text-blue-600">{currentStage}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="text-green-500">
-             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          </div>
-          <div>
-            <p className="text-gray-500 text-xs font-semibold">Total Elapsed Time</p>
-            <p className="font-bold text-gray-900">{elapsedTimeStr}</p>
-          </div>
-        </div>
-      </div>
+function LegendItem({ color, label }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`w-2.5 h-2.5 rounded-full ${color}`}></span>
+      <span className="text-gray-500">{label}</span>
     </div>
   )
 }
