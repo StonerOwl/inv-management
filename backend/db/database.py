@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 
 import config
-from db.models import Base, Category
+from db.models import Base, Category, User
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +55,30 @@ def init_db() -> None:
             logger.info("Increased hsn_code length in line_items")
     except Exception:
         pass
+
+
+def seed_default_admin() -> None:
+    """Create a default admin user (admin/admin) if no users exist yet."""
+    from core.security import get_password_hash
+    db = SessionLocal()
+    try:
+        user_count = db.query(User).count()
+        if user_count == 0:
+            admin = User(
+                username="admin",
+                hashed_password=get_password_hash("admin"),
+                role="admin",
+                can_upload=True,
+                is_active=True,
+            )
+            db.add(admin)
+            db.commit()
+            logger.info("Seeded default admin user (admin/admin)")
+    except Exception as e:
+        db.rollback()
+        logger.warning(f"Failed to seed admin user: {e}")
+    finally:
+        db.close()
 
 
 def seed_default_categories() -> None:

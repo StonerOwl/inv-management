@@ -23,7 +23,8 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-clear
+export TERM="${TERM:-xterm}"
+clear || true
 echo -e "${YELLOW}"
 echo " ██╗███╗   ██╗██╗   ██╗ ██████╗ ██╗ ██████╗███████╗    █████╗ ██╗"
 echo " ██║████╗  ██║██║   ██║██╔═══██╗██║██╔════╝██╔════╝   ██╔══██╗██║"
@@ -161,7 +162,7 @@ echo ""
 echo "[4/6] Waiting for Ollama to be ready..."
 MAX_RETRIES=30
 RETRY_COUNT=0
-until docker exec invoiceai-ollama curl -sf http://localhost:11434/api/tags > /dev/null 2>&1; do
+until docker exec invoiceai-ollama ollama list > /dev/null 2>&1; do
     RETRY_COUNT=$((RETRY_COUNT + 1))
     if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
         echo "⚠️  Ollama did not start in time. You may need to pull models manually."

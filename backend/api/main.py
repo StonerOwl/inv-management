@@ -10,7 +10,7 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from db.database import init_db, seed_default_categories
+from db.database import init_db, seed_default_categories, seed_default_admin
 from api.routes import upload, invoices, stats, json_files, query, auth, products, categories, tracking, pws, notes
 from api.dependencies import get_current_active_user
 
@@ -29,6 +29,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Invoice Scanner API...")
     init_db()
     seed_default_categories()
+    seed_default_admin()
     logger.info("Database initialized.")
     yield
     # Cleanup persistent HTTP client on shutdown

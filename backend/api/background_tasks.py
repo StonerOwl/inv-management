@@ -65,21 +65,25 @@ async def process_batch(job_id: str, file_paths: list[str]) -> None:
     from core.ollama_client import ollama
     try:
         model_ok = await ollama.is_model_available(config.OLLAMA_TEXT_MODEL)
-    except Exception:
+    except Exception as e:
+        msg = f"Cannot connect to Ollama at {config.OLLAMA_HOST}. Make sure Ollama is running: `ollama serve`"
         job["status"] = "failed"
         job["results"].append({
             "file_name": "*",
             "status": "error",
-            "error": f"Cannot connect to Ollama at {config.OLLAMA_HOST}. Make sure Ollama is running: `ollama serve`",
+            "error": msg,
         })
+        _add_log(job_id, f"ERROR: {msg}")
         return
     if not model_ok:
+        msg = f"Ollama model '{config.OLLAMA_TEXT_MODEL}' is not available. Please pull it first: `ollama pull {config.OLLAMA_TEXT_MODEL}`"
         job["status"] = "failed"
         job["results"].append({
             "file_name": "*",
             "status": "error",
-            "error": f"Ollama model '{config.OLLAMA_TEXT_MODEL}' is not available. Please pull it first: `ollama pull {config.OLLAMA_TEXT_MODEL}`",
+            "error": msg,
         })
+        _add_log(job_id, f"ERROR: {msg}")
         return
 
     # Process files sequentially — on CPU-only hardware, concurrent Ollama
