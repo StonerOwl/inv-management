@@ -645,7 +645,9 @@ export default function InventoryDashboard() {
               >
                 <option value="">-- Choose a Project --</option>
                 {projects.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                  <option key={p.id} value={p.id}>
+                    {p.name} {p.project_code ? `(ID: ${p.project_code}, Batch: ${p.batch_id || 'N/A'})` : ''}
+                  </option>
                 ))}
               </select>
             </div>

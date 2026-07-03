@@ -157,6 +157,7 @@ export const addTrackingNote = (invoiceId, data) => api.put(`/tracking/manage/in
 export const getPWSItems = () => api.get('/pws/items')
 export const createPWSItem = (data) => api.post('/pws/items', data)
 export const updatePWSItem = (id, data) => api.put(`/pws/items/${id}`, data)
+export const deletePWSItem = (id) => api.delete(`/pws/items/${id}`)
 export const getPWSAssignments = () => api.get('/pws/assignments')
 export const createPWSAssignment = (data) => api.post('/pws/assignments', data)
 export const deletePWSAssignment = (parentId, childId) => api.delete(`/pws/assignments/${parentId}/${childId}`)

@@ -2,13 +2,18 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FolderPlus, GitCommit, GitBranch, XCircle, CheckCircle, ChevronRight, Plus, Settings2, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 import QRCode from 'react-qr-code';
-import { getPWSItems, createPWSItem, updatePWSItem, getPWSAssignments, createPWSAssignment, deletePWSAssignment } from '../api/client';
+import { getPWSItems, createPWSItem, updatePWSItem, deletePWSItem, getPWSAssignments, createPWSAssignment, deletePWSAssignment } from '../api/client';
 import NoteTarget from '../components/NoteTarget';
 
 export default function CreatePWS() {
   const [viewMode, setViewMode] = useState('tree'); // 'tree', 'create', 'manage'
   const [activeModal, setActiveModal] = useState(null);
   const [name, setName] = useState('');
+  const [product, setProduct] = useState('');
+  const [workOrder, setWorkOrder] = useState('');
+  const [category, setCategory] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [targetDate, setTargetDate] = useState('');
   const [createdItems, setCreatedItems] = useState([]);
   
   // Management State
@@ -80,6 +85,11 @@ export default function CreatePWS() {
   const handleCloseModal = () => {
     setActiveModal(null);
     setName('');
+    setProduct('');
+    setWorkOrder('');
+    setCategory('');
+    setStartDate('');
+    setTargetDate('');
   };
 
   const handleCreate = async (e) => {
@@ -92,6 +102,14 @@ export default function CreatePWS() {
       name: name.trim(),
     };
 
+    if (activeModal === 'project') {
+      newItem.product = product;
+      newItem.work_order = workOrder;
+      newItem.category = category;
+      newItem.start_date = startDate;
+      newItem.target_date = targetDate;
+    }
+
     try {
       const { data } = await createPWSItem(newItem);
       setCreatedItems((prev) => [data, ...prev]);
@@ -101,6 +119,17 @@ export default function CreatePWS() {
     }
   };
 
+  const handleDeleteProject = async (projectId) => {
+    if (!window.confirm("Are you sure you want to delete this project? This will also remove any of its hierarchy assignments.")) return;
+    try {
+      await deletePWSItem(projectId);
+      setCreatedItems(prev => prev.filter(item => item.id !== projectId));
+      setSelectedProjectId(null);
+    } catch (err) {
+      console.error('Failed to delete project:', err);
+      alert('Failed to delete project. Please check the console.');
+    }
+  };
   const assignWorkflow = async (projectId) => {
     if (!workflowToAssign) return;
     try {
@@ -248,12 +277,35 @@ export default function CreatePWS() {
             ) : (
               projects.map(p => (
                 <details key={p.id} className="group border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800" open>
-                  <summary className="p-4 font-black text-xl text-primary-600 flex items-center gap-3 cursor-pointer outline-none select-none hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors list-none [&::-webkit-details-marker]:hidden">
-                    <ChevronRight size={24} className="group-open:rotate-90 transition-transform text-gray-400"/>
-                    <FolderPlus size={24}/> {p.name}
+                  <summary className="p-4 font-black text-xl text-primary-600 flex justify-between items-center cursor-pointer outline-none select-none hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors list-none [&::-webkit-details-marker]:hidden">
+                    <div className="flex items-center gap-3">
+                      <ChevronRight size={24} className="group-open:rotate-90 transition-transform text-gray-400"/>
+                      <FolderPlus size={24}/> {p.name}
+                    </div>
+                    {p.project_code && (
+                      <div className="flex items-center gap-3 text-xs tracking-wider">
+                        <span className="bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 px-3 py-1 border border-primary-200 dark:border-primary-800">
+                          ID: {p.project_code}
+                        </span>
+                        {p.batch_id && (
+                          <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-3 py-1 border border-gray-200 dark:border-gray-700">
+                            BATCH: {p.batch_id}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </summary>
                   
                   <div className="pl-6 pb-6 pr-6">
+                    {(p.product || p.work_order || p.category || p.start_date || p.target_date) && (
+                      <div className="mb-6 bg-gray-50 dark:bg-gray-900/50 p-4 border border-gray-100 dark:border-gray-800 flex flex-wrap gap-x-8 gap-y-4 text-sm">
+                        {p.product && <div><span className="text-gray-400 text-[10px] block mb-0.5 uppercase font-bold tracking-wider">Product</span><span className="font-bold text-gray-800 dark:text-gray-200">{p.product}</span></div>}
+                        {p.work_order && <div><span className="text-gray-400 text-[10px] block mb-0.5 uppercase font-bold tracking-wider">Work Order</span><span className="font-bold text-gray-800 dark:text-gray-200">{p.work_order}</span></div>}
+                        {p.category && <div><span className="text-gray-400 text-[10px] block mb-0.5 uppercase font-bold tracking-wider">Category</span><span className="font-bold text-gray-800 dark:text-gray-200">{p.category}</span></div>}
+                        {p.start_date && <div><span className="text-gray-400 text-[10px] block mb-0.5 uppercase font-bold tracking-wider">Start Date</span><span className="font-bold text-gray-800 dark:text-gray-200">{p.start_date}</span></div>}
+                        {p.target_date && <div><span className="text-gray-400 text-[10px] block mb-0.5 uppercase font-bold tracking-wider">Target Date</span><span className="font-bold text-gray-800 dark:text-gray-200">{p.target_date}</span></div>}
+                      </div>
+                    )}
                     <div className="pl-4 space-y-4 border-l-2 border-gray-200 dark:border-gray-700">
                       {(projectWorkflows[p.id] || []).map(wId => {
                         const wf = workflows.find(w => w.id === wId);
@@ -416,32 +468,45 @@ export default function CreatePWS() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                      {!projectIds[selectedProjectId] ? (
-                        <button 
-                          onClick={async () => {
-                            const newId = Math.floor(10000 + Math.random() * 90000).toString();
-                            try {
-                              await updatePWSItem(selectedProjectId, { project_code: newId });
-                              setProjectIds(prev => ({...prev, [selectedProjectId]: newId}));
-                            } catch (err) {
-                              console.error("Failed to save Project ID", err);
-                            }
-                          }}
-                          className="px-4 py-2 border border-primary-600 text-primary-600 font-black text-xs hover:bg-[#FCD535] hover:border-[#FCD535] hover:text-black transition-colors"
-                        >
-                          Generate ID & QR
-                        </button>
-                      ) : (
-                        <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-2 border border-gray-200 dark:border-gray-700">
-                          <div className="flex flex-col items-end justify-center pr-4 border-r border-gray-200 dark:border-gray-700">
-                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Project ID</span>
-                            <span className="text-xl font-black text-primary-600 tracking-widest">{projectIds[selectedProjectId]}</span>
+                      {(() => {
+                        const p = projects.find(proj => proj.id === selectedProjectId);
+                        if (!p || !p.project_code) return null;
+                        return (
+                          <div className="flex gap-6">
+                            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 min-w-[300px]">
+                              <h4 className="text-sm font-black text-gray-900 dark:text-gray-100 mb-4">Project Batch Details</h4>
+                              <div className="grid grid-cols-[100px_1fr] gap-y-2 text-xs">
+                                <div className="text-gray-500">Project Name</div><div className="font-bold">{p.name}</div>
+                                <div className="text-gray-500">Project ID</div><div className="font-bold text-primary-600">{p.project_code}</div>
+                                <div className="text-gray-500">Batch ID</div><div className="font-bold text-primary-600">{p.batch_id}</div>
+                                <div className="text-gray-500">Product</div><div className="font-bold">{p.product}</div>
+                                <div className="text-gray-500">Work Order</div><div className="font-bold">{p.work_order}</div>
+                                <div className="text-gray-500">Category</div><div className="font-bold">{p.category}</div>
+                                <div className="text-gray-500">Start Date</div><div className="font-bold">{p.start_date}</div>
+                                <div className="text-gray-500">Target Date</div><div className="font-bold">{p.target_date}</div>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-4">
+                              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4">
+                                <div className="text-xs text-gray-500 mb-1">Project ID</div>
+                                <div className="text-xl font-black text-primary-600 mb-2">{p.project_code}</div>
+                                <QRCode value={p.project_code} size={64} />
+                              </div>
+                              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4">
+                                <div className="text-xs text-gray-500 mb-1">Batch ID</div>
+                                <div className="text-xl font-black text-primary-600 mb-2">{p.batch_id}</div>
+                                <QRCode value={p.batch_id} size={64} />
+                              </div>
+                              <button
+                                onClick={() => handleDeleteProject(p.id)}
+                                className="mt-auto px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800 font-bold text-sm transition-colors flex items-center justify-center gap-2"
+                              >
+                                <Trash2 size={16} /> Delete Project
+                              </button>
+                            </div>
                           </div>
-                          <div className="bg-white p-1">
-                            <QRCode value={projectIds[selectedProjectId]} size={48} />
-                          </div>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -629,6 +694,30 @@ export default function CreatePWS() {
                     required
                   />
                 </div>
+                {activeModal === 'project' && (
+                  <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div>
+                      <label className="block text-xs font-bold tracking-normal text-gray-500 dark:text-gray-400 mb-2 uppercase">Product</label>
+                      <input type="text" value={product} onChange={e => setProduct(e.target.value)} className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2 outline-none focus:border-primary-600 transition-colors font-sans text-sm font-bold" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold tracking-normal text-gray-500 dark:text-gray-400 mb-2 uppercase">Work Order</label>
+                      <input type="text" value={workOrder} onChange={e => setWorkOrder(e.target.value)} className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2 outline-none focus:border-primary-600 transition-colors font-sans text-sm font-bold" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold tracking-normal text-gray-500 dark:text-gray-400 mb-2 uppercase">Category</label>
+                      <input type="text" value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2 outline-none focus:border-primary-600 transition-colors font-sans text-sm font-bold" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold tracking-normal text-gray-500 dark:text-gray-400 mb-2 uppercase">Start Date</label>
+                      <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2 outline-none focus:border-primary-600 transition-colors font-sans text-sm font-bold" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold tracking-normal text-gray-500 dark:text-gray-400 mb-2 uppercase">Target Date</label>
+                      <input type="date" value={targetDate} onChange={e => setTargetDate(e.target.value)} className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2 outline-none focus:border-primary-600 transition-colors font-sans text-sm font-bold" />
+                    </div>
+                  </div>
+                )}
                 <div className="flex justify-end gap-4 pt-4 border-t border-gray-100 dark:border-gray-800">
                   <button type="button" onClick={handleCloseModal} className="px-6 py-2 text-gray-500 font-bold tracking-normal text-xs hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
                     CANCEL

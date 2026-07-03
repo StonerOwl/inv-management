@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -8,10 +8,18 @@ from db.models import PWSItem, PWSAssignment, Invoice, InvoiceProjectAssignment
 
 router = APIRouter(prefix="/pws", tags=["PWS Management"])
 
+from datetime import datetime
+
 class PWSItemCreate(BaseModel):
     id: str
     type: str
     name: str
+    product: Optional[str] = None
+    work_order: Optional[str] = None
+    category: Optional[str] = None
+    start_date: Optional[str] = None
+    target_date: Optional[str] = None
+    location: Optional[str] = None
 
 class PWSAssignmentCreate(BaseModel):
     parent_id: str
@@ -30,7 +38,33 @@ def get_pws_items(db: Session = Depends(get_db)):
 
 @router.post("/items", response_model=Dict[str, Any])
 def create_pws_item(item: PWSItemCreate, db: Session = Depends(get_db)):
-    db_item = PWSItem(id=item.id, type=item.type, name=item.name)
+    db_item = PWSItem(
+        id=item.id,
+        type=item.type,
+        name=item.name,
+        product=item.product,
+        work_order=item.work_order,
+        category=item.category,
+        start_date=item.start_date,
+        target_date=item.target_date,
+        location=item.location
+    )
+    
+    if item.type == 'project':
+        current_year = datetime.now().year
+        # Count existing projects for this year to get sequential number
+        # A simple approach is just counting all projects and adding 1, since this is a demo
+        count = db.query(PWSItem).filter(PWSItem.type == 'project').count()
+        seq = count + 1
+        
+        # E.g. PRSJ-2026-001-B001
+        project_id = f"PRSJ-{current_year}-{seq:03d}-B001"
+        # E.g. PBSJ-2026-001
+        batch_id = f"PBSJ-{current_year}-{seq:03d}"
+        
+        db_item.project_code = project_id
+        db_item.batch_id = batch_id
+
     db.add(db_item)
     try:
         db.commit()
@@ -166,5 +200,18 @@ def delete_pws_assignment(parent_id: str, child_id: str, db: Session = Depends(g
         raise HTTPException(status_code=404, detail="Assignment not found")
     
     db.delete(assignment)
+    db.commit()
+    return {"status": "success"}
+
+@router.delete("/items/{item_id}")
+def delete_pws_item(item_id: str, db: Session = Depends(get_db)):
+    item = db.query(PWSItem).filter(PWSItem.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    # Also delete associated assignments where this item is parent or child
+    db.query(PWSAssignment).filter((PWSAssignment.parent_id == item_id) | (PWSAssignment.child_id == item_id)).delete()
+    
+    db.delete(item)
     db.commit()
     return {"status": "success"}
