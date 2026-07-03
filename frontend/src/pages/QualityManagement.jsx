@@ -41,14 +41,15 @@ function Pill({ value, styles }) {
 // running / route not registered) so the page still demos meaningfully.
 function seedNotes() {
   const base = [
-    { project: 'Coconut Oil', batch: 'PRSJ-2026-001-0001', type: 'Inspection', status: 'Resolved', severity: 'Low', submitter: 'a.sharma' },
-    { project: 'Coconut Oil', batch: 'PRSJ-2026-001-0002', type: 'Deviation', status: 'Pending Approval', severity: 'High', submitter: 'r.iyer' },
-    { project: 'Almond Milk', batch: 'PRSJ-2026-004-0007', type: 'Audit', status: 'In Progress', severity: 'Medium', submitter: 'a.sharma' },
+    { project: 'Coconut Oil', projectId: 'PRSJ-2026-001', batch: 'PRSJ-2026-001-0001', type: 'Inspection', status: 'Resolved', severity: 'Low', submitter: 'a.sharma' },
+    { project: 'Coconut Oil', projectId: 'PRSJ-2026-001', batch: 'PRSJ-2026-001-0002', type: 'Deviation', status: 'Pending Approval', severity: 'High', submitter: 'r.iyer' },
+    { project: 'Almond Milk', projectId: 'PRSJ-2026-004', batch: 'PRSJ-2026-004-0007', type: 'Audit', status: 'In Progress', severity: 'Medium', submitter: 'a.sharma' },
   ]
   return base.map((n, i) => ({
     id: i + 1,
     note_id: `QN-${String(i + 1).padStart(4, '0')}`,
     project_name: n.project,
+    project_id: n.projectId,
     batch_id: n.batch,
     note_type: n.type,
     status: n.status,
@@ -145,6 +146,7 @@ export default function QualityManagement() {
 
   const recentColumns = [
     { key: 'note_id', label: 'Note ID' },
+    { key: 'project_id', label: 'Project ID', render: (r) => <span className="font-mono text-xs">{r.project_id || '—'}</span> },
     { key: 'created_at', label: 'Date & Time', render: (r) => format(new Date(r.created_at), 'MMM d, yyyy · h:mm a') },
     { key: 'note_type', label: 'Note Type' },
     { key: 'status', label: 'Status', render: (r) => <Pill value={r.status} styles={STATUS_STYLE} /> },
@@ -190,11 +192,11 @@ export default function QualityManagement() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 mb-8">
-        <div className="xl:col-span-2">
-          <QualityNoteForm onSave={handleSave} projectOptions={projectOptions} />
-        </div>
         <div className="xl:col-span-3">
           <EvidenceDropzone key={dropzoneKey} onChange={setEvidence} />
+        </div>
+        <div className="xl:col-span-2">
+          <QualityNoteForm onSave={handleSave} projectOptions={projectOptions} />
         </div>
       </div>
 
@@ -204,7 +206,7 @@ export default function QualityManagement() {
           icon={ListChecks}
           rows={notes}
           columns={recentColumns}
-          searchKeys={['note_id', 'note_type', 'submitter', 'batch_id', 'project_name']}
+          searchKeys={['note_id', 'note_type', 'submitter', 'batch_id', 'project_name', 'project_id']}
           statusOptions={NOTE_STATUSES}
           emptyMessage="No quality notes logged yet."
         />

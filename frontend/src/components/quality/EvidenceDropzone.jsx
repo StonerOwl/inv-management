@@ -1,7 +1,18 @@
 import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { UploadCloud, X, Image, Thermometer, ScanEye, FileSpreadsheet, BadgeCheck } from 'lucide-react'
+import { UploadCloud, X, Image, Thermometer, ScanEye, FileSpreadsheet, BadgeCheck, FileText, FileType2, File as FileGeneric } from 'lucide-react'
 import clsx from 'clsx'
+
+// Per-file icon so a mixed category (e.g. "QA Device Report", which accepts
+// PDF/DOCX/XLS) still shows what each attached file actually is at a glance.
+function fileTypeIcon(fileName = '') {
+  const ext = fileName.split('.').pop()?.toLowerCase()
+  if (ext === 'pdf') return { Icon: FileText, cls: 'text-red-500' }
+  if (['xls', 'xlsx', 'csv'].includes(ext)) return { Icon: FileSpreadsheet, cls: 'text-emerald-600' }
+  if (['doc', 'docx'].includes(ext)) return { Icon: FileType2, cls: 'text-blue-600' }
+  if (['jpg', 'jpeg', 'png', 'webp', 'tiff', 'tif', 'bmp'].includes(ext)) return { Icon: Image, cls: 'text-primary-600' }
+  return { Icon: FileGeneric, cls: 'text-gray-400' }
+}
 
 // Each category maps to its own dropzone so uploads are visually categorized
 // as soon as they land, per the Evidence & Attachments requirement.
@@ -61,18 +72,24 @@ function CategoryDropzone({ category, files, onAdd, onRemove }) {
 
       {files.length > 0 && (
         <ul className="mt-3 space-y-1.5 max-h-32 overflow-y-auto pr-1">
-          {files.map((file, idx) => (
-            <li key={`${file.name}-${idx}`} className="flex items-center justify-between gap-2 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded px-2 py-1.5">
-              <span className="text-[11px] text-gray-700 dark:text-gray-300 truncate">{file.name}</span>
-              <button
-                type="button"
-                onClick={() => onRemove(category.key, idx)}
-                className="text-gray-400 hover:text-red-500 shrink-0"
-              >
-                <X size={12} />
-              </button>
-            </li>
-          ))}
+          {files.map((file, idx) => {
+            const { Icon: FileIcon, cls } = fileTypeIcon(file.name)
+            return (
+              <li key={`${file.name}-${idx}`} className="flex items-center justify-between gap-2 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded px-2 py-1.5">
+                <span className="flex items-center gap-1.5 min-w-0">
+                  <FileIcon size={12} className={clsx('shrink-0', cls)} />
+                  <span className="text-[11px] text-gray-700 dark:text-gray-300 truncate">{file.name}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onRemove(category.key, idx)}
+                  className="text-gray-400 hover:text-red-500 shrink-0"
+                >
+                  <X size={12} />
+                </button>
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>

@@ -17,6 +17,7 @@ const PROCESSES = ['Visual Inspection', 'Lab Testing', 'Weight Verification', 'L
 
 const emptyNote = {
   project_name: '',
+  project_id: '',
   batch_id: '',
   workflow_stage: WORKFLOW_STAGES[0],
   process: PROCESSES[0],
@@ -59,15 +60,18 @@ export default function QualityNoteForm({ onSave, projectOptions = [] }) {
   const update = (field) => (e) => setNote((n) => ({ ...n, [field]: e.target.value }))
 
   // Reads whatever project/batch QR the Projects module prints (see
-  // BatchIdentityCard) and drops it straight into the form. Only backfills
-  // Project Name if the scan carried one and the field is still empty, so it
-  // never clobbers something the inspector already typed.
+  // BatchIdentityCard, or the Project ID QR from Create PWS) and drops it
+  // straight into the form -- Project ID, Project Name, Batch ID, and
+  // Workflow Stage if the code carries one. Only backfills fields that are
+  // still empty, so it never clobbers something the inspector already typed.
   const handleScanDetected = (raw) => {
-    const { batchId, projectName } = parseBatchScan(raw)
+    const { batchId, projectId, projectName, workflowStage } = parseBatchScan(raw)
     setNote((n) => ({
       ...n,
       batch_id: batchId || n.batch_id,
+      project_id: projectId || n.project_id,
       project_name: n.project_name || projectName || n.project_name,
+      workflow_stage: workflowStage || n.workflow_stage,
     }))
   }
 
@@ -116,7 +120,7 @@ export default function QualityNoteForm({ onSave, projectOptions = [] }) {
         </Field>
 
         <Field
-          label="Batch ID"
+          label="Project ID"
           action={
             <button
               type="button"
@@ -127,6 +131,15 @@ export default function QualityNoteForm({ onSave, projectOptions = [] }) {
             </button>
           }
         >
+          <input
+            className={clsx(inputCls, 'font-mono')}
+            placeholder="Auto-filled by Scan, or type it"
+            value={note.project_id}
+            onChange={update('project_id')}
+          />
+        </Field>
+
+        <Field label="Batch ID">
           <input
             className={clsx(inputCls, 'font-mono')}
             placeholder="e.g. PRSJ-2026-001-0001, or tap Scan"
