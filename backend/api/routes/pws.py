@@ -129,22 +129,35 @@ def get_project_analytics(project_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Project not found")
 
     workflow_assignments = db.query(PWSAssignment).filter_by(parent_id=project_id).all()
-    workflow_ids = [assignment.child_id for assignment in workflow_assignments if assignment.child_id]
+    workflow_ids = [a.child_id for a in workflow_assignments if a.child_id]
     workflows = db.query(PWSItem).filter(PWSItem.id.in_(workflow_ids), PWSItem.type == "workflow").all()
 
     workflow_details = []
     for workflow in workflows:
-        state_assignments = db.query(PWSAssignment).filter_by(parent_id=workflow.id).all()
-        state_ids = [assignment.child_id for assignment in state_assignments if assignment.child_id]
-        states = db.query(PWSItem).filter(PWSItem.id.in_(state_ids), PWSItem.type == "state").all()
+        stage_assignments = db.query(PWSAssignment).filter_by(parent_id=workflow.id).all()
+        stage_ids = [a.child_id for a in stage_assignments if a.child_id]
+        stages = db.query(PWSItem).filter(PWSItem.id.in_(stage_ids), PWSItem.type == "stage").all()
+
+        stage_details = []
+        for stage in stages:
+            process_assignments = db.query(PWSAssignment).filter_by(parent_id=stage.id).all()
+            process_ids = [a.child_id for a in process_assignments if a.child_id]
+            processes = db.query(PWSItem).filter(PWSItem.id.in_(process_ids), PWSItem.type == "process").all()
+
+            stage_details.append({
+                "id": stage.id,
+                "name": stage.name,
+                "processes": [{"id": p.id, "name": p.name} for p in processes],
+            })
+
         workflow_details.append({
             "id": workflow.id,
             "name": workflow.name,
-            "states": [{"id": state.id, "name": state.name} for state in states],
+            "stages": stage_details,
         })
 
     invoice_assignments = db.query(InvoiceProjectAssignment).filter_by(project_id=project_id).order_by(InvoiceProjectAssignment.created_at.desc()).all()
-    invoice_ids = [assignment.invoice_id for assignment in invoice_assignments]
+    invoice_ids = [a.invoice_id for a in invoice_assignments]
     invoices = db.query(Invoice).filter(Invoice.id.in_(invoice_ids)).all() if invoice_ids else []
 
     invoice_summaries = []
@@ -158,6 +171,12 @@ def get_project_analytics(project_id: str, db: Session = Depends(get_db)):
         else:
             progress = 0
 
+        first_stage_name = (
+            workflow_details[0]["stages"][0]["name"]
+            if workflow_details and workflow_details[0].get("stages")
+            else "Not started"
+        )
+
         invoice_summaries.append({
             "id": invoice.id,
             "invoice_number": invoice.invoice_number or f"Batch #{invoice.id}",
@@ -166,7 +185,7 @@ def get_project_analytics(project_id: str, db: Session = Depends(get_db)):
             "status": invoice.status,
             "grand_total": invoice.grand_total,
             "progress": progress,
-            "current_stage": workflow_details[0]["states"][0]["name"] if workflow_details and workflow_details[0].get("states") else "Not started",
+            "current_stage": first_stage_name,
         })
 
     return {

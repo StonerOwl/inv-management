@@ -2,35 +2,24 @@ import React, { useMemo, useState } from 'react'
 
 export default function WorkflowTimeline({ data }) {
   const workflowItems = useMemo(() => data?.workflows || [], [data])
-  const stateItems = useMemo(() => data?.states || [], [data])
   const currentWorkflow = data?.current_workflow || 'Not Started'
-
   const [expandedWorkflow, setExpandedWorkflow] = useState(null)
+  const [expandedStage, setExpandedStage] = useState(null)
 
   const workflowNodes = useMemo(() => {
-    return workflowItems.map(workflow => {
-      const stages = stateItems.filter(s => s.workflow_id === workflow.id)
+    return workflowItems.map((workflow, idx) => {
+      const stages = workflow.stages || []
       const completed = stages.filter(s => s.completed).length
-      const total = stages.length || workflow.states?.length || 0
+      const total = stages.length
       const progress = total > 0 ? Math.round((completed / total) * 100) : 0
       const isActive = workflow.name === currentWorkflow
 
-      const stageNodes = (workflow.states || stages).map((state, idx) => ({
-        id: state.id || idx,
-        name: state.name,
-        completed: state.completed || false,
-        completedAt: state.completed_at || null,
-        description: state.description || null,
-        processes: [],
-      }))
-
-      return { ...workflow, stages: stageNodes, completedCount: completed, total, progress, isActive }
+      return { ...workflow, stages, completedCount: completed, total, progress, isActive }
     })
-  }, [workflowItems, stateItems, currentWorkflow])
+  }, [workflowItems, currentWorkflow])
 
-  const toggleExpand = (id) => {
-    setExpandedWorkflow(prev => (prev === id ? null : id))
-  }
+  const toggleWorkflow = (id) => setExpandedWorkflow(prev => prev === id ? null : id)
+  const toggleStage = (id) => setExpandedStage(prev => prev === id ? null : id)
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -42,17 +31,14 @@ export default function WorkflowTimeline({ data }) {
         </div>
         <div>
           <h2 className="text-sm font-bold text-gray-900">Workflow Timeline</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Click a workflow node to expand its stages</p>
+          <p className="text-xs text-gray-400 mt-0.5">Click a workflow node to expand its stages and processes</p>
         </div>
       </div>
 
       {workflowNodes.length === 0 ? (
-        <div className="p-10 text-center text-sm text-gray-400">
-          No workflows defined for this project.
-        </div>
+        <div className="p-10 text-center text-sm text-gray-400">No workflows defined for this project.</div>
       ) : (
         <div className="px-6 py-8 overflow-x-auto">
-
           <div className="relative flex items-start min-w-max">
             {workflowNodes.map((workflow, idx) => {
               const isLast = idx === workflowNodes.length - 1
@@ -62,8 +48,8 @@ export default function WorkflowTimeline({ data }) {
                 <div key={workflow.id} className="relative flex items-start">
                   <div className="flex flex-col items-center">
                     <button
-                      onClick={() => toggleExpand(workflow.id)}
-                      className={`group relative flex flex-col items-center focus:outline-none w-36`}
+                      onClick={() => toggleWorkflow(workflow.id)}
+                      className="group relative flex flex-col items-center focus:outline-none w-40"
                     >
                       <div className={`
                         w-14 h-14 rounded-full border-2 flex items-center justify-center shadow-sm
@@ -88,80 +74,89 @@ export default function WorkflowTimeline({ data }) {
                         <p className={`text-xs font-bold leading-tight ${workflow.isActive ? 'text-blue-600' : 'text-gray-800'}`}>
                           {workflow.name}
                         </p>
-                        <p className="text-[10px] text-gray-400 mt-1">{workflow.completedCount}/{workflow.total} stages</p>
+                        <p className="text-[10px] text-gray-400 mt-1">{workflow.total} stage{workflow.total !== 1 ? 's' : ''}</p>
 
                         <div className="mt-2 w-20 mx-auto bg-gray-100 rounded-full h-1 overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all duration-500 ${
-                              workflow.progress === 100 ? 'bg-emerald-500' : workflow.isActive ? 'bg-blue-500' : 'bg-gray-300'
-                            }`}
+                            className={`h-full rounded-full transition-all duration-500 ${workflow.progress === 100 ? 'bg-emerald-500' : workflow.isActive ? 'bg-blue-500' : 'bg-gray-300'
+                              }`}
                             style={{ width: `${workflow.progress}%` }}
                           />
                         </div>
 
-                        <div className={`mt-2 inline-flex items-center gap-1 text-[10px] font-semibold transition-colors ${
-                          isExpanded ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-600'
-                        }`}>
+                        <div className={`mt-2 inline-flex items-center gap-1 text-[10px] font-semibold transition-colors ${isExpanded ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-600'
+                          }`}>
                           {isExpanded ? (
-                            <>
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
-                              Collapse
-                            </>
+                            <><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>Collapse</>
                           ) : (
-                            <>
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                              {workflow.stages.length} stage{workflow.stages.length !== 1 ? 's' : ''}
-                            </>
+                            <><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>{workflow.total} stage{workflow.total !== 1 ? 's' : ''}</>
                           )}
                         </div>
                       </div>
                     </button>
 
                     {isExpanded && workflow.stages.length > 0 && (
-                      <div className="mt-4 w-36 px-1">
+                      <div className="mt-4 w-40 px-1">
                         <div className="relative flex flex-col gap-0">
                           <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-gray-200 z-0"></div>
-                          {workflow.stages.map((stage, sIdx) => (
-                            <div key={stage.id} className="relative z-10 flex items-start gap-3 py-2">
-                              <div className={`
-                                w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 text-[10px] font-bold bg-white
-                                ${stage.completed ? 'border-emerald-400 text-emerald-600' : 'border-gray-300 text-gray-500'}
-                              `}>
-                                {stage.completed ? (
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                ) : (
-                                  <span>{sIdx + 1}</span>
+                          {workflow.stages.map((stage, sIdx) => {
+                            const stageExpanded = expandedStage === stage.id
+                            const hasProcesses = (stage.processes || []).length > 0
+
+                            return (
+                              <div key={stage.id} className="relative z-10">
+                                <div className="flex items-start gap-3 py-2">
+                                  <button
+                                    onClick={() => hasProcesses && toggleStage(stage.id)}
+                                    className={`w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 text-[10px] font-bold bg-white transition-colors
+                                      ${stage.completed ? 'border-emerald-400 text-emerald-600' : 'border-gray-300 text-gray-500'}
+                                      ${hasProcesses ? 'cursor-pointer hover:border-blue-400' : 'cursor-default'}
+                                    `}
+                                  >
+                                    {stage.completed ? (
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    ) : (
+                                      <span>{sIdx + 1}</span>
+                                    )}
+                                  </button>
+                                  <div className="pt-1 min-w-0 flex-1">
+                                    <p className={`text-[11px] font-semibold leading-tight ${stage.completed ? 'text-emerald-700' : 'text-gray-700'}`}>
+                                      {stage.name}
+                                    </p>
+                                    {hasProcesses && (
+                                      <p className={`text-[9px] mt-0.5 ${stageExpanded ? 'text-blue-500' : 'text-gray-400'}`}>
+                                        {stage.processes.length} process{stage.processes.length !== 1 ? 'es' : ''}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {stageExpanded && (
+                                  <div className="ml-8 mb-2 flex flex-col gap-1">
+                                    {stage.processes.map((proc, pIdx) => (
+                                      <div key={proc.id} className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-lg px-2 py-1.5">
+                                        <div className="w-4 h-4 rounded-full bg-violet-100 border border-violet-200 flex items-center justify-center flex-shrink-0">
+                                          <span className="text-[8px] font-black text-violet-600">{pIdx + 1}</span>
+                                        </div>
+                                        <p className="text-[10px] font-semibold text-gray-600 leading-tight">{proc.name}</p>
+                                      </div>
+                                    ))}
+                                  </div>
                                 )}
                               </div>
-                              <div className="pt-1 min-w-0">
-                                <p className={`text-[11px] font-semibold leading-tight ${stage.completed ? 'text-emerald-700' : 'text-gray-700'}`}>
-                                  {stage.name}
-                                </p>
-                                {stage.completedAt && (
-                                  <p className="text-[9px] text-gray-400 mt-0.5">
-                                    {new Date(stage.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                  </p>
-                                )}
-                                {!stage.completed && (
-                                  <p className="text-[9px] text-gray-300 mt-0.5 uppercase tracking-wide">Pending</p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       </div>
                     )}
                   </div>
 
                   {!isLast && (
-                    <div className="flex items-center mt-7 mx-1">
+                    <div className="flex items-center mx-1 self-start mt-7">
                       <div className="w-10 h-0.5 bg-gray-200 relative">
-                        <div
-                          className="h-full bg-blue-400 transition-all duration-700"
-                          style={{ width: `${workflow.progress}%` }}
-                        />
+                        <div className="h-full bg-blue-400 transition-all duration-700" style={{ width: `${workflow.progress}%` }} />
                       </div>
                       <svg className="w-3 h-3 text-gray-300 flex-shrink-0 -ml-0.5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
@@ -177,6 +172,7 @@ export default function WorkflowTimeline({ data }) {
             <LegendItem color="bg-blue-600" label="Active workflow" />
             <LegendItem color="bg-emerald-500" label="Completed" />
             <LegendItem color="bg-gray-300" label="Not started" />
+            <LegendItem color="bg-violet-200" label="Process" />
           </div>
         </div>
       )}

@@ -3,6 +3,7 @@ import { getPWSItems, getProjectAnalytics } from '../../api/client'
 import WorkflowTimeline from './WorkflowTimeline'
 import AnalyticsCards from './AnalyticsCards'
 import StageProcessList from './StageProcessList'
+import AnalyticsCharts from './AnalyticsCharts'
 
 const NAV_TABS = [
   { id: 'summary', label: 'Summary' },
@@ -52,40 +53,30 @@ export default function TrackTracePage() {
 
   const timelineData = projectAnalytics
     ? {
-        category: projectAnalytics.project?.name || selectedProject?.name,
-        invoice: {
-          invoice_id: projectAnalytics.invoices?.[0]?.id || null,
-          invoice_number: projectAnalytics.invoices?.[0]?.invoice_number || `Batch #${selectedProject?.project_code || selectedProject?.id}`,
-          description: projectAnalytics.invoices?.[0]?.description || projectAnalytics.project?.name,
-          current_stage: projectAnalytics.invoices?.[0]?.current_stage || projectAnalytics.workflows?.[0]?.states?.[0]?.name || 'Not started',
-          progress: projectAnalytics.invoices?.[0]?.progress || 0,
-        },
-        workflows: projectAnalytics.workflows || [],
-        processes: (projectAnalytics.workflows || []).flatMap(workflow =>
-          (workflow.states || []).map((state, index) => ({
-            id: state.id,
-            workflow_id: workflow.id,
-            workflow_name: workflow.name,
-            name: state.name,
-            description: `State ${index + 1} in ${workflow.name}`,
-            completed: false,
-            completed_at: null,
-          }))
-        ),
-        states: (projectAnalytics.workflows || []).flatMap(workflow =>
-          (workflow.states || []).map((state, index) => ({
-            id: state.id,
-            workflow_id: workflow.id,
-            workflow_name: workflow.name,
-            name: state.name,
-            description: `State ${index + 1} in ${workflow.name}`,
-            completed: false,
-            completed_at: null,
-          }))
-        ),
-        current_workflow: projectAnalytics.workflows?.[0]?.name || 'Not started',
-        invoices: projectAnalytics.invoices || [],
-      }
+      category: projectAnalytics.project?.name || selectedProject?.name,
+      invoice: {
+        invoice_id: projectAnalytics.invoices?.[0]?.id || null,
+        invoice_number: projectAnalytics.invoices?.[0]?.invoice_number || `Batch #${selectedProject?.project_code || selectedProject?.id}`,
+        description: projectAnalytics.invoices?.[0]?.description || projectAnalytics.project?.name,
+        current_stage: projectAnalytics.invoices?.[0]?.current_stage || projectAnalytics.workflows?.[0]?.stages?.[0]?.name || 'Not started',
+        progress: projectAnalytics.invoices?.[0]?.progress || 0,
+      },
+      workflows: projectAnalytics.workflows || [],
+      states: (projectAnalytics.workflows || []).flatMap(workflow =>
+        (workflow.stages || []).map((stage, index) => ({
+          id: stage.id,
+          workflow_id: workflow.id,
+          workflow_name: workflow.name,
+          name: stage.name,
+          description: `Stage ${index + 1} in ${workflow.name}`,
+          completed: false,
+          completed_at: null,
+          processes: stage.processes || [],
+        }))
+      ),
+      current_workflow: projectAnalytics.workflows?.[0]?.name || 'Not started',
+      invoices: projectAnalytics.invoices || [],
+    }
     : null
 
   if (loading) {
@@ -129,11 +120,10 @@ export default function TrackTracePage() {
             <button
               key={tab.id}
               onClick={() => handleTabClick(tab.id)}
-              className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-all duration-150 focus:outline-none ${
-                activeTab === tab.id
+              className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-all duration-150 focus:outline-none ${activeTab === tab.id
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300'
-              }`}
+                }`}
             >
               {tab.label}
             </button>
@@ -184,6 +174,7 @@ export default function TrackTracePage() {
             </div>
 
             <AnalyticsCards data={timelineData} />
+            <AnalyticsCharts data={timelineData} />
           </section>
 
           <section ref={analyticsRef} className="scroll-mt-24 px-6">

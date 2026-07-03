@@ -1,14 +1,12 @@
 import React from 'react'
 
 export default function AnalyticsCards({ data }) {
-  const processes = data?.processes || []
-  const states = data?.states || []
   const workflows = data?.workflows || []
 
-  const uniqueStageNames = new Set(states.map(s => s.name))
-  const totalStages = uniqueStageNames.size
-  const totalProcesses = processes.length
   const totalWorkflows = workflows.length
+  const totalStages = workflows.reduce((sum, wf) => sum + (wf.stages || []).length, 0)
+  const totalProcesses = workflows.reduce((sum, wf) =>
+    sum + (wf.stages || []).reduce((s2, stage) => s2 + (stage.processes || []).length, 0), 0)
   const avgStagesPerWorkflow = totalWorkflows > 0 ? (totalStages / totalWorkflows).toFixed(1) : 0
 
   const cards = [
@@ -36,7 +34,7 @@ export default function AnalyticsCards({ data }) {
       bg: 'bg-indigo-50',
       border: 'border-indigo-100',
       text: 'text-indigo-600',
-      sub: 'Unique stages across workflows',
+      sub: 'Total stages across workflows',
     },
     {
       label: 'Processes',

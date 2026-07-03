@@ -5,6 +5,7 @@ import Upload from './pages/Upload'
 import InvoiceList from './pages/InvoiceList'
 import InvoiceDetail from './pages/InvoiceDetail'
 import TrackTracePage from './pages/analytics/TrackTracePage'
+import FarmToForkPage from './pages/analytics/FarmToForkPage'
 import Modify from './pages/Modify'
 import NaturalQuery from './pages/NaturalQuery'
 import BackgroundPreview from './pages/BackgroundPreview'
@@ -67,7 +68,7 @@ export default function App() {
                   <Route path="/tracking/manage" element={<ManageTracking />} />
                   {/* Admin Routes */}
                   <Route path="/users" element={<ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute>} />
-                  <Route path="/admin/create-pws" element={<ProtectedRoute requiredRole="admin"><CreatePWS /></ProtectedRoute>} />
+                  <Route path="/app-management/create-pws" element={<ProtectedRoute requiredRole="admin"><CreatePWS /></ProtectedRoute>} />
 
                   {/* Invoice Management */}
                   <Route path="/invoices" element={<InvoiceList />} />
@@ -75,6 +76,7 @@ export default function App() {
 
                   {/* Other Existing Routes */}
                   <Route path="/analytics" element={<TrackTracePage />} />
+                  <Route path="/analytics/farm-to-fork" element={<FarmToForkPage />} />
                   <Route path="/preview-bg" element={<BackgroundPreview />} />
                   <Route path="/modify" element={<ProtectedRoute requireUpload={true}><Modify /></ProtectedRoute>} />
                   <Route path="/item-codes" element={<ItemCodes />} />

@@ -15,18 +15,18 @@ export default function CreatePWS() {
   const [startDate, setStartDate] = useState('');
   const [targetDate, setTargetDate] = useState('');
   const [createdItems, setCreatedItems] = useState([]);
-  
+
   // Management State
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [projectWorkflows, setProjectWorkflows] = useState({}); // { projectId: [workflowId, ...] }
   const [workflowStages, setWorkflowStages] = useState({}); // { workflowId: [stageId, ...] }
   const [stageProcesses, setStageProcesses] = useState({}); // { stageId: [processId, ...] }
-  
+
   // Dropdown states for assignment
   const [workflowToAssign, setWorkflowToAssign] = useState('');
   const [stageToAssign, setStageToAssign] = useState({}); // { workflowId: stageIdToAssign }
   const [processToAssign, setProcessToAssign] = useState({}); // { stageId: processIdToAssign }
-  
+
   // Project ID and QR state
   const [projectIds, setProjectIds] = useState({}); // { projectId: 5-digit-id }
 
@@ -36,7 +36,7 @@ export default function CreatePWS() {
         getPWSItems(),
         getPWSAssignments()
       ]);
-      
+
       setCreatedItems(items || []);
 
       // Load existing project codes
@@ -47,7 +47,7 @@ export default function CreatePWS() {
         }
       });
       setProjectIds(existingCodes);
-      
+
       // Rebuild assignment mappings
       const pwMap = {};
       const wsMap = {};
@@ -97,7 +97,7 @@ export default function CreatePWS() {
     if (!name.trim()) return;
 
     const newItem = {
-      id: `pws_${Date.now()}`,
+      id: `pws_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       type: activeModal,
       name: name.trim(),
     };
@@ -187,7 +187,7 @@ export default function CreatePWS() {
   };
 
   const getIcon = (type, size = 24) => {
-    switch(type) {
+    switch (type) {
       case 'project': return <FolderPlus size={size} />;
       case 'workflow': return <GitBranch size={size} />;
       case 'stage': return <GitCommit size={size} />;
@@ -208,8 +208,8 @@ export default function CreatePWS() {
         <div className="text-xs text-gray-600 dark:text-gray-400 italic">No {typeLabel}s created yet</div>
       ) : (
         items.map((item, idx) => (
-          <NoteTarget 
-            key={item.id} 
+          <NoteTarget
+            key={item.id}
             targetType={item.type}
             targetId={item.id}
             className={clsx("flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700", idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900')}
@@ -228,7 +228,7 @@ export default function CreatePWS() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col -m-8 p-8 relative">
       <div className="max-w-7xl mx-auto w-full pb-20">
-        
+
         {/* Header */}
         <div className="mb-12 border-b border-gray-200 dark:border-gray-700 pb-6 flex items-end justify-between">
           <div>
@@ -239,10 +239,10 @@ export default function CreatePWS() {
               Project · Workflow · Stage · Process
             </div>
           </div>
-          
+
           <div className="flex gap-4">
             {viewMode !== 'tree' && (
-              <button 
+              <button
                 onClick={() => setViewMode('tree')}
                 className="flex items-center gap-2 border border-gray-300 text-gray-600 px-6 py-3 font-black tracking-normal text-xs hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
@@ -250,7 +250,7 @@ export default function CreatePWS() {
               </button>
             )}
             {viewMode !== 'create' && (
-              <button 
+              <button
                 onClick={() => setViewMode('create')}
                 className="flex items-center gap-2 border border-primary-600 text-primary-600 px-6 py-3 font-black tracking-normal text-xs hover:bg-[#FCD535] hover:border-[#FCD535] hover:text-black transition-colors"
               >
@@ -258,7 +258,7 @@ export default function CreatePWS() {
               </button>
             )}
             {viewMode !== 'manage' && (
-              <button 
+              <button
                 onClick={() => setViewMode('manage')}
                 className="flex items-center gap-2 bg-primary-600 text-white px-6 py-3 font-black tracking-normal text-xs hover:bg-primary-700 transition-colors"
               >
@@ -279,8 +279,8 @@ export default function CreatePWS() {
                 <details key={p.id} className="group border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800" open>
                   <summary className="p-4 font-black text-xl text-primary-600 flex justify-between items-center cursor-pointer outline-none select-none hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors list-none [&::-webkit-details-marker]:hidden">
                     <div className="flex items-center gap-3">
-                      <ChevronRight size={24} className="group-open:rotate-90 transition-transform text-gray-400"/>
-                      <FolderPlus size={24}/> {p.name}
+                      <ChevronRight size={24} className="group-open:rotate-90 transition-transform text-gray-400" />
+                      <FolderPlus size={24} /> {p.name}
                     </div>
                     {p.project_code && (
                       <div className="flex items-center gap-3 text-xs tracking-wider">
@@ -295,7 +295,7 @@ export default function CreatePWS() {
                       </div>
                     )}
                   </summary>
-                  
+
                   <div className="pl-6 pb-6 pr-6">
                     {(p.product || p.work_order || p.category || p.start_date || p.target_date) && (
                       <div className="mb-6 bg-gray-50 dark:bg-gray-900/50 p-4 border border-gray-100 dark:border-gray-800 flex flex-wrap gap-x-8 gap-y-4 text-sm">
@@ -314,10 +314,10 @@ export default function CreatePWS() {
                           <details key={wId} className="group/wf" open>
                             <summary className="py-2 font-bold text-lg text-gray-800 dark:text-gray-200 flex items-center gap-3 cursor-pointer outline-none select-none hover:text-primary-600 transition-colors list-none [&::-webkit-details-marker]:hidden relative">
                               <div className="absolute -left-[18px] top-1/2 w-4 h-0.5 bg-gray-200 dark:bg-gray-700"></div>
-                              <ChevronRight size={18} className="group-open/wf:rotate-90 transition-transform text-gray-400"/>
-                              <GitBranch size={18} className="text-gray-500"/> {wf.name}
+                              <ChevronRight size={18} className="group-open/wf:rotate-90 transition-transform text-gray-400" />
+                              <GitBranch size={18} className="text-gray-500" /> {wf.name}
                             </summary>
-                            
+
                             <div className="pl-8">
                               <div className="pl-4 space-y-3 border-l-2 border-gray-100 dark:border-gray-800">
                                 {(workflowStages[wId] || []).map(sId => {
@@ -327,10 +327,10 @@ export default function CreatePWS() {
                                     <details key={sId} className="group/st" open>
                                       <summary className="py-1.5 font-semibold text-md text-gray-700 dark:text-gray-300 flex items-center gap-3 cursor-pointer outline-none select-none hover:text-primary-600 transition-colors list-none [&::-webkit-details-marker]:hidden relative">
                                         <div className="absolute -left-[18px] top-1/2 w-4 h-0.5 bg-gray-100 dark:bg-gray-800"></div>
-                                        <ChevronRight size={16} className="group-open/st:rotate-90 transition-transform text-gray-400"/>
-                                        <GitCommit size={16} className="text-emerald-500"/> {st.name}
+                                        <ChevronRight size={16} className="group-open/st:rotate-90 transition-transform text-gray-400" />
+                                        <GitCommit size={16} className="text-emerald-500" /> {st.name}
                                       </summary>
-                                      
+
                                       <div className="pl-8 py-2">
                                         <div className="pl-4 space-y-2 border-l border-dashed border-gray-200 dark:border-gray-700">
                                           {(stageProcesses[sId] || []).length === 0 ? (
@@ -345,7 +345,7 @@ export default function CreatePWS() {
                                               return (
                                                 <div key={procId} className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-2 relative">
                                                   <div className="absolute -left-[17px] top-1/2 w-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-                                                  <Settings2 size={14} className="text-gray-400"/> {proc.name}
+                                                  <Settings2 size={14} className="text-gray-400" /> {proc.name}
                                                 </div>
                                               )
                                             })
@@ -384,7 +384,7 @@ export default function CreatePWS() {
                 </div>
                 <h2 className="text-lg font-black tracking-normal">Create Workflow</h2>
               </button>
-              
+
               <button onClick={() => handleOpenModal('stage')} className="card-brutal-dark border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center gap-4 hover:border-primary-600 hover:bg-[#FCD535]/5 transition-all group">
                 <div className="w-16 h-16 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 group-hover:border-primary-600 group-hover:text-primary-600 flex items-center justify-center transition-colors">
                   <GitCommit size={32} />
@@ -421,11 +421,11 @@ export default function CreatePWS() {
               <div className="flex flex-col gap-2">
                 {projects.length === 0 ? (
                   <div className="p-8 border border-gray-200 dark:border-gray-700 border-dashed text-center text-gray-600 dark:text-gray-400 text-sm font-bold">
-                    No projects found.<br/>Go to Create view first.
+                    No projects found.<br />Go to Create view first.
                   </div>
                 ) : (
                   projects.map(p => (
-                    <NoteTarget 
+                    <NoteTarget
                       key={p.id}
                       as="button"
                       targetType="project"
@@ -433,8 +433,8 @@ export default function CreatePWS() {
                       onClick={() => setSelectedProjectId(p.id)}
                       className={clsx(
                         "p-4 border text-left flex items-center justify-between transition-colors",
-                        selectedProjectId === p.id 
-                          ? "border-primary-600 bg-[#FCD535]/10 text-primary-600" 
+                        selectedProjectId === p.id
+                          ? "border-primary-600 bg-[#FCD535]/10 text-primary-600"
                           : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-500 text-gray-500"
                       )}
                     >
@@ -516,7 +516,7 @@ export default function CreatePWS() {
                         <label className="block text-xs font-bold tracking-normal text-gray-400 mb-2 ">
                           Assign Workflow
                         </label>
-                        <select 
+                        <select
                           value={workflowToAssign}
                           onChange={(e) => setWorkflowToAssign(e.target.value)}
                           className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2 outline-none focus:border-primary-600 font-sans text-sm appearance-none"
@@ -526,10 +526,10 @@ export default function CreatePWS() {
                             .filter(w => !(projectWorkflows[selectedProjectId] || []).includes(w.id))
                             .map(w => (
                               <option key={w.id} value={w.id}>{w.name}</option>
-                          ))}
+                            ))}
                         </select>
                       </div>
-                      <button 
+                      <button
                         onClick={() => assignWorkflow(selectedProjectId)}
                         disabled={!workflowToAssign}
                         className="h-10 px-6 bg-[#FCD535] text-black font-black  tracking-normal text-xs hover:bg-white dark:bg-gray-800 disabled:opacity-50 transition-colors flex items-center gap-2"
@@ -551,7 +551,7 @@ export default function CreatePWS() {
                             <NoteTarget as="div" targetType="workflow" targetId={wId} key={wId} className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 relative">
                               <div className="flex justify-between items-start mb-4 pb-4 border-b border-gray-100 dark:border-gray-800">
                                 <div className="flex items-center gap-3 text-gray-900 dark:text-gray-100">
-                                  <div className="p-2 bg-[#222] text-primary-600"><GitBranch size={16}/></div>
+                                  <div className="p-2 bg-[#222] text-primary-600"><GitBranch size={16} /></div>
                                   <span className="font-bold text-lg">{wf.name}</span>
                                 </div>
                                 <button onClick={() => removeAssignment(selectedProjectId, wId, setProjectWorkflows)} className="text-red-500 hover:text-red-400 p-2">
@@ -562,9 +562,9 @@ export default function CreatePWS() {
                               <div className="pl-6 border-l-2 border-gray-100 dark:border-gray-800">
                                 <div className="flex items-end gap-3 mb-4">
                                   <div className="flex-1">
-                                    <select 
+                                    <select
                                       value={stageToAssign[wId] || ''}
-                                      onChange={(e) => setStageToAssign({...stageToAssign, [wId]: e.target.value})}
+                                      onChange={(e) => setStageToAssign({ ...stageToAssign, [wId]: e.target.value })}
                                       className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-400 px-3 py-1.5 outline-none focus:border-primary-600 font-sans text-xs appearance-none"
                                     >
                                       <option value="">-- Assign Stage --</option>
@@ -572,10 +572,10 @@ export default function CreatePWS() {
                                         .filter(s => !(workflowStages[wId] || []).includes(s.id))
                                         .map(s => (
                                           <option key={s.id} value={s.id}>{s.name}</option>
-                                      ))}
+                                        ))}
                                     </select>
                                   </div>
-                                  <button 
+                                  <button
                                     onClick={() => assignStage(wId)}
                                     disabled={!stageToAssign[wId]}
                                     className="h-8 px-4 border border-gray-200 dark:border-gray-700 text-gray-500 font-bold tracking-normal text-[10px] hover:text-primary-600 hover:border-primary-600 disabled:opacity-50 transition-colors"
@@ -595,7 +595,7 @@ export default function CreatePWS() {
                                         <div key={sId} className="border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4">
                                           <NoteTarget as="div" targetType="stage" targetId={sId} className="flex items-center justify-between mb-4">
                                             <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 text-md font-bold">
-                                              <div className="text-emerald-500"><GitCommit size={14}/></div>
+                                              <div className="text-emerald-500"><GitCommit size={14} /></div>
                                               {st.name}
                                             </div>
                                             <button onClick={() => removeAssignment(wId, sId, setWorkflowStages)} className="text-gray-400 hover:text-red-500">
@@ -606,9 +606,9 @@ export default function CreatePWS() {
                                           <div className="pl-6 border-l-2 border-gray-200 dark:border-gray-700">
                                             <div className="flex items-end gap-3 mb-4">
                                               <div className="flex-1">
-                                                <select 
+                                                <select
                                                   value={processToAssign[sId] || ''}
-                                                  onChange={(e) => setProcessToAssign({...processToAssign, [sId]: e.target.value})}
+                                                  onChange={(e) => setProcessToAssign({ ...processToAssign, [sId]: e.target.value })}
                                                   className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-400 px-3 py-1 outline-none focus:border-primary-600 font-sans text-xs appearance-none"
                                                 >
                                                   <option value="">-- Assign Process --</option>
@@ -616,10 +616,10 @@ export default function CreatePWS() {
                                                     .filter(p => !(stageProcesses[sId] || []).includes(p.id))
                                                     .map(p => (
                                                       <option key={p.id} value={p.id}>{p.name}</option>
-                                                  ))}
+                                                    ))}
                                                 </select>
                                               </div>
-                                              <button 
+                                              <button
                                                 onClick={() => assignProcess(sId)}
                                                 disabled={!processToAssign[sId]}
                                                 className="h-6 px-3 border border-gray-200 dark:border-gray-700 text-gray-500 font-bold tracking-normal text-[10px] hover:text-primary-600 hover:border-primary-600 disabled:opacity-50 transition-colors"
@@ -638,7 +638,7 @@ export default function CreatePWS() {
                                                   return (
                                                     <NoteTarget as="div" targetType="process" targetId={pId} key={pId} className="flex items-center justify-between bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800 p-2 pr-3">
                                                       <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm font-bold">
-                                                        <Settings2 size={12}/>
+                                                        <Settings2 size={12} />
                                                         {proc.name}
                                                       </div>
                                                       <button onClick={() => removeAssignment(sId, pId, setStageProcesses)} className="text-gray-400 hover:text-red-500">
