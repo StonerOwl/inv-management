@@ -65,9 +65,9 @@ export default function App() {
                   <Route path="/tracking/workflow" element={<TraceWorkflow />} />
                   <Route path="/tracking/process" element={<TraceProcess />} />
                   <Route path="/tracking/manage" element={<ManageTracking />} />
-                  {/* App Management Routes */}
+                  {/* Admin Routes */}
                   <Route path="/users" element={<ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute>} />
-                  <Route path="/app-management/create-pws" element={<CreatePWS />} />
+                  <Route path="/admin/create-pws" element={<ProtectedRoute requiredRole="admin"><CreatePWS /></ProtectedRoute>} />
 
                   {/* Invoice Management */}
                   <Route path="/invoices" element={<InvoiceList />} />

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { listUsers, createUser, updateUser } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { Plus, Edit, ShieldCheck, Upload } from 'lucide-react'
@@ -148,15 +149,15 @@ export default function UserManagement() {
       </div>
 
       {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-gray-800/80 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-[8px_8px_0px_0px_rgba(252,213,53,1)] w-full max-w-md overflow-hidden">
-            <div className="p-6 border-b-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      {isModalOpen && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/50 dark:bg-gray-900/80 backdrop-blur-sm p-4 sm:p-6 overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-[8px_8px_0px_0px_rgba(252,213,53,1)] w-full max-w-md flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0">
               <h2 className="text-2xl font-black text-primary-600 tracking-tighter ">
                 {editingUser ? 'EDIT USER' : 'CREATE USER'}
               </h2>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 font-semibold tracking-normal mb-2">Username</label>
                 <input
@@ -227,7 +228,7 @@ export default function UserManagement() {
                 </div>
               )}
 
-              <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -244,7 +245,8 @@ export default function UserManagement() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
