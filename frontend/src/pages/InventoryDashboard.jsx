@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone'
 import { Download, Trash2, Search, Filter, Plus, FileText, Upload as UploadIcon, AlertCircle, CheckCircle, Loader2, RefreshCw, Layers, Edit, Eye, XCircle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext';
-import { listInvoices, getUnmatchedInvoices, deleteInvoice, updateInvoice, uploadInvoices, getJobStatus, getPWSItems, getPWSAssignments } from '../api/client'
+import { listInvoices, getUnmatchedInvoices, deleteInvoice, updateInvoice, uploadInvoices, getJobStatus, getPWSItems, getPWSAssignments, assignInvoiceToProject } from '../api/client'
 import { useUpload } from '../context/UploadContext'
 import NoteTarget from '../components/NoteTarget';
 
@@ -169,9 +169,17 @@ export default function InventoryDashboard() {
     fetchData()
   }, [fetchData])
 
-  const handleRegisterSave = () => {
-    alert("Invoice successfully registered to the selected project hierarchy!")
-    closeRegisterPopup()
+  const handleRegisterSave = async () => {
+    if (!selectedInvoice || !selectedProjectId) return
+
+    try {
+      await assignInvoiceToProject(selectedProjectId, selectedInvoice.id)
+      alert("Invoice successfully registered to the selected project hierarchy!")
+      closeRegisterPopup()
+    } catch (err) {
+      console.error("Failed to register invoice to project:", err)
+      alert("Failed to register invoice to the selected project.")
+    }
   }
 
   const projects = pwsItems.filter(i => i.type === 'project')

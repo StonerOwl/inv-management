@@ -7,10 +7,12 @@ import { useNotes } from '../context/NotesContext';
 import NotesDrawer from './NotesDrawer';
 import { ErrorBoundary } from './ErrorBoundary';
 import clsx from 'clsx';
-import { Zap, Moon, Sun, Database } from 'lucide-react';
+import { Zap, Moon, Sun, Database, Layers } from 'lucide-react';
 
 const MAIN_TABS = [
   { id: 'inventory', label: 'Inventory', color: 'bg-primary-600', path: '/inventory/dashboard' },
+  { id: 'app-management', label: 'Application Management', color: 'bg-indigo-600', path: '/users' },
+  { id: 'analytics', label: 'Analytics', color: 'bg-blue-600', path: '/analytics' },
   { id: 'track-trace', label: 'Track & Trace', color: 'bg-emerald-600', path: '/tracking' },
 ];
 
@@ -29,6 +31,10 @@ const SIDEBAR_OPTIONS = {
   ],
   'admin': [
     { label: 'User', path: '/users' },
+    { label: 'Create P/W/S', path: '/app-management/create-pws' },
+  ],
+  'analytics': [
+    { label: 'Track & Trace UI', path: '/analytics', icon: Layers }
     { label: 'Create P/W/S', path: '/admin/create-pws' },
   ]
 };
@@ -45,8 +51,9 @@ export default function AppLayout() {
   const getActiveTab = () => {
     const path = location.pathname;
     if (path.startsWith('/inventory') || path === '/upload' || path === '/invoices') return 'inventory';
-    if (path.startsWith('/tracking')) return 'track-trace';
     if (path.startsWith('/purchase')) return 'purchase';
+    if (path.startsWith('/app-management') || path === '/users') return 'app-management';
+    if (path.startsWith('/analytics') || path.startsWith('/tracking')) return 'analytics';
     if (path.startsWith('/admin') || path === '/users') return 'admin';
     return 'inventory'; // Default fallback
   };
@@ -150,7 +157,10 @@ export default function AppLayout() {
                   isActive ? "text-primary-600 bg-primary-50 dark:bg-primary-900/30/50 border-r-2 border-r-primary-600" : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-900 hover:text-gray-900 dark:text-gray-100"
                 )}
               >
-                {opt.label}
+                <span className="flex items-center gap-2">
+                  {opt.icon && <opt.icon size={16} className="text-current" />}
+                  {opt.label}
+                </span>
               </NavLink>
             ))}
           </aside>

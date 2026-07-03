@@ -160,5 +160,7 @@ export const updatePWSItem = (id, data) => api.put(`/pws/items/${id}`, data)
 export const getPWSAssignments = () => api.get('/pws/assignments')
 export const createPWSAssignment = (data) => api.post('/pws/assignments', data)
 export const deletePWSAssignment = (parentId, childId) => api.delete(`/pws/assignments/${parentId}/${childId}`)
+export const assignInvoiceToProject = (projectId, invoiceId) => api.post('/pws/invoice-project', { project_id: projectId, invoice_id: invoiceId })
+export const getProjectAnalytics = (projectId) => api.get(`/pws/projects/${projectId}/analytics`)
 
 export default api

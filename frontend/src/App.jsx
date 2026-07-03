@@ -4,7 +4,7 @@ import Dashboard from './pages/Dashboard'
 import Upload from './pages/Upload'
 import InvoiceList from './pages/InvoiceList'
 import InvoiceDetail from './pages/InvoiceDetail'
-import Analytics from './pages/Analytics'
+import TrackTracePage from './pages/analytics/TrackTracePage'
 import Modify from './pages/Modify'
 import NaturalQuery from './pages/NaturalQuery'
 import BackgroundPreview from './pages/BackgroundPreview'
@@ -74,7 +74,7 @@ export default function App() {
                   <Route path="/invoices/:id" element={<InvoiceDetail />} />
 
                   {/* Other Existing Routes */}
-                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/analytics" element={<TrackTracePage />} />
                   <Route path="/preview-bg" element={<BackgroundPreview />} />
                   <Route path="/modify" element={<ProtectedRoute requireUpload={true}><Modify /></ProtectedRoute>} />
                   <Route path="/item-codes" element={<ItemCodes />} />

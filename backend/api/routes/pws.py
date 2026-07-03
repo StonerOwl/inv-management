@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from api.dependencies import get_db
-from db.models import PWSItem, PWSAssignment
+from db.models import PWSItem, PWSAssignment, Invoice, InvoiceProjectAssignment
 
 router = APIRouter(prefix="/pws", tags=["PWS Management"])
 
@@ -16,6 +16,12 @@ class PWSItemCreate(BaseModel):
 class PWSAssignmentCreate(BaseModel):
     parent_id: str
     child_id: str
+
+
+class InvoiceProjectAssignmentCreate(BaseModel):
+    invoice_id: int
+    project_id: str
+
 
 @router.get("/items", response_model=List[Dict[str, Any]])
 def get_pws_items(db: Session = Depends(get_db)):
@@ -51,6 +57,90 @@ def update_pws_item(item_id: str, update: PWSItemUpdate, db: Session = Depends(g
 def get_pws_assignments(db: Session = Depends(get_db)):
     assignments = db.query(PWSAssignment).all()
     return [assignment.to_dict() for assignment in assignments]
+
+
+@router.post("/invoice-project", response_model=Dict[str, Any])
+def assign_invoice_to_project(assign: InvoiceProjectAssignmentCreate, db: Session = Depends(get_db)):
+    invoice = db.query(Invoice).filter_by(id=assign.invoice_id).first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    project = db.query(PWSItem).filter_by(id=assign.project_id, type="project").first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    existing = db.query(InvoiceProjectAssignment).filter_by(
+        invoice_id=assign.invoice_id,
+        project_id=assign.project_id,
+    ).first()
+    if existing:
+        return existing.to_dict()
+
+    assignment = InvoiceProjectAssignment(invoice_id=assign.invoice_id, project_id=assign.project_id)
+    db.add(assignment)
+    try:
+        db.commit()
+        db.refresh(assignment)
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    return assignment.to_dict()
+
+
+@router.get("/projects/{project_id}/analytics")
+def get_project_analytics(project_id: str, db: Session = Depends(get_db)):
+    project = db.query(PWSItem).filter_by(id=project_id, type="project").first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    workflow_assignments = db.query(PWSAssignment).filter_by(parent_id=project_id).all()
+    workflow_ids = [assignment.child_id for assignment in workflow_assignments if assignment.child_id]
+    workflows = db.query(PWSItem).filter(PWSItem.id.in_(workflow_ids), PWSItem.type == "workflow").all()
+
+    workflow_details = []
+    for workflow in workflows:
+        state_assignments = db.query(PWSAssignment).filter_by(parent_id=workflow.id).all()
+        state_ids = [assignment.child_id for assignment in state_assignments if assignment.child_id]
+        states = db.query(PWSItem).filter(PWSItem.id.in_(state_ids), PWSItem.type == "state").all()
+        workflow_details.append({
+            "id": workflow.id,
+            "name": workflow.name,
+            "states": [{"id": state.id, "name": state.name} for state in states],
+        })
+
+    invoice_assignments = db.query(InvoiceProjectAssignment).filter_by(project_id=project_id).order_by(InvoiceProjectAssignment.created_at.desc()).all()
+    invoice_ids = [assignment.invoice_id for assignment in invoice_assignments]
+    invoices = db.query(Invoice).filter(Invoice.id.in_(invoice_ids)).all() if invoice_ids else []
+
+    invoice_summaries = []
+    for invoice in invoices:
+        line_names = [line.name for line in invoice.line_items if line.name][:3]
+        description = "; ".join(line_names) if line_names else None
+        if invoice.status == "processed":
+            progress = 100
+        elif invoice.status == "needs_review":
+            progress = 50
+        else:
+            progress = 0
+
+        invoice_summaries.append({
+            "id": invoice.id,
+            "invoice_number": invoice.invoice_number or f"Batch #{invoice.id}",
+            "file_name": invoice.file_name,
+            "description": description,
+            "status": invoice.status,
+            "grand_total": invoice.grand_total,
+            "progress": progress,
+            "current_stage": workflow_details[0]["states"][0]["name"] if workflow_details and workflow_details[0].get("states") else "Not started",
+        })
+
+    return {
+        "project": project.to_dict(),
+        "workflows": workflow_details,
+        "invoices": invoice_summaries,
+    }
+
 
 @router.post("/assignments", response_model=Dict[str, Any])
 def create_pws_assignment(assign: PWSAssignmentCreate, db: Session = Depends(get_db)):

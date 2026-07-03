@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import (
-    Column, DateTime, Float, ForeignKey, Integer, String, Text, Boolean, func
+    Column, DateTime, Float, ForeignKey, Integer, String, Text, Boolean, UniqueConstraint, func
 )
 from sqlalchemy.orm import DeclarativeBase, relationship
 from pgvector.sqlalchemy import Vector
@@ -334,6 +334,28 @@ class PWSAssignment(Base):
             "parent_id": self.parent_id,
             "child_id": self.child_id,
         }
+
+
+class InvoiceProjectAssignment(Base):
+    __tablename__ = "invoice_project_assignments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    invoice_id = Column(Integer, ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False, index=True)
+    project_id = Column(String(50), ForeignKey("pws_items.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("invoice_id", "project_id", name="uq_invoice_project_assignment"),
+    )
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "invoice_id": self.invoice_id,
+            "project_id": self.project_id,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
 
 class Note(Base):
     __tablename__ = "notes"

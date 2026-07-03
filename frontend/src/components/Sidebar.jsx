@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Upload, FileText, BarChart3, Zap, Activity, Settings2, MessageSquare, Users, LogOut, ShoppingCart } from 'lucide-react'
+import { LayoutDashboard, Upload, FileText, BarChart3, Zap, Activity, Settings2, MessageSquare, Users, LogOut, ShoppingCart, Layers } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { getHealth } from '../api/client'
 import { useAuth } from '../context/AuthContext'
@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { to: '/upload', icon: Upload, label: 'Upload', requireUpload: true },
   { to: '/invoices', icon: FileText, label: 'Invoices' },
   { to: '/query', icon: MessageSquare, label: 'Ask AI' },
-  { to: '/analytics', icon: BarChart3, label: 'Analytics' },
+  { to: '/analytics', icon: Layers, label: 'Track & Trace UI' },
   { to: '/modify', icon: Settings2, label: 'Modify', requireUpload: true },
   { to: '/users', icon: Users, label: 'Users', adminOnly: true },
 ]
