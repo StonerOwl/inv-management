@@ -11,7 +11,6 @@ import { Zap, Moon, Sun, Database, Layers } from 'lucide-react';
 
 const MAIN_TABS = [
   { id: 'inventory', label: 'Inventory', color: 'bg-primary-600', path: '/inventory/dashboard' },
-  { id: 'track-trace', label: 'Track & Trace', color: 'bg-emerald-600', path: '/tracking' },
   { id: 'app-management', label: 'Application Management', color: 'bg-indigo-600', path: '/users' },
   { id: 'analytics', label: 'Analytics', color: 'bg-blue-600', path: '/analytics' },
 ];
@@ -22,12 +21,6 @@ const SIDEBAR_OPTIONS = {
     { label: 'Register', path: '/inventory/register' },
     { label: 'Manage', path: '/invoices' },
     { label: 'Search', path: '/inventory/search' },
-  ],
-  'track-trace': [
-    { label: 'Trace Inv', path: '/tracking/trace-inv' },
-    { label: 'Trace Workflow', path: '/tracking/workflow' },
-    { label: 'Trace Process', path: '/tracking/process' },
-    { label: 'Manage', path: '/tracking/manage' },
   ],
   'app-management': [
     { label: 'User', path: '/users' },
@@ -46,20 +39,17 @@ export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Determine active tab based on current path
   const getActiveTab = () => {
     const path = location.pathname;
     if (path.startsWith('/inventory') || path === '/upload' || path === '/invoices') return 'inventory';
     if (path.startsWith('/purchase')) return 'purchase';
     if (path.startsWith('/app-management') || path === '/users') return 'app-management';
     if (path.startsWith('/analytics') || path.startsWith('/tracking')) return 'analytics';
-    if (path.startsWith('/admin')) return 'admin';
-    return 'inventory'; // Default fallback
+    return 'inventory';
   };
 
   const [activeTab, setActiveTab] = useState(getActiveTab());
 
-  // Keep active tab in sync with location if navigated from somewhere else
   useEffect(() => {
     setActiveTab(getActiveTab());
   }, [location.pathname]);
@@ -74,7 +64,6 @@ export default function AppLayout() {
   return (
     <ErrorBoundary>
     <div className="flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans selection:bg-primary-100 selection:text-primary-900">
-      {/* Top Header */}
       <div className="flex items-center justify-between pt-5 px-8 pb-4 shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <Link to="/dashboard" className="text-2xl font-bold tracking-tight hover:text-primary-600 transition-colors flex items-center gap-2">
           <Zap size={24} className="text-primary-600" /> <span className="text-primary-900">INVOICE_AI</span>
@@ -84,9 +73,6 @@ export default function AppLayout() {
           <Link to="/query" className="hover:text-primary-600 transition-colors">Ask AI</Link>
           <Link to="/help" className="hover:text-primary-600 transition-colors">Help & Support</Link>
           <Link to="/settings" className="hover:text-primary-600 transition-colors">Settings</Link>
-          {user?.role === 'admin' && (
-            <Link to="/users" className={clsx("transition-colors", activeTab === 'admin' ? "text-primary-600" : "hover:text-primary-600")}>admin</Link>
-          )}
         </div>
 
         <div className="flex items-center gap-4">
@@ -121,7 +107,6 @@ export default function AppLayout() {
         </div>
       </div>
 
-      {/* Lower Row / Main Tabs */}
       <div className="flex items-end bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shrink-0 px-8 pt-2 gap-8 shadow-sm relative z-20">
         {MAIN_TABS.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -142,9 +127,7 @@ export default function AppLayout() {
         })}
       </div>
 
-      {/* Main Content Area: Sidebar + Outlet */}
       <div className={clsx("flex flex-1 overflow-hidden relative z-10", settings.sidebarLayout === 'right' ? 'flex-row-reverse' : '')}>
-        {/* Sidebar */}
         {activeTab !== 'inventory' && (
           <aside className="w-56 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shrink-0 overflow-y-auto flex flex-col py-4 shadow-sm z-10">
             {activeSidebarOptions.map((opt) => (
@@ -165,7 +148,6 @@ export default function AppLayout() {
           </aside>
         )}
 
-        {/* Dynamic Page Content */}
         <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 relative z-0">
           <div className="p-8">
             <Outlet />
@@ -173,7 +155,6 @@ export default function AppLayout() {
         </main>
       </div>
       
-      {/* Global Notes Drawer & Bubble */}
       <NotesDrawer />
       <button
         onClick={toggleDrawer}
