@@ -13,7 +13,6 @@ const MAIN_TABS = [
   { id: 'inventory', label: 'Inventory', color: 'bg-primary-600', path: '/inventory/dashboard' },
   { id: 'app-management', label: 'Application Management', color: 'bg-indigo-600', path: '/users' },
   { id: 'analytics', label: 'Analytics', color: 'bg-blue-600', path: '/analytics' },
-  { id: 'track-trace', label: 'Track & Trace', color: 'bg-emerald-600', path: '/tracking' },
 ];
 
 const SIDEBAR_OPTIONS = {
@@ -23,20 +22,13 @@ const SIDEBAR_OPTIONS = {
     { label: 'Manage', path: '/invoices' },
     { label: 'Search', path: '/inventory/search' },
   ],
-  'track-trace': [
-    { label: 'Trace Inv', path: '/tracking/trace-inv' },
-    { label: 'Trace Workflow', path: '/tracking/workflow' },
-    { label: 'Trace Process', path: '/tracking/process' },
-    { label: 'Manage', path: '/tracking/manage' },
-  ],
-  'admin': [
+  'app-management': [
     { label: 'User', path: '/users' },
     { label: 'Create P/W/S', path: '/app-management/create-pws' },
   ],
   'analytics': [
     { label: 'Track & Trace UI', path: '/analytics', icon: Layers }
-    { label: 'Create P/W/S', path: '/admin/create-pws' },
-  ]
+  ],
 };
 
 export default function AppLayout() {
@@ -54,7 +46,7 @@ export default function AppLayout() {
     if (path.startsWith('/purchase')) return 'purchase';
     if (path.startsWith('/app-management') || path === '/users') return 'app-management';
     if (path.startsWith('/analytics') || path.startsWith('/tracking')) return 'analytics';
-    if (path.startsWith('/admin') || path === '/users') return 'admin';
+    if (path.startsWith('/admin')) return 'admin';
     return 'inventory'; // Default fallback
   };
 
