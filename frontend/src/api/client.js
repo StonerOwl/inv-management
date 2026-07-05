@@ -164,4 +164,7 @@ export const deletePWSAssignment = (parentId, childId) => api.delete(`/pws/assig
 export const assignInvoiceToProject = (projectId, invoiceId) => api.post('/pws/invoice-project', { project_id: projectId, invoice_id: invoiceId })
 export const getProjectAnalytics = (projectId) => api.get(`/pws/projects/${projectId}/analytics`)
 
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+export const getDashboardData = () => api.get('/dashboard')
+
 export default api

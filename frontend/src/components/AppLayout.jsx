@@ -7,30 +7,30 @@ import { useNotes } from '../context/NotesContext';
 import NotesDrawer from './NotesDrawer';
 import { ErrorBoundary } from './ErrorBoundary';
 import clsx from 'clsx';
-import { Zap, Moon, Sun, Database, Layers, GitBranch } from 'lucide-react';
+import { Zap, Moon, Sun, Database, Layers, GitBranch, Home, Package } from 'lucide-react';
 
 const MAIN_TABS = [
-  { id: 'inventory', label: 'Inventory', color: 'bg-primary-600', path: '/inventory/dashboard' },
+  { id: 'dashboard', label: 'Dashboard', color: 'bg-primary-600', path: '/dashboard-overview' },
   { id: 'app-management', label: 'Application Management', color: 'bg-indigo-600', path: '/users' },
   { id: 'analytics', label: 'Analytics', color: 'bg-blue-600', path: '/analytics' },
 ];
 
 const SIDEBAR_OPTIONS = {
-  'inventory': [
-    { label: 'Upload', path: '/upload' },
-    { label: 'Register', path: '/inventory/register' },
-    { label: 'Manage', path: '/invoices' },
-    { label: 'Search', path: '/inventory/search' },
+  'dashboard': [
+    { label: 'Dashboard', path: '/dashboard-overview', icon: Home },
+    { label: 'Inventory', path: '/inventory/dashboard', icon: Package },
   ],
   'app-management': [
     { label: 'User', path: '/users' },
     { label: 'Create P/W/S', path: '/app-management/create-pws' },
   ],
   'analytics': [
-    { label: 'Track & Trace UI', path: '/analytics', icon: Layers },
+    { label: 'Track & Trace', path: '/analytics', icon: Layers },
     { label: 'Farm to Fork', path: '/analytics/farm-to-fork', icon: GitBranch },
   ],
 };
+
+const NO_SIDEBAR_TABS = [];
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -40,20 +40,18 @@ export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Determine active tab based on current path
   const getActiveTab = () => {
     const path = location.pathname;
-    if (path.startsWith('/inventory') || path === '/upload' || path === '/invoices') return 'inventory';
+    if (path.startsWith('/dashboard-overview') || path.startsWith('/inventory') || path === '/upload' || path === '/invoices') return 'dashboard';
     if (path.startsWith('/purchase')) return 'purchase';
     if (path.startsWith('/app-management') || path === '/users') return 'app-management';
     if (path.startsWith('/analytics') || path.startsWith('/tracking')) return 'analytics';
     if (path.startsWith('/admin')) return 'admin';
-    return 'inventory'; // Default fallback
+    return 'inventory';
   };
 
   const [activeTab, setActiveTab] = useState(getActiveTab());
 
-  // Keep active tab in sync with location if navigated from somewhere else
   useEffect(() => {
     setActiveTab(getActiveTab());
   }, [location.pathname]);
@@ -64,11 +62,12 @@ export default function AppLayout() {
   };
 
   const activeSidebarOptions = SIDEBAR_OPTIONS[activeTab] || [];
+  const showSidebar = !NO_SIDEBAR_TABS.includes(activeTab);
 
   return (
     <ErrorBoundary>
       <div className="flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans selection:bg-primary-100 selection:text-primary-900">
-        {/* Top Header */}
+
         <div className="flex items-center justify-between pt-5 px-8 pb-4 shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <Link to="/dashboard" className="text-2xl font-bold tracking-tight hover:text-primary-600 transition-colors flex items-center gap-2">
             <Zap size={24} className="text-primary-600" /> <span className="text-primary-900">INVOICE_AI</span>
@@ -102,10 +101,7 @@ export default function AppLayout() {
                 <span className="text-sm font-semibold text-primary-700 bg-primary-50 dark:bg-primary-900/30 px-3 py-1 rounded-full border border-primary-100 dark:border-primary-900/50">
                   {user.username}
                 </span>
-                <button
-                  onClick={logout}
-                  className="text-sm font-bold text-red-500 hover:text-red-600 transition-colors"
-                >
+                <button onClick={logout} className="text-sm font-bold text-red-500 hover:text-red-600 transition-colors">
                   Logout
                 </button>
               </>
@@ -115,7 +111,6 @@ export default function AppLayout() {
           </div>
         </div>
 
-        {/* Lower Row / Main Tabs */}
         <div className="flex items-end bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shrink-0 px-8 pt-2 gap-8 shadow-sm relative z-20">
           {MAIN_TABS.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -136,16 +131,14 @@ export default function AppLayout() {
           })}
         </div>
 
-        {/* Main Content Area: Sidebar + Outlet */}
         <div className={clsx("flex flex-1 overflow-hidden relative z-10", settings.sidebarLayout === 'right' ? 'flex-row-reverse' : '')}>
-          {/* Sidebar */}
-          {activeTab !== 'inventory' && (
+          {showSidebar && (
             <aside className="w-56 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shrink-0 overflow-y-auto flex flex-col py-4 shadow-sm z-10">
               {activeSidebarOptions.map((opt) => (
                 <NavLink
                   key={opt.path}
                   to={opt.path}
-                  end
+                  end={opt.path === '/analytics'}
                   className={({ isActive }) => clsx(
                     "px-8 py-3 transition-colors whitespace-nowrap text-sm font-semibold flex items-center justify-between",
                     isActive ? "text-primary-600 bg-primary-50 dark:bg-primary-900/30/50 border-r-2 border-r-primary-600" : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-900 hover:text-gray-900 dark:text-gray-100"
@@ -160,7 +153,6 @@ export default function AppLayout() {
             </aside>
           )}
 
-          {/* Dynamic Page Content */}
           <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 relative z-0">
             <div className="p-8">
               <Outlet />
@@ -168,7 +160,6 @@ export default function AppLayout() {
           </main>
         </div>
 
-        {/* Global Notes Drawer & Bubble */}
         <NotesDrawer />
         <button
           onClick={toggleDrawer}
@@ -179,7 +170,6 @@ export default function AppLayout() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
           </svg>
         </button>
-
       </div>
     </ErrorBoundary>
   );

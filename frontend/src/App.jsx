@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
+import DashboardPage from './pages/DashboardPage'
 import Upload from './pages/Upload'
 import InvoiceList from './pages/InvoiceList'
 import InvoiceDetail from './pages/InvoiceDetail'
@@ -42,45 +43,40 @@ export default function App() {
                 <Routes>
                   <Route path="/login" element={<Login />} />
 
-                <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                    <Route path="/" element={<Navigate to="/dashboard-overview" replace />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/dashboard-overview" element={<DashboardPage />} />
 
-                  {/* Top Header Links */}
-                  <Route path="/help" element={<PlaceholderPage title="Help & Support" />} />
-                  <Route path="/settings" element={<Settings />} />
+                    <Route path="/help" element={<PlaceholderPage title="Help & Support" />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/query" element={<NaturalQuery />} />
 
-                  {/* Ask AI Link */}
-                  <Route path="/query" element={<NaturalQuery />} />
+                    <Route path="/upload" element={<Navigate to="/inventory/dashboard" replace />} />
+                    <Route path="/invoices" element={<Navigate to="/inventory/dashboard" replace />} />
+                    <Route path="/inventory/register/:id?" element={<Navigate to="/inventory/dashboard" replace />} />
+                    <Route path="/inventory/search" element={<Navigate to="/inventory/dashboard" replace />} />
+                    <Route path="/inventory/dashboard" element={<InventoryDashboard />} />
 
-                  {/* Inventory Routes */}
-                  <Route path="/upload" element={<Navigate to="/inventory/dashboard" replace />} />
-                  <Route path="/invoices" element={<Navigate to="/inventory/dashboard" replace />} />
-                  <Route path="/inventory/register/:id?" element={<Navigate to="/inventory/dashboard" replace />} />
-                  <Route path="/inventory/search" element={<Navigate to="/inventory/dashboard" replace />} />
-                  <Route path="/inventory/dashboard" element={<InventoryDashboard />} />
+                    <Route path="/tracking" element={<TrackingDashboard />} />
+                    <Route path="/tracking/trace-inv" element={<TraceInventory />} />
+                    <Route path="/tracking/workflow" element={<TraceWorkflow />} />
+                    <Route path="/tracking/process" element={<TraceProcess />} />
+                    <Route path="/tracking/manage" element={<ManageTracking />} />
 
-                  {/* Track & Trace Routes */}
-                  <Route path="/tracking" element={<TrackingDashboard />} />
-                  <Route path="/tracking/trace-inv" element={<TraceInventory />} />
-                  <Route path="/tracking/workflow" element={<TraceWorkflow />} />
-                  <Route path="/tracking/process" element={<TraceProcess />} />
-                  <Route path="/tracking/manage" element={<ManageTracking />} />
-                  {/* Admin Routes */}
-                  <Route path="/users" element={<ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute>} />
-                  <Route path="/app-management/create-pws" element={<ProtectedRoute requiredRole="admin"><CreatePWS /></ProtectedRoute>} />
+                    <Route path="/users" element={<ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute>} />
+                    <Route path="/admin/create-pws" element={<ProtectedRoute requiredRole="admin"><CreatePWS /></ProtectedRoute>} />
+                    <Route path="/app-management/create-pws" element={<ProtectedRoute requiredRole="admin"><CreatePWS /></ProtectedRoute>} />
 
-                  {/* Invoice Management */}
-                  <Route path="/invoices" element={<InvoiceList />} />
-                  <Route path="/invoices/:id" element={<InvoiceDetail />} />
+                    <Route path="/invoices/:id" element={<InvoiceDetail />} />
 
-                  {/* Other Existing Routes */}
-                  <Route path="/analytics" element={<TrackTracePage />} />
-                  <Route path="/analytics/farm-to-fork" element={<FarmToForkPage />} />
-                  <Route path="/preview-bg" element={<BackgroundPreview />} />
-                  <Route path="/modify" element={<ProtectedRoute requireUpload={true}><Modify /></ProtectedRoute>} />
-                  <Route path="/item-codes" element={<ItemCodes />} />
-                </Route>
+                    <Route path="/analytics" element={<TrackTracePage />} />
+                    <Route path="/analytics/farm-to-fork" element={<FarmToForkPage />} />
+
+                    <Route path="/preview-bg" element={<BackgroundPreview />} />
+                    <Route path="/modify" element={<ProtectedRoute requireUpload={true}><Modify /></ProtectedRoute>} />
+                    <Route path="/item-codes" element={<ItemCodes />} />
+                  </Route>
                 </Routes>
               </BrowserRouter>
             </NotesProvider>

@@ -5,6 +5,7 @@ import logging
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
+from api.routes.dashboard import router as dashboard_router
 
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -70,6 +71,7 @@ app.include_router(categories.router, dependencies=[Depends(get_current_active_u
 app.include_router(tracking.router, dependencies=[Depends(get_current_active_user)])
 app.include_router(pws.router, prefix="/api", dependencies=[Depends(get_current_active_user)])
 app.include_router(notes.router, prefix="/api", dependencies=[Depends(get_current_active_user)])
+app.include_router(dashboard_router)
 
 
 @app.get("/api")
