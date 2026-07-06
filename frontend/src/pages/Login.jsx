@@ -44,19 +44,26 @@ export default function Login() {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-surface-900 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8 bg-surface-800 p-8 rounded-2xl border border-surface-700/50 shadow-xl">
+    <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-gray-950 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8 bg-white dark:bg-gray-900 p-8 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xl">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-            Sign in to your account
+          <div className="flex justify-center mb-4">
+            <svg width="46" height="36" viewBox="0 0 46 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0" y="0" width="22" height="22" rx="4" fill="#2563EB" />
+              <rect x="12" y="14" width="22" height="22" rx="4" fill="#0D9488" />
+              <rect x="24" y="0" width="22" height="22" rx="4" fill="#3B82F6" />
+            </svg>
+          </div>
+          <h2 className="mt-2 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+            AIQ Platform
           </h2>
-          <p className="mt-2 text-center text-sm text-surface-400">
-            Invoice Scanner System
+          <p className="mt-2 text-center text-sm text-gray-700 dark:text-gray-300">
+            Integrated with Inventory Management
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-lg text-sm text-center">
+            <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 p-3 rounded-lg text-sm text-center font-medium">
               {error}
             </div>
           )}
@@ -68,7 +75,7 @@ export default function Login() {
                 name="username"
                 type="text"
                 required
-                className="relative block w-full rounded-xl border-0 bg-surface-900 py-3 px-4 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-surface-700 placeholder:text-surface-500 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-primary-500 sm:text-sm sm:leading-6"
+                className="aiq-input"
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -81,7 +88,7 @@ export default function Login() {
                 name="password"
                 type="password"
                 required
-                className="relative block w-full rounded-xl border-0 bg-surface-900 py-3 px-4 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-surface-700 placeholder:text-surface-500 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-primary-500 sm:text-sm sm:leading-6"
+                className="aiq-input"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -93,7 +100,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative flex w-full justify-center rounded-xl bg-primary-600 px-3 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100 hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="aiq-btn-primary w-full flex justify-center text-base"
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>

@@ -14,6 +14,7 @@ export default function CreatePWS() {
   const [category, setCategory] = useState('');
   const [startDate, setStartDate] = useState('');
   const [targetDate, setTargetDate] = useState('');
+  const [batchId, setBatchId] = useState('');
   const [createdItems, setCreatedItems] = useState([]);
 
   // Management State
@@ -90,6 +91,7 @@ export default function CreatePWS() {
     setCategory('');
     setStartDate('');
     setTargetDate('');
+    setBatchId('');
   };
 
   const handleCreate = async (e) => {
@@ -108,6 +110,7 @@ export default function CreatePWS() {
       newItem.category = category;
       newItem.start_date = startDate;
       newItem.target_date = targetDate;
+      newItem.batch_id = batchId;
     }
 
     try {
@@ -203,9 +206,9 @@ export default function CreatePWS() {
 
   const renderRecentlyCreated = (items, typeLabel) => (
     <div className="flex flex-col gap-2">
-      <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 tracking-normal mb-2 border-b border-gray-200 dark:border-gray-700 pb-2 capitalize">{typeLabel}s</h4>
+      <h4 className="text-xs font-bold text-gray-700 dark:text-gray-300 tracking-normal mb-2 border-b border-gray-200 dark:border-gray-700 pb-2 capitalize">{typeLabel}s</h4>
       {items.length === 0 ? (
-        <div className="text-xs text-gray-600 dark:text-gray-400 italic">No {typeLabel}s created yet</div>
+        <div className="text-xs text-gray-800 dark:text-gray-200 italic">No {typeLabel}s created yet</div>
       ) : (
         items.map((item, idx) => (
           <NoteTarget
@@ -230,12 +233,12 @@ export default function CreatePWS() {
       <div className="max-w-7xl mx-auto w-full pb-20">
 
         {/* Header */}
-        <div className="mb-12 border-b border-gray-200 dark:border-gray-700 pb-6 flex items-end justify-between">
+        <div className="mb-12 border-b border-gray-200 dark:border-gray-800 pb-6 flex items-end justify-between">
           <div>
-            <h1 className="text-5xl font-black tracking-tighter text-primary-600">
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
               {viewMode === 'tree' ? 'Project Hierarchy' : viewMode === 'create' ? 'Create Items' : 'Manage Project'}
             </h1>
-            <div className="text-sm font-bold tracking-normal text-gray-500 dark:text-gray-400 mt-2 ">
+            <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-2">
               Project · Workflow · Stage · Process
             </div>
           </div>
@@ -244,7 +247,7 @@ export default function CreatePWS() {
             {viewMode !== 'tree' && (
               <button
                 onClick={() => setViewMode('tree')}
-                className="flex items-center gap-2 border border-gray-300 text-gray-600 px-6 py-3 font-black tracking-normal text-xs hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="aiq-btn-ghost flex items-center gap-2"
               >
                 Back to Tree
               </button>
@@ -252,7 +255,7 @@ export default function CreatePWS() {
             {viewMode !== 'create' && (
               <button
                 onClick={() => setViewMode('create')}
-                className="flex items-center gap-2 border border-primary-600 text-primary-600 px-6 py-3 font-black tracking-normal text-xs hover:bg-[#FCD535] hover:border-[#FCD535] hover:text-black transition-colors"
+                className="aiq-btn-ghost text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center gap-2"
               >
                 <Plus size={16} /> Create
               </button>
@@ -260,7 +263,7 @@ export default function CreatePWS() {
             {viewMode !== 'manage' && (
               <button
                 onClick={() => setViewMode('manage')}
-                className="flex items-center gap-2 bg-primary-600 text-white px-6 py-3 font-black tracking-normal text-xs hover:bg-primary-700 transition-colors"
+                className="aiq-btn-primary flex items-center gap-2"
               >
                 <Settings2 size={16} /> Manage Project
               </button>
@@ -275,35 +278,48 @@ export default function CreatePWS() {
                 No projects found. Click "Create" to get started.
               </div>
             ) : (
-              projects.map(p => (
-                <details key={p.id} className="group border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800" open>
-                  <summary className="p-4 font-black text-xl text-primary-600 flex justify-between items-center cursor-pointer outline-none select-none hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors list-none [&::-webkit-details-marker]:hidden">
+              projects.map(p => {
+                let isLive = false;
+                if (p.start_date && p.target_date) {
+                  const now = new Date();
+                  const start = new Date(p.start_date);
+                  const target = new Date(p.target_date);
+                  if (now >= start && now <= target) {
+                    isLive = true;
+                  }
+                }
+                return (
+                <details key={p.id} className="group aiq-card overflow-hidden mb-4" open>
+                  <summary className="p-4 font-bold text-lg text-gray-900 dark:text-gray-100 flex justify-between items-center cursor-pointer outline-none select-none hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open:border-gray-100 dark:group-open:border-gray-800">
                     <div className="flex items-center gap-3">
-                      <ChevronRight size={24} className="group-open:rotate-90 transition-transform text-gray-400" />
-                      <FolderPlus size={24} /> {p.name}
+                      <ChevronRight size={20} className="group-open:rotate-90 transition-transform text-gray-400" />
+                      <FolderPlus size={20} className="text-primary-600 dark:text-primary-400" /> {p.name}
                     </div>
-                    {p.project_code && (
-                      <div className="flex items-center gap-3 text-xs tracking-wider">
+                    <div className="flex items-center gap-3 text-xs tracking-wider">
+                      <span className={clsx("px-3 py-1 rounded-full font-bold", isLive ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700")}>
+                        {isLive ? "LIVE" : "FINISHED"}
+                      </span>
+                      {p.project_code && (
                         <span className="bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 px-3 py-1 border border-primary-200 dark:border-primary-800">
                           ID: {p.project_code}
                         </span>
-                        {p.batch_id && (
-                          <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-3 py-1 border border-gray-200 dark:border-gray-700">
-                            BATCH: {p.batch_id}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                      )}
+                      {p.batch_id && (
+                        <span className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-3 py-1 border border-gray-200 dark:border-gray-700">
+                          BATCH: {p.batch_id}
+                        </span>
+                      )}
+                    </div>
                   </summary>
 
-                  <div className="pl-6 pb-6 pr-6">
+                  <div className="p-6 bg-gray-50/50 dark:bg-gray-900/20">
                     {(p.product || p.work_order || p.category || p.start_date || p.target_date) && (
-                      <div className="mb-6 bg-gray-50 dark:bg-gray-900/50 p-4 border border-gray-100 dark:border-gray-800 flex flex-wrap gap-x-8 gap-y-4 text-sm">
-                        {p.product && <div><span className="text-gray-400 text-[10px] block mb-0.5 uppercase font-bold tracking-wider">Product</span><span className="font-bold text-gray-800 dark:text-gray-200">{p.product}</span></div>}
-                        {p.work_order && <div><span className="text-gray-400 text-[10px] block mb-0.5 uppercase font-bold tracking-wider">Work Order</span><span className="font-bold text-gray-800 dark:text-gray-200">{p.work_order}</span></div>}
-                        {p.category && <div><span className="text-gray-400 text-[10px] block mb-0.5 uppercase font-bold tracking-wider">Category</span><span className="font-bold text-gray-800 dark:text-gray-200">{p.category}</span></div>}
-                        {p.start_date && <div><span className="text-gray-400 text-[10px] block mb-0.5 uppercase font-bold tracking-wider">Start Date</span><span className="font-bold text-gray-800 dark:text-gray-200">{p.start_date}</span></div>}
-                        {p.target_date && <div><span className="text-gray-400 text-[10px] block mb-0.5 uppercase font-bold tracking-wider">Target Date</span><span className="font-bold text-gray-800 dark:text-gray-200">{p.target_date}</span></div>}
+                      <div className="mb-6 bg-white dark:bg-gray-800/80 p-5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex flex-wrap gap-x-10 gap-y-4 text-sm">
+                        {p.product && <div><span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Product</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.product}</span></div>}
+                        {p.work_order && <div><span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Work Order</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.work_order}</span></div>}
+                        {p.category && <div><span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Category</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.category}</span></div>}
+                        {p.start_date && <div><span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Start Date</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.start_date}</span></div>}
+                        {p.target_date && <div><span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Target Date</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.target_date}</span></div>}
                       </div>
                     )}
                     <div className="pl-4 space-y-4 border-l-2 border-gray-200 dark:border-gray-700">
@@ -343,7 +359,7 @@ export default function CreatePWS() {
                                               const proc = processes.find(pr => pr.id === procId);
                                               if (!proc) return null;
                                               return (
-                                                <div key={procId} className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-2 relative">
+                                                <div key={procId} className="text-sm font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2 relative">
                                                   <div className="absolute -left-[17px] top-1/2 w-4 h-px bg-gray-200 dark:bg-gray-700"></div>
                                                   <Settings2 size={14} className="text-gray-400" /> {proc.name}
                                                 </div>
@@ -363,7 +379,7 @@ export default function CreatePWS() {
                     </div>
                   </div>
                 </details>
-              ))
+              )})
             )}
           </div>
         )}
@@ -371,32 +387,32 @@ export default function CreatePWS() {
         {viewMode === 'create' && (
           <div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-              <button onClick={() => handleOpenModal('project')} className="card-brutal-dark border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center gap-4 hover:border-primary-600 hover:bg-[#FCD535]/5 transition-all group">
-                <div className="w-16 h-16 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 group-hover:border-primary-600 group-hover:text-primary-600 flex items-center justify-center transition-colors">
+              <button onClick={() => handleOpenModal('project')} className="aiq-card p-6 flex flex-col items-center justify-center gap-4 hover:border-primary-600 dark:hover:border-primary-500 hover:shadow-md transition-all group">
+                <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-xl group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center transition-colors">
                   <FolderPlus size={32} />
                 </div>
-                <h2 className="text-lg font-black tracking-normal">Create Project</h2>
+                <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Create Project</h2>
               </button>
 
-              <button onClick={() => handleOpenModal('workflow')} className="card-brutal-dark border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center gap-4 hover:border-primary-600 hover:bg-[#FCD535]/5 transition-all group">
-                <div className="w-16 h-16 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 group-hover:border-primary-600 group-hover:text-primary-600 flex items-center justify-center transition-colors">
+              <button onClick={() => handleOpenModal('workflow')} className="aiq-card p-6 flex flex-col items-center justify-center gap-4 hover:border-primary-600 dark:hover:border-primary-500 hover:shadow-md transition-all group">
+                <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center transition-colors">
                   <GitBranch size={32} />
                 </div>
-                <h2 className="text-lg font-black tracking-normal">Create Workflow</h2>
+                <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Create Workflow</h2>
               </button>
 
-              <button onClick={() => handleOpenModal('stage')} className="card-brutal-dark border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center gap-4 hover:border-primary-600 hover:bg-[#FCD535]/5 transition-all group">
-                <div className="w-16 h-16 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 group-hover:border-primary-600 group-hover:text-primary-600 flex items-center justify-center transition-colors">
+              <button onClick={() => handleOpenModal('stage')} className="aiq-card p-6 flex flex-col items-center justify-center gap-4 hover:border-primary-600 dark:hover:border-primary-500 hover:shadow-md transition-all group">
+                <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center transition-colors">
                   <GitCommit size={32} />
                 </div>
-                <h2 className="text-lg font-black tracking-normal">Create Stage</h2>
+                <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Create Stage</h2>
               </button>
 
-              <button onClick={() => handleOpenModal('process')} className="card-brutal-dark border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center gap-4 hover:border-primary-600 hover:bg-[#FCD535]/5 transition-all group">
-                <div className="w-16 h-16 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 group-hover:border-primary-600 group-hover:text-primary-600 flex items-center justify-center transition-colors">
+              <button onClick={() => handleOpenModal('process')} className="aiq-card p-6 flex flex-col items-center justify-center gap-4 hover:border-primary-600 dark:hover:border-primary-500 hover:shadow-md transition-all group">
+                <div className="w-16 h-16 bg-violet-50 dark:bg-violet-900/30 rounded-xl group-hover:bg-violet-100 dark:group-hover:bg-violet-900/50 text-violet-600 dark:text-violet-400 flex items-center justify-center transition-colors">
                   <Settings2 size={32} />
                 </div>
-                <h2 className="text-lg font-black tracking-normal">Create Process</h2>
+                <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Create Process</h2>
               </button>
             </div>
 
@@ -420,7 +436,7 @@ export default function CreatePWS() {
               <h3 className="text-sm font-black tracking-normal text-gray-400 ">Select Project</h3>
               <div className="flex flex-col gap-2">
                 {projects.length === 0 ? (
-                  <div className="p-8 border border-gray-200 dark:border-gray-700 border-dashed text-center text-gray-600 dark:text-gray-400 text-sm font-bold">
+                  <div className="p-8 border border-gray-200 dark:border-gray-700 border-dashed text-center text-gray-800 dark:text-gray-200 text-sm font-bold">
                     No projects found.<br />Go to Create view first.
                   </div>
                 ) : (
@@ -449,9 +465,9 @@ export default function CreatePWS() {
               </div>
             </div>
 
-            <div className="w-2/3 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-8 min-h-[500px]">
+            <div className="w-2/3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-8 min-h-[500px]">
               {!selectedProjectId ? (
-                <div className="h-full flex items-center justify-center text-gray-600 dark:text-gray-400 font-bold tracking-normal">
+                <div className="h-full flex items-center justify-center text-gray-700 dark:text-gray-300 font-semibold tracking-normal">
                   Select a project to manage
                 </div>
               ) : (
@@ -462,7 +478,7 @@ export default function CreatePWS() {
                         <FolderPlus size={28} />
                         {projects.find(p => p.id === selectedProjectId)?.name}
                       </h2>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold tracking-normal mt-2">
+                      <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold tracking-normal mt-2">
                         Hierarchy Management
                       </div>
                     </div>
@@ -473,33 +489,33 @@ export default function CreatePWS() {
                         if (!p || !p.project_code) return null;
                         return (
                           <div className="flex gap-6">
-                            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 min-w-[300px]">
-                              <h4 className="text-sm font-black text-gray-900 dark:text-gray-100 mb-4">Project Batch Details</h4>
+                            <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 min-w-[300px]">
+                              <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">Project Batch Details</h4>
                               <div className="grid grid-cols-[100px_1fr] gap-y-2 text-xs">
-                                <div className="text-gray-500">Project Name</div><div className="font-bold">{p.name}</div>
-                                <div className="text-gray-500">Project ID</div><div className="font-bold text-primary-600">{p.project_code}</div>
-                                <div className="text-gray-500">Batch ID</div><div className="font-bold text-primary-600">{p.batch_id}</div>
-                                <div className="text-gray-500">Product</div><div className="font-bold">{p.product}</div>
-                                <div className="text-gray-500">Work Order</div><div className="font-bold">{p.work_order}</div>
-                                <div className="text-gray-500">Category</div><div className="font-bold">{p.category}</div>
-                                <div className="text-gray-500">Start Date</div><div className="font-bold">{p.start_date}</div>
-                                <div className="text-gray-500">Target Date</div><div className="font-bold">{p.target_date}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Project Name</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.name}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Project ID</div><div className="font-bold text-primary-600 dark:text-primary-400">{p.project_code}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Batch ID</div><div className="font-bold text-primary-600 dark:text-primary-400">{p.batch_id}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Product</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.product}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Work Order</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.work_order}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Category</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.category}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Start Date</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.start_date}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Target Date</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.target_date}</div>
                               </div>
                             </div>
                             <div className="flex flex-col gap-4">
-                              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4">
-                                <div className="text-xs text-gray-500 mb-1">Project ID</div>
-                                <div className="text-xl font-black text-primary-600 mb-2">{p.project_code}</div>
-                                <QRCode value={p.project_code} size={64} />
+                              <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <div className="text-xs text-gray-700 dark:text-gray-300 mb-1">Project ID</div>
+                                <div className="text-xl font-black text-primary-600 dark:text-primary-400 mb-2">{p.project_code}</div>
+                                <QRCode value={p.project_code} size={64} className="bg-white p-1 rounded" />
                               </div>
-                              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4">
-                                <div className="text-xs text-gray-500 mb-1">Batch ID</div>
-                                <div className="text-xl font-black text-primary-600 mb-2">{p.batch_id}</div>
-                                <QRCode value={p.batch_id} size={64} />
+                              <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <div className="text-xs text-gray-700 dark:text-gray-300 mb-1">Batch ID</div>
+                                <div className="text-xl font-black text-primary-600 dark:text-primary-400 mb-2">{p.batch_id}</div>
+                                <QRCode value={p.batch_id} size={64} className="bg-white p-1 rounded" />
                               </div>
                               <button
                                 onClick={() => handleDeleteProject(p.id)}
-                                className="mt-auto px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800 font-bold text-sm transition-colors flex items-center justify-center gap-2"
+                                className="mt-auto px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800 font-bold text-sm transition-colors flex items-center justify-center gap-2 rounded-lg"
                               >
                                 <Trash2 size={16} /> Delete Project
                               </button>
@@ -511,15 +527,15 @@ export default function CreatePWS() {
                   </div>
 
                   <div className="flex-1 overflow-y-auto pr-4">
-                    <div className="flex items-end gap-4 mb-6 p-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800">
+                    <div className="flex items-end gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-lg">
                       <div className="flex-1">
-                        <label className="block text-xs font-bold tracking-normal text-gray-400 mb-2 ">
+                        <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 ">
                           Assign Workflow
                         </label>
                         <select
                           value={workflowToAssign}
                           onChange={(e) => setWorkflowToAssign(e.target.value)}
-                          className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2 outline-none focus:border-primary-600 font-sans text-sm appearance-none"
+                          className="aiq-input"
                         >
                           <option value="">-- Select Workflow --</option>
                           {workflows
@@ -532,7 +548,7 @@ export default function CreatePWS() {
                       <button
                         onClick={() => assignWorkflow(selectedProjectId)}
                         disabled={!workflowToAssign}
-                        className="h-10 px-6 bg-[#FCD535] text-black font-black  tracking-normal text-xs hover:bg-white dark:bg-gray-800 disabled:opacity-50 transition-colors flex items-center gap-2"
+                        className="aiq-btn-primary h-[42px] px-6 text-sm flex items-center gap-2"
                       >
                         <Plus size={16} /> Assign
                       </button>
@@ -540,7 +556,7 @@ export default function CreatePWS() {
 
                     <div className="flex flex-col gap-6">
                       {(projectWorkflows[selectedProjectId] || []).length === 0 ? (
-                        <div className="text-center py-8 text-gray-600 dark:text-gray-400 text-sm font-bold  tracking-normal border border-dashed border-gray-200 dark:border-gray-700">
+                        <div className="text-center py-8 text-gray-800 dark:text-gray-200 text-sm font-bold  tracking-normal border border-dashed border-gray-200 dark:border-gray-700">
                           No workflows assigned
                         </div>
                       ) : (
@@ -637,7 +653,7 @@ export default function CreatePWS() {
                                                   if (!proc) return null;
                                                   return (
                                                     <NoteTarget as="div" targetType="process" targetId={pId} key={pId} className="flex items-center justify-between bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800 p-2 pr-3">
-                                                      <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm font-bold">
+                                                      <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 text-sm font-bold">
                                                         <Settings2 size={12} />
                                                         {proc.name}
                                                       </div>
@@ -672,57 +688,61 @@ export default function CreatePWS() {
       {/* Creation Modal */}
       {activeModal && (
         <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 w-full max-w-md shadow-[8px_8px_0px_0px_rgba(252,213,53,1)] relative">
-            <button onClick={handleCloseModal} className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-colors">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl w-full max-w-md shadow-2xl relative overflow-hidden">
+            <button onClick={handleCloseModal} className="absolute top-4 right-4 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100 transition-colors">
               <XCircle size={24} />
             </button>
             <div className="p-8">
-              <div className="flex items-center gap-4 mb-6 text-primary-600">
+              <div className="flex items-center gap-4 mb-6 text-primary-600 dark:text-primary-400">
                 {getIcon(activeModal, 32)}
                 <h2 className="text-2xl font-black tracking-tighter uppercase">New {activeModal}</h2>
               </div>
               <form onSubmit={handleCreate}>
                 <div className="mb-8">
-                  <label className="block text-xs font-bold tracking-normal text-gray-500 dark:text-gray-400 mb-2 uppercase">{activeModal} Name</label>
+                  <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">{activeModal} Name</label>
                   <input
                     type="text"
                     autoFocus
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={`ENTER ${activeModal.toUpperCase()} NAME...`}
-                    className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-4 py-3 outline-none focus:border-primary-600 transition-colors font-sans text-sm font-bold"
+                    className="aiq-input"
                     required
                   />
                 </div>
                 {activeModal === 'project' && (
                   <div className="grid grid-cols-2 gap-4 mb-8">
                     <div>
-                      <label className="block text-xs font-bold tracking-normal text-gray-500 dark:text-gray-400 mb-2 uppercase">Product</label>
-                      <input type="text" value={product} onChange={e => setProduct(e.target.value)} className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2 outline-none focus:border-primary-600 transition-colors font-sans text-sm font-bold" />
+                      <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Product</label>
+                      <input type="text" value={product} onChange={e => setProduct(e.target.value)} className="aiq-input" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold tracking-normal text-gray-500 dark:text-gray-400 mb-2 uppercase">Work Order</label>
-                      <input type="text" value={workOrder} onChange={e => setWorkOrder(e.target.value)} className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2 outline-none focus:border-primary-600 transition-colors font-sans text-sm font-bold" />
+                      <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Work Order</label>
+                      <input type="text" value={workOrder} onChange={e => setWorkOrder(e.target.value)} className="aiq-input" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold tracking-normal text-gray-500 dark:text-gray-400 mb-2 uppercase">Category</label>
-                      <input type="text" value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2 outline-none focus:border-primary-600 transition-colors font-sans text-sm font-bold" />
+                      <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Category</label>
+                      <input type="text" value={category} onChange={e => setCategory(e.target.value)} className="aiq-input" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold tracking-normal text-gray-500 dark:text-gray-400 mb-2 uppercase">Start Date</label>
-                      <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2 outline-none focus:border-primary-600 transition-colors font-sans text-sm font-bold" />
+                      <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Start Date</label>
+                      <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="aiq-input" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold tracking-normal text-gray-500 dark:text-gray-400 mb-2 uppercase">Target Date</label>
-                      <input type="date" value={targetDate} onChange={e => setTargetDate(e.target.value)} className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2 outline-none focus:border-primary-600 transition-colors font-sans text-sm font-bold" />
+                      <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Target Date</label>
+                      <input type="date" value={targetDate} onChange={e => setTargetDate(e.target.value)} className="aiq-input" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Batch ID</label>
+                      <input type="text" value={batchId} onChange={e => setBatchId(e.target.value)} className="aiq-input" />
                     </div>
                   </div>
                 )}
-                <div className="flex justify-end gap-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-                  <button type="button" onClick={handleCloseModal} className="px-6 py-2 text-gray-500 font-bold tracking-normal text-xs hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800 mt-4">
+                  <button type="button" onClick={handleCloseModal} className="aiq-btn-ghost">
                     CANCEL
                   </button>
-                  <button type="submit" disabled={!name.trim()} className="btn-brutal-dark px-6 py-2 text-black font-black tracking-normal text-xs transition-colors">
+                  <button type="submit" disabled={!name.trim()} className="aiq-btn-primary">
                     CREATE
                   </button>
                 </div>

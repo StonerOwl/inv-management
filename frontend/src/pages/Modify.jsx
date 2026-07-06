@@ -62,7 +62,7 @@ function ConfirmModal({ title, message, confirmLabel = 'DELETE', onConfirm, onCa
           </div>
         </div>
         <div className="flex justify-end gap-4 mt-8">
-          <button onClick={onCancel} className="text-sm font-black text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100  tracking-normal px-4 py-2">CANCEL</button>
+          <button onClick={onCancel} className="text-sm font-black text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100  tracking-normal px-4 py-2">CANCEL</button>
           <button
             onClick={onConfirm}
             className={clsx(
@@ -115,7 +115,7 @@ function EditModal({ invoice, onSave, onCancel, saving, categories }) {
         <div className="grid grid-cols-2 gap-6">
           {fields.map(f => (
             <div key={f.key}>
-              <label className="text-[10px] text-gray-500 dark:text-gray-400 font-black  tracking-normal">{f.label}</label>
+              <label className="text-[10px] text-gray-700 dark:text-gray-300 font-black  tracking-normal">{f.label}</label>
               <input
                 type={f.type}
                 className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm outline-none focus:border-primary-600 transition-colors mt-1 font-bold placeholder-gray-700"
@@ -126,7 +126,7 @@ function EditModal({ invoice, onSave, onCancel, saving, categories }) {
             </div>
           ))}
           <div>
-            <label className="text-[10px] text-gray-500 dark:text-gray-400 font-black  tracking-normal">STATUS</label>
+            <label className="text-[10px] text-gray-700 dark:text-gray-300 font-black  tracking-normal">STATUS</label>
             <select
               className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm outline-none focus:border-primary-600 transition-colors mt-1 font-bold cursor-pointer  tracking-normal"
               value={values.status}
@@ -138,7 +138,7 @@ function EditModal({ invoice, onSave, onCancel, saving, categories }) {
             </select>
           </div>
           <div>
-            <label className="text-[10px] text-gray-500 dark:text-gray-400 font-black  tracking-normal">CATEGORY</label>
+            <label className="text-[10px] text-gray-700 dark:text-gray-300 font-black  tracking-normal">CATEGORY</label>
             <select
               className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm outline-none focus:border-primary-600 transition-colors mt-1 font-bold cursor-pointer  tracking-normal"
               value={values.category}
@@ -153,7 +153,7 @@ function EditModal({ invoice, onSave, onCancel, saving, categories }) {
         </div>
 
         <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-          <button onClick={onCancel} className="text-sm font-black text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100  tracking-normal px-4 py-2 flex items-center gap-2">
+          <button onClick={onCancel} className="text-sm font-black text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100  tracking-normal px-4 py-2 flex items-center gap-2">
             <X size={14} /> CANCEL
           </button>
           <button
@@ -401,7 +401,7 @@ export default function Modify() {
             </span>
             <button
               onClick={() => setSelected(new Set())}
-              className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-colors"
+              className="text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100 transition-colors"
             >
               [ CLEAR SELECTION ]
             </button>
@@ -422,7 +422,7 @@ export default function Modify() {
               <thead className="bg-white dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
                 <tr>
                   <th className="py-4 px-4 border-r border-gray-100 dark:border-gray-800 w-12 text-center">
-                    <button onClick={toggleSelectAll} className="text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors">
+                    <button onClick={toggleSelectAll} className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition-colors">
                       {allSelected ? <CheckSquare size={18} className="text-primary-600" /> : <Square size={18} />}
                     </button>
                   </th>
@@ -434,7 +434,7 @@ export default function Modify() {
               <tbody>
                 {invoices.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="text-center py-20 text-gray-600 dark:text-gray-400 font-bold tracking-normal">
+                    <td colSpan={8} className="text-center py-20 text-gray-800 dark:text-gray-200 font-bold tracking-normal">
                       <Settings2 size={48} className="mx-auto mb-4 opacity-20" />
                       NO INVOICES FOUND.
                     </td>
@@ -450,7 +450,7 @@ export default function Modify() {
                       )}
                     >
                       <td className="py-3 px-4 border-r border-gray-100 dark:border-gray-800 text-center" onClick={(e) => { e.stopPropagation(); toggleSelect(inv.id); }}>
-                        <button className="text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors">
+                        <button className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition-colors">
                           {selected.has(inv.id)
                             ? <CheckSquare size={18} className="text-primary-600" />
                             : <Square size={18} />
@@ -462,7 +462,7 @@ export default function Modify() {
                         <span className="truncate block font-bold text-gray-300">{inv.product_description || '—'}</span>
                       </td>
                       <td className="py-3 px-4 text-xs text-gray-400 whitespace-nowrap border-r border-gray-100 dark:border-gray-800" onClick={() => toggleSelect(inv.id)}>{inv.invoice_date || '—'}</td>
-                      <td className="py-3 px-4 text-xs text-gray-500 dark:text-gray-400 border-r border-gray-100 dark:border-gray-800" onClick={() => toggleSelect(inv.id)}>{inv.seller_gstin || '—'}</td>
+                      <td className="py-3 px-4 text-xs text-gray-700 dark:text-gray-300 border-r border-gray-100 dark:border-gray-800" onClick={() => toggleSelect(inv.id)}>{inv.seller_gstin || '—'}</td>
                       <td className="py-3 px-4 text-sm font-black text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-800" onClick={() => toggleSelect(inv.id)}>{formatCurrency(inv.grand_total)}</td>
                       <td className="py-3 px-4 border-r border-gray-100 dark:border-gray-800" onClick={() => toggleSelect(inv.id)}>
                         <select
@@ -470,7 +470,7 @@ export default function Modify() {
                             "bg-white dark:bg-gray-800 border outline-none text-[10px] font-black px-1 py-1  tracking-normal cursor-pointer transition-colors",
                             pendingCategories[inv.id] !== undefined 
                               ? "text-primary-600 border-primary-600" 
-                              : inv.category ? "text-primary-600 border-black" : "text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700"
+                              : inv.category ? "text-primary-600 border-black" : "text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700"
                           )}
                           value={pendingCategories[inv.id] !== undefined ? pendingCategories[inv.id] : (inv.category || '')}
                           onChange={(e) => {
@@ -514,7 +514,7 @@ export default function Modify() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-800 border-t-2 border-gray-200 dark:border-gray-700">
-              <span className="text-xs font-bold tracking-normal text-gray-500 dark:text-gray-400 ">
+              <span className="text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 ">
                 PAGE {page + 1} OF {totalPages}
               </span>
               <div className="flex gap-2">
@@ -538,7 +538,7 @@ export default function Modify() {
         </div>
 
         {/* Quick stats footer */}
-        <div className="mt-6 flex items-center gap-6 text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 px-2 ">
+        <div className="mt-6 flex items-center gap-6 text-[10px] font-black tracking-normal text-gray-700 dark:text-gray-300 px-2 ">
           <span>{total} TOTAL RECORDS</span>
           <span>·</span>
           <span className="text-primary-600">{selected.size} SELECTED</span>

@@ -229,56 +229,56 @@ export default function InventoryDashboard() {
   const pendingCount = invoices.filter(i => !i.status || i.status === 'pending').length
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-sans flex flex-col relative -m-8 p-8 rounded-tl-xl shadow-inner">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col relative -m-8 p-8">
       <div className="max-w-7xl w-full mx-auto pb-20">
         
         {/* Upload Header */}
         <div className="mb-6">
-          <h1 className="text-[28px] font-bold text-primary-700 tracking-tight">UPLOAD</h1>
-          <p className="text-[14px] text-gray-600 dark:text-gray-400 font-medium mt-1">Upload invoice files and extract data automatically</p>
+          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">UPLOAD</h1>
+          <p className="text-sm text-gray-700 dark:text-gray-300 font-semibold mt-1">Upload invoice files and extract data automatically</p>
         </div>
 
         {/* Drop zone */}
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer relative overflow-hidden mb-8 transition-colors ${
-            isDragActive ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30' : 'border-gray-200 dark:border-gray-700 bg-gray-50/50 hover:bg-gray-50 dark:bg-gray-900'
+          className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer relative overflow-hidden mb-8 transition-all ${
+            isDragActive ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-primary-500 hover:bg-gray-50 dark:hover:bg-gray-800/80'
           }`}
         >
           <input {...getInputProps()} />
           <div className="flex flex-col items-center justify-center">
-             <div className="mb-4 text-primary-600">
+             <div className="mb-4 text-primary-600 dark:text-primary-400">
                <UploadIcon size={42} strokeWidth={2} />
              </div>
              <p className="font-semibold text-lg text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                Drag & Drop invoice files here or
              </p>
-             <button className="bg-primary-600 hover:bg-primary-700 text-gray-900 dark:text-gray-100 font-semibold text-sm py-2 px-6 rounded-md transition-colors mb-4 shadow-sm">
+             <button className="aiq-btn-primary mb-4">
                Browse Files
              </button>
-             <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Supports: PDF, JPG, PNG, Excel, CSV (Max size: 20MB)</p>
+             <p className="text-gray-700 dark:text-gray-300 text-xs font-semibold">Supports: PDF, JPG, PNG, Excel, CSV (Max size: 20MB)</p>
           </div>
         </div>
 
         {/* Selected Files & Progress */}
         {files.length > 0 && (
-          <div className="mb-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-[0_2px_15px_-5px_rgba(0,0,0,0.05)]">
+          <div className="mb-10 aiq-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-800 dark:text-gray-200">Files Ready for Processing ({files.length})</h3>
-              <button onClick={clearAll} className="text-sm font-medium text-red-500 hover:text-red-600 transition-colors">
+              <h3 className="font-bold text-gray-900 dark:text-gray-100">Files Ready for Processing ({files.length})</h3>
+              <button onClick={clearAll} className="text-sm font-semibold text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors">
                 Clear All
               </button>
             </div>
             
             <div className="max-h-48 overflow-y-auto space-y-2 mb-6 pr-2">
               {files.map(f => (
-                <div key={f.name} className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg p-3">
+                <div key={f.name} className="flex items-center justify-between bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                   <div className="flex items-center gap-3">
-                    <FileText size={18} className="text-primary-500" />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate max-w-md">{f.name}</span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">{(f.size / 1024).toFixed(0)} KB</span>
+                    <FileText size={18} className="text-primary-600 dark:text-primary-400" />
+                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate max-w-md">{f.name}</span>
+                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{(f.size / 1024).toFixed(0)} KB</span>
                   </div>
-                  <button onClick={() => setFiles(prev => prev.filter(file => file.name !== f.name))} className="text-gray-400 hover:text-red-500 transition-colors">
+                  <button onClick={() => setFiles(prev => prev.filter(file => file.name !== f.name))} className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors">
                     <XCircle size={18} />
                   </button>
                 </div>
@@ -319,7 +319,7 @@ export default function InventoryDashboard() {
               )}
 
               {job && (
-                <div className="flex justify-between text-xs font-semibold text-gray-600 dark:text-gray-400 px-1 mt-1">
+                <div className="flex justify-between text-xs font-semibold text-gray-800 dark:text-gray-200 px-1 mt-1">
                   <span>Processed: {job.processed}</span>
                   {job.failed > 0 && <span className="text-red-500">Failed: {job.failed}</span>}
                   {job.pending > 0 && <span>Pending: {job.pending}</span>}
@@ -334,54 +334,54 @@ export default function InventoryDashboard() {
 
         {/* Stats Row */}
         <div className="grid grid-cols-5 gap-5 mb-10">
-          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800 p-5 rounded-xl flex flex-col shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)]">
+          <div className="aiq-card p-5 flex flex-col">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary-600 text-gray-900 dark:text-gray-100 flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                 <UploadIcon size={16} strokeWidth={2.5} />
               </div>
-              <span className="text-[13px] font-bold text-primary-700">Total Uploaded</span>
+              <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Total Uploaded</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">{total || invoices.length || 0}</p>
+            <p className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{total || invoices.length || 0}</p>
           </div>
           
-          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800 p-5 rounded-xl flex flex-col shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)]">
+          <div className="aiq-card p-5 flex flex-col">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-green-600 text-gray-900 dark:text-gray-100 flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                 <CheckCircle size={16} strokeWidth={2.5} />
               </div>
-              <span className="text-[13px] font-bold text-green-600">Parsed Successfully</span>
+              <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Parsed Successfully</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">{parsedCount}</p>
+            <p className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{parsedCount}</p>
           </div>
           
-          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800 p-5 rounded-xl flex flex-col shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)]">
+          <div className="aiq-card p-5 flex flex-col">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-orange-400 text-gray-900 dark:text-gray-100 flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center">
                 <Clock size={16} strokeWidth={2.5} />
               </div>
-              <span className="text-[13px] font-bold text-orange-500">Pending Parsing</span>
+              <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Pending Parsing</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">{pendingCount}</p>
+            <p className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{pendingCount}</p>
           </div>
           
-          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800 p-5 rounded-xl flex flex-col shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)]">
+          <div className="aiq-card p-5 flex flex-col">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-red-500 text-gray-900 dark:text-gray-100 flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center">
                 <XCircle size={16} strokeWidth={2.5} />
               </div>
-              <span className="text-[13px] font-bold text-red-500">Failed</span>
+              <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Failed</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">{failedCount}</p>
+            <p className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{failedCount}</p>
           </div>
           
-          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800 p-5 rounded-xl flex flex-col shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)]">
+          <div className="aiq-card p-5 flex flex-col">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-indigo-600 text-gray-900 dark:text-gray-100 flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                 <FileText size={16} strokeWidth={2.5} />
               </div>
-              <span className="text-[13px] font-bold text-indigo-700">Duplicates</span>
+              <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Duplicates</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">0</p>
+            <p className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">0</p>
           </div>
         </div>
 
@@ -394,27 +394,27 @@ export default function InventoryDashboard() {
               <input 
                 type="text" 
                 placeholder="Search..." 
-                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg py-2 pl-9 pr-4 outline-none text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 w-64 shadow-sm"
+                className="aiq-input pl-9 pr-4 py-2 min-w-[250px]"
               />
             </div>
-            <button className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg py-2 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-900 shadow-sm transition-colors">
+            <button className="aiq-btn-ghost flex items-center gap-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 h-[42px] px-4">
               <Filter size={16} /> Filters
             </button>
-            <button onClick={fetchData} className="p-2 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-900 shadow-sm transition-colors">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            <button onClick={fetchData} className="aiq-btn-ghost flex items-center justify-center border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 h-[42px] w-[42px] p-0">
+              <RefreshCw size={16} />
             </button>
           </div>
         </div>
 
         {/* Table */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden shadow-[0_2px_15px_-5px_rgba(0,0,0,0.05)] relative min-h-[300px]">
+        <div className="aiq-card overflow-hidden relative min-h-[300px]">
           {loading && (
-            <div className="absolute inset-0 bg-white dark:bg-gray-800/80 backdrop-blur-sm flex items-center justify-center z-10">
-              <Loader2 className="animate-spin text-primary-600" size={32} />
+            <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-10">
+              <Loader2 className="animate-spin text-primary-600 dark:text-primary-400" size={32} />
             </div>
           )}
           <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-50/80 border-b border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 text-[11px] font-bold  tracking-wider">
+            <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold tracking-wider uppercase">
               <tr>
                 <th className="py-4 px-6">File Name</th>
                 <th className="py-4 px-6">File Type</th>
@@ -424,10 +424,10 @@ export default function InventoryDashboard() {
                 <th className="py-4 px-6 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-[13px] font-medium text-gray-800 dark:text-gray-200">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800 text-sm font-medium text-gray-800 dark:text-gray-200">
               {invoices.length === 0 && !loading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-gray-400 font-semibold">
+                  <td colSpan={6} className="text-center py-12 text-gray-700 dark:text-gray-300 font-semibold">
                     No upload history found.
                   </td>
                 </tr>
@@ -437,41 +437,41 @@ export default function InventoryDashboard() {
                   const isExpanded = expandedRow === item.id;
                   return (
                     <React.Fragment key={item.id}>
-                      <tr className="hover:bg-gray-50/80 transition-colors group">
-                        <td className="py-4 px-6 max-w-[200px] truncate" title={item.file_name || item.invoice_number}>
+                      <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
+                        <td className="py-4 px-6 max-w-[200px] truncate font-semibold" title={item.file_name || item.invoice_number}>
                           {item.file_name || item.invoice_number || `INV-${item.id}`}
                         </td>
-                        <td className="py-4 px-6 text-gray-500 dark:text-gray-400">
+                        <td className="py-4 px-6 text-gray-700 dark:text-gray-300">
                           {item.file_name ? item.file_name.split('.').pop().toUpperCase() : 'PDF'}
                         </td>
-                        <td className="py-4 px-6 text-gray-600 dark:text-gray-400">{item.invoice_number || item.id}</td>
-                        <td className="py-4 px-6 text-gray-500 dark:text-gray-400">
+                        <td className="py-4 px-6 text-gray-800 dark:text-gray-200">{item.invoice_number || item.id}</td>
+                        <td className="py-4 px-6 text-gray-700 dark:text-gray-300">
                           {item.created_at ? new Date(item.created_at).toLocaleDateString() : (item.invoice_date || '—')}
                         </td>
                         <td className="py-4 px-6">
                           {parseStatus === 'Parsed' && (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold bg-green-50 text-green-700 border border-green-200/60">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
                               Parsed
                             </span>
                           )}
                           {parseStatus === 'Failed' && (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold bg-red-50 text-red-700 border border-red-200/60">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800">
                               Failed
                             </span>
                           )}
                           {parseStatus === 'Pending' && (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold bg-orange-50 text-orange-700 border border-orange-200/60">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800">
                               Pending
                             </span>
                           )}
                         </td>
                         <NoteTarget as="td" targetType="invoice" targetId={item.id} className="py-4 px-6 flex items-center justify-end gap-3 text-gray-400 relative z-20">
-                          <button onClick={() => handleToggleExpand(item)} className="hover:text-primary-600 transition-colors" title="View/Edit"><Eye size={18} strokeWidth={1.5} /></button>
-                          <button onClick={() => handleDownload(item)} className="hover:text-primary-600 transition-colors" title="Download"><Download size={18} strokeWidth={1.5} /></button>
-                          <button onClick={() => handleDelete(item.id)} className="hover:text-red-500 transition-colors" title="Delete"><Trash2 size={18} strokeWidth={1.5} /></button>
+                          <button onClick={() => handleToggleExpand(item)} className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors" title="View/Edit"><Eye size={18} strokeWidth={1.5} /></button>
+                          <button onClick={() => handleDownload(item)} className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors" title="Download"><Download size={18} strokeWidth={1.5} /></button>
+                          <button onClick={() => handleDelete(item.id)} className="hover:text-red-500 dark:hover:text-red-400 transition-colors" title="Delete"><Trash2 size={18} strokeWidth={1.5} /></button>
                           <button 
                             onClick={() => openRegisterPopup({ ...item, fileName: item.file_name || item.invoice_number || `INV-${item.id}` })}
-                            className="ml-3 bg-primary-600 hover:bg-primary-700 text-gray-900 dark:text-gray-100 text-xs font-semibold py-1.5 px-3.5 rounded-md transition-colors shadow-sm"
+                            className="ml-3 aiq-btn-primary py-1.5 px-3.5 text-xs h-auto"
                           >
                             Register
                           </button>
@@ -479,15 +479,15 @@ export default function InventoryDashboard() {
                       </tr>
                       {isExpanded && (
                         <tr>
-                          <td colSpan={6} className="bg-gray-50/50 p-6 border-b border-gray-100 dark:border-gray-800">
+                          <td colSpan={6} className="bg-gray-50 dark:bg-gray-900/50 p-6 border-b border-gray-200 dark:border-gray-800">
                             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 shadow-sm w-full">
                               <h3 className="text-[15px] font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-                                <FileText size={18} className="text-primary-600" />
+                                <FileText size={18} className="text-primary-600 dark:text-primary-400" />
                                 Edit Invoice Details
                               </h3>
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
                                 <div>
-                                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400  tracking-wider mb-1.5">Invoice Number</label>
+                                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300  tracking-wider mb-1.5">Invoice Number</label>
                                   <input 
                                     type="text" 
                                     value={editData.invoice_number || ''} 
@@ -496,7 +496,7 @@ export default function InventoryDashboard() {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400  tracking-wider mb-1.5">Invoice Date</label>
+                                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300  tracking-wider mb-1.5">Invoice Date</label>
                                   <input 
                                     type="text" 
                                     value={editData.invoice_date || ''} 
@@ -505,7 +505,7 @@ export default function InventoryDashboard() {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400  tracking-wider mb-1.5">Invoice Details</label>
+                                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300  tracking-wider mb-1.5">Invoice Details</label>
                                   <input 
                                     type="text" 
                                     value={editData.invoice_details || ''} 
@@ -514,7 +514,7 @@ export default function InventoryDashboard() {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400  tracking-wider mb-1.5">GST Registration No</label>
+                                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300  tracking-wider mb-1.5">GST Registration No</label>
                                   <input 
                                     type="text" 
                                     value={editData.gst_registration_no || ''} 
@@ -523,7 +523,7 @@ export default function InventoryDashboard() {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400  tracking-wider mb-1.5">PAN No</label>
+                                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300  tracking-wider mb-1.5">PAN No</label>
                                   <input 
                                     type="text" 
                                     value={editData.pan_no || ''} 
@@ -532,7 +532,7 @@ export default function InventoryDashboard() {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400  tracking-wider mb-1.5">CIN No</label>
+                                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300  tracking-wider mb-1.5">CIN No</label>
                                   <input 
                                     type="text" 
                                     value={editData.cin_no || ''} 
@@ -541,7 +541,7 @@ export default function InventoryDashboard() {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400  tracking-wider mb-1.5">Status</label>
+                                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300  tracking-wider mb-1.5">Status</label>
                                   <select 
                                     value={editData.status || ''} 
                                     onChange={(e) => handleEditChange('status', e.target.value)}
@@ -594,7 +594,7 @@ export default function InventoryDashboard() {
                               <div className="mt-6 flex justify-end gap-3">
                                 <button 
                                   onClick={() => setExpandedRow(null)}
-                                  className="px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 rounded transition-colors"
+                                  className="px-4 py-2 text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 rounded transition-colors"
                                 >
                                   Cancel
                                 </button>
@@ -620,28 +620,27 @@ export default function InventoryDashboard() {
 
       {/* Blank Popup Modal for Register */}
       {registerPopupOpen && (
-        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-lg relative border border-gray-100 dark:border-gray-800">
+        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl p-6 w-full max-w-lg relative border border-gray-200 dark:border-gray-800">
             <button 
               onClick={closeRegisterPopup} 
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-400 transition-colors"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-800 dark:text-gray-200 transition-colors"
             >
               <XCircle size={20} strokeWidth={2} />
             </button>
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
               Register Invoice
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-6 font-medium">
               {selectedInvoice?.fileName}
             </p>
             
-            {/* PWS Hierarchy Selection */}
             <div className="mb-6">
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Select Project</label>
               <select 
                 value={selectedProjectId}
                 onChange={(e) => setSelectedProjectId(e.target.value)}
-                className="w-full bg-white dark:bg-gray-800 border border-gray-300 text-gray-900 dark:text-gray-100 px-4 py-2.5 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all font-semibold appearance-none cursor-pointer"
+                className="aiq-input appearance-none"
               >
                 <option value="">-- Choose a Project --</option>
                 {projects.map(p => (
@@ -654,7 +653,7 @@ export default function InventoryDashboard() {
 
             {selectedProjectId && (
               <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 rounded-lg max-h-[300px] overflow-y-auto">
-                <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400  tracking-wider mb-3">Connected Hierarchy</h3>
+                <h3 className="text-xs font-bold text-gray-700 dark:text-gray-300  tracking-wider mb-3">Connected Hierarchy</h3>
                 {connectedWorkflows.length === 0 ? (
                   <div className="text-sm text-gray-400 italic">No workflows connected to this project.</div>
                 ) : (
@@ -672,11 +671,11 @@ export default function InventoryDashboard() {
                           </div>
                           <div className="pl-4 border-l-2 border-gray-100 dark:border-gray-800 flex flex-wrap gap-2">
                             {connectedStates.length === 0 ? (
-                              <span className="text-xs text-gray-400 italic">No states assigned</span>
+                              <span className="text-xs text-gray-400 italic">No stages assigned</span>
                             ) : (
                               connectedStates.map(s => (
                                 <span key={s.id} className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                  State: {s.name}
+                                  Stage: {s.name}
                                 </span>
                               ))
                             )}
@@ -692,14 +691,14 @@ export default function InventoryDashboard() {
             <div className="mt-8 flex justify-end gap-3">
               <button 
                 onClick={closeRegisterPopup}
-                className="px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 rounded-lg transition-colors"
+                className="aiq-btn-ghost"
               >
                 Cancel
               </button>
               <button 
                 onClick={handleRegisterSave}
                 disabled={!selectedProjectId}
-                className="px-4 py-2 text-sm font-semibold bg-primary-600 hover:bg-primary-700 text-gray-900 dark:text-gray-100 rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="aiq-btn-primary disabled:opacity-50"
               >
                 Register & Save
               </button>

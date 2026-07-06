@@ -37,16 +37,16 @@ function ProgressBar({ progress, size = 'md' }) {
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
-function StatCard({ icon: Icon, label, value, subtext, color = 'text-primary-600' }) {
+function StatCard({ icon: Icon, label, value, subtext, color = 'text-primary-600 dark:text-primary-400' }) {
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 flex items-start gap-4 hover:border-primary-600 transition-colors group">
-      <div className="w-12 h-12 bg-[#FCD535] text-black flex items-center justify-center shrink-0">
-        <Icon size={22} />
+    <div className="aiq-card p-6 flex items-start gap-4 hover:border-primary-500 dark:hover:border-primary-400 transition-colors group">
+      <div className="w-12 h-12 rounded-lg bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center shrink-0">
+        <Icon size={24} />
       </div>
       <div>
-        <p className="text-[10px] text-gray-500 dark:text-gray-400 font-black font-semibold tracking-normal mb-1">{label}</p>
-        <p className={clsx('text-2xl font-black tracking-tight', color)}>{value}</p>
-        {subtext && <p className="text-[10px] text-gray-600 dark:text-gray-400 font-bold tracking-normal mt-1 ">{subtext}</p>}
+        <p className="text-xs text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider mb-1">{label}</p>
+        <p className={clsx('text-3xl font-extrabold tracking-tight', color)}>{value}</p>
+        {subtext && <p className="text-xs text-gray-700 dark:text-gray-300 font-bold mt-1">{subtext}</p>}
       </div>
     </div>
   )
@@ -86,15 +86,15 @@ function TrackingDetailModal({ invoiceId, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-gray-800/80 backdrop-blur-sm p-4 font-sans">
-      <div className="bg-white dark:bg-gray-800 border-2 border-primary-600 w-full max-w-lg overflow-hidden max-h-[85vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm p-4 font-sans">
+      <div className="aiq-card w-full max-w-lg overflow-hidden max-h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between shrink-0">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 flex items-center justify-between shrink-0">
           <div>
-            <h2 className="text-xl font-black text-primary-600 tracking-tighter ">PROCESS TRACKING</h2>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold tracking-normal mt-1">INVOICE #{invoiceId}</p>
+            <h2 className="text-xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">Process Tracking</h2>
+            <p className="text-sm text-gray-700 dark:text-gray-300 font-bold mt-1">Invoice #{invoiceId}</p>
           </div>
-          <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-colors p-2">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
             <X size={20} />
           </button>
         </div>
@@ -108,10 +108,10 @@ function TrackingDetailModal({ invoiceId, onClose }) {
           ) : !data?.processes || data.processes.length === 0 ? (
             <div className="text-center py-12">
               <GitBranch size={48} className="mx-auto mb-4 text-gray-700 dark:text-gray-300" />
-              <p className="text-sm text-gray-500 dark:text-gray-400 font-black font-semibold tracking-normal">
+              <p className="text-sm text-gray-700 dark:text-gray-300 font-black font-semibold tracking-normal">
                 NO PROCESSES DEFINED
               </p>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 font-bold">
+              <p className="text-xs text-gray-800 dark:text-gray-200 mt-2 font-bold">
                 Add workflows and processes to this category in Item Codes.
               </p>
             </div>
@@ -121,13 +121,13 @@ function TrackingDetailModal({ invoiceId, onClose }) {
               <div className="flex items-center gap-3 mb-2">
                 <GitBranch size={14} className="text-primary-600" />
                 <span className="text-sm font-black tracking-normal text-gray-900 dark:text-gray-100 ">TRACKING PROGRESS</span>
-                <span className="text-[10px] text-gray-500 dark:text-gray-400 font-bold tracking-normal">{data.category}</span>
+                <span className="text-[10px] text-gray-700 dark:text-gray-300 font-bold tracking-normal">{data.category}</span>
               </div>
 
               {/* Progress */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] text-gray-500 dark:text-gray-400 font-black font-semibold tracking-normal">
+                  <span className="text-[10px] text-gray-700 dark:text-gray-300 font-black font-semibold tracking-normal">
                     PROGRESS
                   </span>
                   <span className={clsx(
@@ -138,7 +138,7 @@ function TrackingDetailModal({ invoiceId, onClose }) {
                   </span>
                 </div>
                 <ProgressBar progress={data.progress} size="lg" />
-                <p className="text-[10px] text-gray-600 dark:text-gray-400 font-bold tracking-normal mt-2 ">
+                <p className="text-[10px] text-gray-800 dark:text-gray-200 font-bold tracking-normal mt-2 ">
                   {data.completed_count} OF {data.total_processes} STEPS COMPLETED
                 </p>
               </div>
@@ -164,16 +164,16 @@ function TrackingDetailModal({ invoiceId, onClose }) {
                       ) : proc.completed ? (
                         <CheckCircle2 size={18} className="text-emerald-500" />
                       ) : (
-                        <Circle size={18} className="text-gray-600 dark:text-gray-400 group-hover:text-primary-600 transition-colors" />
+                        <Circle size={18} className="text-gray-800 dark:text-gray-200 group-hover:text-primary-600 transition-colors" />
                       )}
                     </div>
 
                     {/* Step info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-gray-600 dark:text-gray-400 font-black w-5 shrink-0">{idx + 1}.</span>
+                        <span className="text-[10px] text-gray-800 dark:text-gray-200 font-black w-5 shrink-0">{idx + 1}.</span>
                         <span className={clsx(
-                          'text-[10px] font-black font-semibold tracking-normal text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-1.5 py-0.5'
+                          'text-[10px] font-black font-semibold tracking-normal text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-1.5 py-0.5'
                         )}>
                           {proc.workflow_name}
                         </span>
@@ -186,14 +186,14 @@ function TrackingDetailModal({ invoiceId, onClose }) {
                       </div>
                       {proc.completed && proc.completed_at && (
                         <div className="flex items-center gap-2 mt-1 ml-7">
-                          <Clock size={8} className="text-gray-600 dark:text-gray-400" />
-                          <span className="text-[9px] text-gray-600 dark:text-gray-400 font-bold">
+                          <Clock size={8} className="text-gray-800 dark:text-gray-200" />
+                          <span className="text-[9px] text-gray-800 dark:text-gray-200 font-bold">
                             {new Date(proc.completed_at).toLocaleString()}
                           </span>
                           {proc.completed_by && (
                             <>
-                              <User size={8} className="text-gray-600 dark:text-gray-400 ml-1" />
-                              <span className="text-[9px] text-gray-600 dark:text-gray-400 font-bold">{proc.completed_by}</span>
+                              <User size={8} className="text-gray-800 dark:text-gray-200 ml-1" />
+                              <span className="text-[9px] text-gray-800 dark:text-gray-200 font-bold">{proc.completed_by}</span>
                             </>
                           )}
                         </div>
@@ -248,19 +248,19 @@ export default function TrackingDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col">
 
-      <div className="max-w-7xl mx-auto w-full px-8 flex-1 pb-20">
+      <div className="max-w-7xl mx-auto w-full px-8 flex-1 pb-20 pt-10">
         {/* Header */}
-        <div className="mb-8 border-b border-gray-200 dark:border-gray-700 pb-6 flex items-end justify-between">
+        <div className="mb-8 border-b border-gray-200 dark:border-gray-800 pb-6 flex items-end justify-between">
           <div>
-            <h1 className="text-7xl font-black tracking-tighter  flex items-center gap-6">
-              <div className="w-16 h-16 bg-[#FCD535] flex items-center justify-center border-4 border-primary-600">
-                <BarChart3 size={36} className="text-black" />
+            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center">
+                <BarChart3 size={28} />
               </div>
-              TRACKING
+              Tracking Dashboard
             </h1>
-            <div className="text-sm font-bold tracking-normal text-primary-600 mt-4 flex items-center gap-4">
+            <div className="text-sm font-bold tracking-normal text-primary-600 dark:text-primary-400 mt-3 flex items-center gap-4">
               <span>&gt; WORKFLOW · PROCESS TRACKING</span>
-              <div className="w-32 h-[1px] bg-[#FCD535]"></div>
+              <div className="w-32 h-[1px] bg-primary-500"></div>
             </div>
           </div>
           <div className="flex gap-3 items-center">
@@ -268,17 +268,17 @@ export default function TrackingDashboard() {
               <select
                 value={categoryFilter}
                 onChange={e => setCategoryFilter(e.target.value)}
-                className="appearance-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2.5 pr-10 text-xs font-black tracking-normal text-gray-900 dark:text-gray-100 focus:border-primary-600 outline-none  cursor-pointer"
+                className="aiq-input appearance-none pr-10 cursor-pointer text-sm font-bold"
               >
                 <option value="">ALL CATEGORIES</option>
                 {categories.map(c => (
                   <option key={c.name} value={c.name}>{c.name.toUpperCase()}</option>
                 ))}
               </select>
-              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none" />
+              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 dark:text-gray-300 pointer-events-none" />
             </div>
-            <button onClick={fetchDashboard} className="btn-brutal-dark p-3 text-xs">
-              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            <button onClick={fetchDashboard} className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             </button>
           </div>
         </div>
@@ -334,28 +334,26 @@ export default function TrackingDashboard() {
           </div>
         )}
 
-        <div className="divider-striped-yellow mb-8"></div>
-
         {/* Items Table */}
-        <div className="card-brutal-dark relative">
+        <div className="aiq-card relative overflow-hidden">
           {loading && (
-            <div className="absolute inset-0 bg-white dark:bg-gray-800/80 flex items-center justify-center z-10">
-              <Loader2 className="animate-spin text-primary-600" size={32} />
+            <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-10">
+              <Loader2 className="animate-spin text-primary-500" size={32} />
             </div>
           )}
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
-              <thead className="bg-white dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
                 <tr>
                   {['INVOICE #', 'DATE', 'CATEGORY', 'DESCRIPTION', 'COST', 'CURRENT STAGE', 'PROGRESS'].map(h => (
-                    <th key={h} className="py-4 px-4 text-xs font-black tracking-normal text-primary-600 whitespace-nowrap border-r border-gray-100 dark:border-gray-800 last:border-0">{h}</th>
+                    <th key={h} className="py-3.5 px-4 text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="text-center py-20 text-gray-600 dark:text-gray-400 font-bold tracking-normal">
+                    <td colSpan={8} className="text-center py-20 text-gray-800 dark:text-gray-200 font-bold tracking-normal">
                       <BarChart3 size={48} className="mx-auto mb-4 opacity-20" />
                       {loading ? 'LOADING...' : 'NO ITEMS WITH CATEGORIES FOUND.'}
                     </td>
@@ -368,32 +366,32 @@ export default function TrackingDashboard() {
                       <tr
                         key={item.invoice_id}
                         className={clsx(
-                          'border-b border-gray-100 dark:border-gray-800 hover:bg-gray-100 dark:bg-gray-800 cursor-pointer transition-colors',
-                          idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'
+                          'border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors',
+                          idx % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/30'
                         )}
                         onClick={() => setSelectedInvoice(item.invoice_id)}
                       >
-                        <td className="py-3 px-4 text-sm font-bold border-r border-gray-100 dark:border-gray-800">
+                        <td className="py-3.5 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 font-mono">
                           {item.invoice_number || '—'}
                         </td>
-                        <td className="py-3 px-4 text-xs text-gray-400 whitespace-nowrap border-r border-gray-100 dark:border-gray-800">
+                        <td className="py-3.5 px-4 text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap">
                           {item.invoice_date || '—'}
                         </td>
-                        <td className="py-3 px-4 border-r border-gray-100 dark:border-gray-800">
+                        <td className="py-3.5 px-4">
                           <span className={clsx(
-                            'inline-flex items-center px-2 py-1 text-[10px] font-black font-semibold tracking-normal rounded-sm border',
+                            'inline-flex items-center px-2.5 py-1 text-[10px] font-bold tracking-wide rounded-full border',
                             cc.bg, cc.color, cc.border
                           )}>
                             {item.category}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-xs text-gray-300 max-w-[200px] truncate border-r border-gray-100 dark:border-gray-800">
+                        <td className="py-3.5 px-4 text-sm text-gray-800 dark:text-gray-200 max-w-[200px] truncate">
                           {item.description || '—'}
                         </td>
-                        <td className="py-3 px-4 text-sm font-black text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-800">
+                        <td className="py-3.5 px-4 text-sm font-bold text-gray-900 dark:text-gray-100">
                           {formatCurrency(item.grand_total)}
                         </td>
-                        <td className="py-3 px-4 border-r border-gray-100 dark:border-gray-800">
+                        <td className="py-3.5 px-4">
                           {item.current_stage ? (
                             <span className={clsx(
                               'text-[10px] font-black font-semibold tracking-normal px-2 py-1',
@@ -404,7 +402,7 @@ export default function TrackingDashboard() {
                               {item.current_stage}
                             </span>
                           ) : (
-                            <span className="text-[10px] text-gray-600 dark:text-gray-400 font-bold font-semibold tracking-normal">—</span>
+                            <span className="text-[10px] text-gray-800 dark:text-gray-200 font-bold font-semibold tracking-normal">—</span>
                           )}
                         </td>
                         <td className="py-3 px-4 min-w-[140px]">
@@ -413,13 +411,13 @@ export default function TrackingDashboard() {
                               <ProgressBar progress={item.progress} size="sm" />
                               <span className={clsx(
                                 'text-[10px] font-black tracking-normal whitespace-nowrap',
-                                item.progress >= 100 ? 'text-emerald-400' : item.progress > 0 ? 'text-primary-600' : 'text-gray-600 dark:text-gray-400'
+                                item.progress >= 100 ? 'text-emerald-400' : item.progress > 0 ? 'text-primary-600' : 'text-gray-800 dark:text-gray-200'
                               )}>
                                 {item.progress}%
                               </span>
                             </div>
                           ) : (
-                            <span className="text-[10px] text-gray-600 dark:text-gray-400 font-bold tracking-normal">—</span>
+                            <span className="text-[10px] text-gray-800 dark:text-gray-200 font-bold tracking-normal">—</span>
                           )}
                         </td>
                       </tr>
@@ -432,7 +430,7 @@ export default function TrackingDashboard() {
         </div>
 
         {/* Quick stats footer */}
-        <div className="mt-6 flex items-center gap-6 text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 px-2 ">
+        <div className="mt-6 flex items-center gap-6 text-[10px] font-black tracking-normal text-gray-700 dark:text-gray-300 px-2 ">
           <span>{items.length} TRACKED ITEMS</span>
           <span>·</span>
           <span className="text-emerald-400">{completedItems} COMPLETED</span>

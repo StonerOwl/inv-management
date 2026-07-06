@@ -132,26 +132,26 @@ export default function RegisterInventory() {
 
   if (!id && !invoice) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[50vh] text-gray-500 dark:text-gray-400">
-        <CheckCircle size={48} className="mb-4 opacity-20" />
-        <p className="font-bold font-semibold tracking-normal">No pending invoices to register.</p>
+      <div className="flex flex-col items-center justify-center h-full min-h-[50vh] text-gray-700 dark:text-gray-300">
+        <CheckCircle size={64} className="mb-6 text-gray-300 dark:text-gray-600" />
+        <p className="text-lg font-bold mb-6">No pending invoices to register.</p>
         <button 
           onClick={() => navigate('/upload')} 
-          className="mt-6 btn-brutal-dark px-6 py-3 flex items-center gap-2 text-xs text-primary-600"
+          className="px-6 py-3 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-bold transition-colors flex items-center gap-2"
         >
-          GO TO UPLOAD <ArrowRight size={14} />
+          Go to Upload <ArrowRight size={18} />
         </button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto pb-20">
-      <div className="mb-8 border-b border-gray-200 dark:border-gray-700 pb-6">
-        <h1 className="text-5xl font-black tracking-tighter ">Review & Register</h1>
-        <div className="text-sm font-bold tracking-normal text-primary-600 mt-2 flex items-center gap-4">
+    <div className="max-w-6xl mx-auto pb-20 pt-10">
+      <div className="mb-8 border-b border-gray-200 dark:border-gray-800 pb-6">
+        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">Review & Register</h1>
+        <div className="text-sm font-bold tracking-normal text-primary-600 dark:text-primary-400 mt-3 flex items-center gap-4">
           <span>&gt; INVOICE #{invoice?.invoice_number || invoice?.id}</span>
-          <div className="w-32 h-[1px] bg-[#FCD535]"></div>
+          <div className="w-32 h-[1px] bg-primary-500"></div>
         </div>
       </div>
 
@@ -166,15 +166,17 @@ export default function RegisterInventory() {
         
         {/* Left Column: Invoice Details */}
         <div className="lg:col-span-2 space-y-8">
-          <div className="card-brutal-dark p-8 relative">
-            <div className="absolute top-0 left-0 w-2 h-full bg-[#FCD535]" />
-            <h2 className="text-lg font-black text-gray-900 dark:text-gray-100  tracking-normal mb-6 flex items-center gap-2">
-              <FileText size={18} className="text-primary-600" /> EXTRACTED DETAILS
+          <div className="aiq-card p-8">
+            <h2 className="text-lg font-extrabold text-gray-900 dark:text-gray-100 tracking-tight mb-6 flex items-center gap-2 pb-4 border-b border-gray-100 dark:border-gray-800">
+              <div className="w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 flex items-center justify-center">
+                <FileText size={18} />
+              </div>
+              Extracted Details
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="block text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 ">
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Invoice Number
                 </label>
                 <input
@@ -183,12 +185,12 @@ export default function RegisterInventory() {
                   name="invoice_number"
                   value={formData.invoice_number}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 p-3 focus:outline-none focus:border-primary-600 transition-colors font-bold"
+                  className="aiq-input w-full"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 ">
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Invoice Date
                 </label>
                 <input
@@ -197,12 +199,12 @@ export default function RegisterInventory() {
                   name="invoice_date"
                   value={formData.invoice_date}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 p-3 focus:outline-none focus:border-primary-600 transition-colors font-bold"
+                  className="aiq-input w-full"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 ">
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Seller GSTIN
                 </label>
                 <input
@@ -210,12 +212,12 @@ export default function RegisterInventory() {
                   name="seller_gstin"
                   value={formData.seller_gstin}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 p-3 focus:outline-none focus:border-primary-600 transition-colors font-bold"
+                  className="aiq-input w-full"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 ">
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Product / Service Description
                 </label>
                 <input
@@ -224,12 +226,12 @@ export default function RegisterInventory() {
                   name="product_description"
                   value={formData.product_description}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 p-3 focus:outline-none focus:border-primary-600 transition-colors font-bold"
+                  className="aiq-input w-full"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 ">
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Total Quantity
                 </label>
                 <input
@@ -239,12 +241,12 @@ export default function RegisterInventory() {
                   name="quantity"
                   value={formData.quantity}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 p-3 focus:outline-none focus:border-primary-600 transition-colors font-bold"
+                  className="aiq-input w-full"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 ">
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Grand Total (₹)
                 </label>
                 <input
@@ -254,7 +256,7 @@ export default function RegisterInventory() {
                   name="grand_total"
                   value={formData.grand_total}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-primary-600 font-black text-lg p-3 focus:outline-none focus:border-primary-600 transition-colors"
+                  className="aiq-input w-full text-lg font-extrabold text-primary-600 dark:text-primary-400"
                 />
               </div>
             </div>
@@ -262,25 +264,24 @@ export default function RegisterInventory() {
         </div>
 
         {/* Right Column: Classification & PO */}
-        <div className="space-y-8">
+        <div className="space-y-6">
           
-          <div className="card-brutal-dark p-8 relative">
-            <div className="absolute top-0 left-0 w-2 h-full bg-cyan-400" />
-            <h2 className="text-lg font-black text-gray-900 dark:text-gray-100  tracking-normal mb-6 flex items-center gap-2">
-              <Link2 size={18} className="text-cyan-400" /> CLASSIFICATION
+          <div className="aiq-card p-6 border-t-4 border-t-cyan-500 dark:border-t-cyan-400">
+            <h2 className="text-lg font-extrabold text-gray-900 dark:text-gray-100 tracking-tight mb-6 flex items-center gap-2">
+              <Link2 size={18} className="text-cyan-500 dark:text-cyan-400" /> Classification
             </h2>
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="block text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 ">
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Match Purchase Order
                 </label>
                 <select
                   value={selectedPoId}
                   onChange={(e) => setSelectedPoId(e.target.value)}
-                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 p-3 focus:outline-none focus:border-cyan-400 transition-colors font-bold  cursor-pointer"
+                  className="aiq-input w-full cursor-pointer"
                 >
-                  <option value="">-- NO PO MATCHED --</option>
+                  <option value="">-- No PO Matched --</option>
                   {pos.map(po => (
                     <option key={po.id} value={po.id}>
                       {po.po_number} - {po.item_name} ({po.quantity} {po.unit})
@@ -290,14 +291,14 @@ export default function RegisterInventory() {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 ">
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Invoice Type / Category
                 </label>
                 <select
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 p-3 focus:outline-none focus:border-primary-600 transition-colors font-bold  cursor-pointer"
+                  className="aiq-input w-full cursor-pointer"
                 >
                   {INVOICE_TYPES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -307,47 +308,46 @@ export default function RegisterInventory() {
 
           {/* PO Info Panel - shows when a PO is selected */}
           {selectedPO && (
-            <div className="card-brutal-dark p-8 relative">
-              <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500" />
-              <h2 className="text-lg font-black text-gray-900 dark:text-gray-100  tracking-normal mb-6 flex items-center gap-2">
-                <Package size={18} className="text-emerald-500" /> PO DETAILS
+            <div className="aiq-card p-6 border-t-4 border-t-emerald-500 dark:border-t-emerald-400">
+              <h2 className="text-lg font-extrabold text-gray-900 dark:text-gray-100 tracking-tight mb-6 flex items-center gap-2">
+                <Package size={18} className="text-emerald-500 dark:text-emerald-400" /> PO Details
               </h2>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-                  <span className="text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 ">PO Number</span>
-                  <span className="text-sm font-bold text-primary-600">{selectedPO.po_number}</span>
+                  <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">PO Number</span>
+                  <span className="text-sm font-bold text-primary-600 dark:text-primary-400">{selectedPO.po_number}</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-                  <span className="text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 ">Item</span>
+                  <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Item</span>
                   <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{selectedPO.item_name}</span>
                 </div>
                 {selectedPO.item_code && (
                   <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-                    <span className="text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 ">Item Code</span>
-                    <span className="text-sm font-bold text-cyan-400 font-sans">{selectedPO.item_code}</span>
+                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Item Code</span>
+                    <span className="text-sm font-bold text-cyan-500 dark:text-cyan-400 font-mono">{selectedPO.item_code}</span>
                   </div>
                 )}
                 {selectedPO.category && (
                   <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-                    <span className="text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 ">Item Category</span>
-                    <span className="inline-flex items-center gap-1.5 text-xs font-black font-semibold tracking-normal text-purple-400 bg-purple-500/15 border border-purple-500/30 px-2.5 py-1 rounded-sm">
-                      <Tag size={10} />
+                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Category</span>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-2.5 py-1 rounded-full border border-purple-200 dark:border-purple-800/30">
+                      <Tag size={12} />
                       {selectedPO.category}
                     </span>
                   </div>
                 )}
                 <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-                  <span className="text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 ">Quantity</span>
+                  <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Quantity</span>
                   <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{selectedPO.quantity} {selectedPO.unit}</span>
                 </div>
                 <div className="flex items-center justify-between pb-1">
-                  <span className="text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 ">Status</span>
+                  <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Status</span>
                   <span className={clsx(
-                    "text-[10px] font-black px-2 py-1 font-semibold tracking-normal border",
-                    selectedPO.status === 'approved' ? 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30' :
-                    selectedPO.status === 'rejected' ? 'text-red-400 bg-red-500/15 border-red-500/30' :
-                    'text-gray-400 bg-gray-50 dark:bg-gray-9000/15 border-gray-500/30'
+                    "text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
+                    selectedPO.status === 'approved' ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/30' :
+                    selectedPO.status === 'rejected' ? 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30' :
+                    'text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
                   )}>
                     {selectedPO.status}
                   </span>
@@ -357,25 +357,25 @@ export default function RegisterInventory() {
               {/* Workflow / Process info from PO's category */}
               {poCategory && poCategory.workflows && poCategory.workflows.length > 0 && (
                 <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <p className="text-[10px] text-primary-600 font-black font-semibold tracking-normal mb-3 flex items-center gap-1.5">
-                    <GitBranch size={10} /> LINKED WORKFLOWS & PROCESSES
+                  <p className="text-xs text-primary-600 dark:text-primary-400 font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <GitBranch size={14} /> Linked Workflows
                   </p>
                   <div className="space-y-3">
                     {poCategory.workflows.map(wf => (
-                      <div key={wf.id} className="border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <GitBranch size={10} className="text-primary-600" />
-                          <span className="text-[10px] font-black text-gray-900 dark:text-gray-100  tracking-normal">{wf.name}</span>
+                      <div key={wf.id} className="border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <GitBranch size={14} className="text-primary-600 dark:text-primary-400" />
+                          <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{wf.name}</span>
                         </div>
-                        <div className="space-y-1 pl-4 border-l border-gray-200 dark:border-gray-700 ml-1.5">
+                        <div className="space-y-2 pl-5 border-l-2 border-gray-200 dark:border-gray-700 ml-1.5">
                           {wf.processes?.length > 0 ? wf.processes.map((proc, idx) => (
-                            <div key={proc.id} className="flex items-center gap-2 text-[10px] text-gray-400 font-bold tracking-normal">
-                              <span className="text-gray-600 dark:text-gray-400 w-4">{idx + 1}.</span>
-                              <Layers size={8} className="text-emerald-500" />
-                              <span className="">{proc.name}</span>
+                            <div key={proc.id} className="flex items-center gap-2 text-xs font-medium text-gray-800 dark:text-gray-200">
+                              <span className="text-gray-400 w-4">{idx + 1}.</span>
+                              <Layers size={12} className="text-emerald-500 dark:text-emerald-400" />
+                              <span>{proc.name}</span>
                             </div>
                           )) : (
-                            <p className="text-[10px] text-gray-600 dark:text-gray-400 font-bold tracking-normal">NO PROCESSES DEFINED</p>
+                            <p className="text-xs text-gray-700 dark:text-gray-300 italic">No processes defined</p>
                           )}
                         </div>
                       </div>
@@ -387,19 +387,19 @@ export default function RegisterInventory() {
           )}
 
           {/* Submit Action */}
-          <div className="pt-4">
+          <div className="pt-2">
             <button
               type="submit"
               disabled={saving}
-              className="w-full flex items-center justify-center gap-3 bg-[#FCD535] text-black px-8 py-5 font-black tracking-normal text-sm  hover:bg-white dark:bg-gray-800 transition-colors disabled:opacity-50 cursor-pointer border border-primary-600"
+              className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold text-white bg-primary-600 hover:bg-primary-700 transition-colors disabled:opacity-50"
             >
               {saving ? (
-                <><Loader2 size={18} className="animate-spin" /> PROCESSING...</>
+                <><Loader2 size={18} className="animate-spin" /> Processing...</>
               ) : (
-                <><Save size={18} /> COMPLETE REGISTRATION</>
+                <><Save size={18} /> Complete Registration</>
               )}
             </button>
-            <p className="text-center text-[10px] text-gray-500 dark:text-gray-400 font-bold  tracking-normal mt-4">
+            <p className="text-center text-xs text-gray-700 dark:text-gray-300 mt-4">
               Will route to manage page upon success
             </p>
           </div>

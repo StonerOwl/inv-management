@@ -55,15 +55,15 @@ function ProcessModal({ invoiceId, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-gray-800/80 backdrop-blur-sm p-4 font-sans">
-      <div className="bg-white dark:bg-gray-800 border-2 border-primary-600 w-full max-w-lg overflow-hidden max-h-[85vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm p-4 font-sans">
+      <div className="aiq-card w-full max-w-lg overflow-hidden max-h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between shrink-0">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 flex items-center justify-between shrink-0">
           <div>
-            <h2 className="text-xl font-black text-primary-600 tracking-tighter ">TRACE PROCESS</h2>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold tracking-normal mt-1">INVOICE #{invoiceId} · {data?.category || '—'}</p>
+            <h2 className="text-xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">Trace Process</h2>
+            <p className="text-sm text-gray-700 dark:text-gray-300 font-bold mt-1">Invoice #{invoiceId} · {data?.category || '—'}</p>
           </div>
-          <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-colors p-2">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
             <X size={20} />
           </button>
         </div>
@@ -77,22 +77,22 @@ function ProcessModal({ invoiceId, onClose }) {
           ) : !data?.processes || data.processes.length === 0 ? (
             <div className="text-center py-12">
               <Cog size={48} className="mx-auto mb-4 text-gray-700 dark:text-gray-300" />
-              <p className="text-sm text-gray-500 dark:text-gray-400 font-black font-semibold tracking-normal">NO PROCESSES DEFINED</p>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 font-bold">Add workflows and processes to this category in Configure.</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 font-black font-semibold tracking-normal">NO PROCESSES DEFINED</p>
+              <p className="text-xs text-gray-800 dark:text-gray-200 mt-2 font-bold">Add workflows and processes to this category in Configure.</p>
             </div>
           ) : (
             <div className="space-y-6">
               {/* Progress */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] text-gray-500 dark:text-gray-400 font-black font-semibold tracking-normal">PROGRESS</span>
+                  <span className="text-[10px] text-gray-700 dark:text-gray-300 font-black font-semibold tracking-normal">PROGRESS</span>
                   <span className={clsx(
                     'text-sm font-black tracking-normal',
                     data.progress >= 100 ? 'text-emerald-400' : 'text-primary-600'
                   )}>{data.progress}%</span>
                 </div>
                 <ProgressBar progress={data.progress} size="lg" />
-                <p className="text-[10px] text-gray-600 dark:text-gray-400 font-bold tracking-normal mt-2 ">
+                <p className="text-[10px] text-gray-800 dark:text-gray-200 font-bold tracking-normal mt-2 ">
                   {data.completed_count} OF {data.total_processes} STEPS COMPLETED
                 </p>
               </div>
@@ -118,15 +118,15 @@ function ProcessModal({ invoiceId, onClose }) {
                       ) : proc.completed ? (
                         <CheckCircle2 size={18} className="text-emerald-500" />
                       ) : (
-                        <Circle size={18} className="text-gray-600 dark:text-gray-400 group-hover:text-primary-600 transition-colors" />
+                        <Circle size={18} className="text-gray-800 dark:text-gray-200 group-hover:text-primary-600 transition-colors" />
                       )}
                     </div>
 
                     {/* Step info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-gray-600 dark:text-gray-400 font-black w-5 shrink-0">{idx + 1}.</span>
-                        <span className="text-[10px] font-black font-semibold tracking-normal text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
+                        <span className="text-[10px] text-gray-800 dark:text-gray-200 font-black w-5 shrink-0">{idx + 1}.</span>
+                        <span className="text-[10px] font-black font-semibold tracking-normal text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
                           {proc.workflow_name}
                         </span>
                         <span className={clsx(
@@ -138,14 +138,14 @@ function ProcessModal({ invoiceId, onClose }) {
                       </div>
                       {proc.completed && proc.completed_at && (
                         <div className="flex items-center gap-2 mt-1 ml-7">
-                          <Clock size={8} className="text-gray-600 dark:text-gray-400" />
-                          <span className="text-[9px] text-gray-600 dark:text-gray-400 font-bold">
+                          <Clock size={8} className="text-gray-800 dark:text-gray-200" />
+                          <span className="text-[9px] text-gray-800 dark:text-gray-200 font-bold">
                             {new Date(proc.completed_at).toLocaleString()}
                           </span>
                           {proc.completed_by && (
                             <>
-                              <User size={8} className="text-gray-600 dark:text-gray-400 ml-1" />
-                              <span className="text-[9px] text-gray-600 dark:text-gray-400 font-bold">{proc.completed_by}</span>
+                              <User size={8} className="text-gray-800 dark:text-gray-200 ml-1" />
+                              <span className="text-[9px] text-gray-800 dark:text-gray-200 font-bold">{proc.completed_by}</span>
                             </>
                           )}
                         </div>
@@ -195,19 +195,19 @@ export default function TraceProcess() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col">
-      <div className="max-w-7xl mx-auto w-full px-8 flex-1 pb-20">
+      <div className="max-w-7xl mx-auto w-full px-8 flex-1 pb-20 pt-10">
         {/* Header */}
-        <div className="mb-8 border-b border-gray-200 dark:border-gray-700 pb-6 flex items-end justify-between">
+        <div className="mb-8 border-b border-gray-200 dark:border-gray-800 pb-6 flex items-end justify-between">
           <div>
-            <h1 className="text-5xl font-black tracking-tighter  flex items-center gap-5">
-              <div className="w-14 h-14 bg-[#FCD535] flex items-center justify-center">
-                <Cog size={30} className="text-black" />
+            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center">
+                <Cog size={28} />
               </div>
-              TRACE PROCESS
+              Trace Process
             </h1>
-            <div className="text-sm font-bold tracking-normal text-gray-500 dark:text-gray-400 mt-3 flex items-center gap-4">
+            <div className="text-sm font-bold tracking-normal text-primary-600 dark:text-primary-400 mt-3 flex items-center gap-4">
               <span>&gt; TOGGLE INDIVIDUAL PROCESSES FOR INVOICES</span>
-              <div className="w-24 h-[1px] bg-[#333]"></div>
+              <div className="w-24 h-[1px] bg-primary-500"></div>
             </div>
           </div>
           <div className="flex gap-3 items-center">
@@ -215,74 +215,72 @@ export default function TraceProcess() {
               <select
                 value={categoryFilter}
                 onChange={e => setCategoryFilter(e.target.value)}
-                className="appearance-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2.5 pr-10 text-xs font-black tracking-normal text-gray-900 dark:text-gray-100 focus:border-primary-600 outline-none  cursor-pointer"
+                className="aiq-input appearance-none pr-10 cursor-pointer text-sm font-bold"
               >
                 <option value="">ALL CATEGORIES</option>
                 {categories.map(c => (
                   <option key={c.name} value={c.name}>{c.name.toUpperCase()}</option>
                 ))}
               </select>
-              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none" />
+              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 dark:text-gray-300 pointer-events-none" />
             </div>
-            <button onClick={fetchDashboard} className="btn-brutal-dark p-3 text-xs">
-              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            <button onClick={fetchDashboard} className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             </button>
           </div>
         </div>
 
         {/* Summary Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5 flex items-start gap-4 hover:border-primary-600 transition-colors">
-            <div className="w-11 h-11 bg-[#FCD535] text-black flex items-center justify-center shrink-0">
-              <Package size={20} />
+          <div className="aiq-card p-6 flex items-start gap-4 hover:border-primary-500 dark:hover:border-primary-400 transition-colors group">
+            <div className="w-12 h-12 rounded-lg bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center shrink-0">
+              <Package size={24} />
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 font-black font-semibold tracking-normal mb-1">TRACKED INVOICES</p>
-              <p className="text-2xl font-black tracking-tight text-primary-600">{items.length}</p>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider mb-1">Tracked Invoices</p>
+              <p className="text-3xl font-extrabold tracking-tight text-primary-600 dark:text-primary-400">{items.length}</p>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5 flex items-start gap-4 hover:border-emerald-500/50 transition-colors">
-            <div className="w-11 h-11 bg-emerald-500 text-black flex items-center justify-center shrink-0">
-              <CheckCircle2 size={20} />
+          <div className="aiq-card p-6 flex items-start gap-4 hover:border-emerald-500 dark:hover:border-emerald-400 transition-colors group">
+            <div className="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <CheckCircle2 size={24} />
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 font-black font-semibold tracking-normal mb-1">FULLY COMPLETED</p>
-              <p className="text-2xl font-black tracking-tight text-emerald-400">{completedItems}</p>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider mb-1">Fully Completed</p>
+              <p className="text-3xl font-extrabold tracking-tight text-emerald-600 dark:text-emerald-400">{completedItems}</p>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5 flex items-start gap-4 hover:border-orange-500/50 transition-colors">
-            <div className="w-11 h-11 bg-orange-500 text-black flex items-center justify-center shrink-0">
-              <Layers size={20} />
+          <div className="aiq-card p-6 flex items-start gap-4 hover:border-orange-500 dark:hover:border-orange-400 transition-colors group">
+            <div className="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
+              <Layers size={24} />
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 font-black font-semibold tracking-normal mb-1">IN PROGRESS</p>
-              <p className="text-2xl font-black tracking-tight text-orange-400">{inProgressItems}</p>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider mb-1">In Progress</p>
+              <p className="text-3xl font-extrabold tracking-tight text-orange-600 dark:text-orange-400">{inProgressItems}</p>
             </div>
           </div>
         </div>
 
-        <div className="divider-striped-yellow mb-8"></div>
-
         {/* Items Table */}
-        <div className="card-brutal-dark relative">
+        <div className="aiq-card relative overflow-hidden">
           {loading && (
-            <div className="absolute inset-0 bg-white dark:bg-gray-800/80 flex items-center justify-center z-10">
-              <Loader2 className="animate-spin text-primary-600" size={32} />
+            <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-10">
+              <Loader2 className="animate-spin text-primary-500" size={32} />
             </div>
           )}
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
-              <thead className="bg-white dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
                 <tr>
                   {['INVOICE #', 'CATEGORY', 'DESCRIPTION', 'CURRENT STAGE', 'PROGRESS', 'ACTION'].map(h => (
-                    <th key={h} className="py-4 px-4 text-xs font-black tracking-normal text-primary-600 whitespace-nowrap border-r border-gray-100 dark:border-gray-800 last:border-0">{h}</th>
+                    <th key={h} className="py-3.5 px-4 text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-20 text-gray-600 dark:text-gray-400 font-bold tracking-normal">
+                    <td colSpan={6} className="text-center py-20 text-gray-800 dark:text-gray-200 font-bold tracking-normal">
                       <Cog size={48} className="mx-auto mb-4 opacity-20" />
                       {loading ? 'LOADING...' : 'NO INVOICES WITH PROCESSES FOUND.'}
                     </td>
@@ -292,50 +290,50 @@ export default function TraceProcess() {
                     <tr
                       key={item.invoice_id}
                       className={clsx(
-                        'border-b border-gray-100 dark:border-gray-800 hover:bg-gray-100 dark:bg-gray-800 transition-colors',
-                        idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'
+                        'border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors',
+                        idx % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/30'
                       )}
                     >
-                      <td className="py-3 px-4 text-sm font-bold border-r border-gray-100 dark:border-gray-800">
+                      <td className="py-3.5 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 font-mono">
                         {item.invoice_number || '—'}
                       </td>
-                      <td className="py-3 px-4 border-r border-gray-100 dark:border-gray-800">
-                        <span className="text-[10px] font-black font-semibold tracking-normal text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-1">
+                      <td className="py-3.5 px-4">
+                        <span className="text-[10px] font-bold tracking-wide text-purple-600 dark:text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-full">
                           {item.category || '—'}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-xs text-gray-300 max-w-[200px] truncate border-r border-gray-100 dark:border-gray-800">
+                      <td className="py-3.5 px-4 text-sm text-gray-800 dark:text-gray-200 max-w-[200px] truncate">
                         {item.description || '—'}
                       </td>
-                      <td className="py-3 px-4 border-r border-gray-100 dark:border-gray-800">
+                      <td className="py-3.5 px-4">
                         {item.current_stage ? (
                           <span className={clsx(
-                            'text-[10px] font-black font-semibold tracking-normal px-2 py-1',
+                            'text-[10px] font-bold tracking-wide px-2.5 py-1 rounded-full',
                             item.current_stage === 'COMPLETED'
-                              ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'
-                              : 'text-primary-600 bg-[#FCD535]/10 border border-primary-600/20'
+                              ? 'text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'
+                              : 'text-primary-600 dark:text-primary-400 bg-primary-500/10 border border-primary-500/20'
                           )}>
                             {item.current_stage}
                           </span>
                         ) : (
-                          <span className="text-[10px] text-gray-600 dark:text-gray-400 font-bold font-semibold tracking-normal">NOT STARTED</span>
+                          <span className="text-[10px] text-gray-700 dark:text-gray-300 font-bold uppercase">Not Started</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 min-w-[140px] border-r border-gray-100 dark:border-gray-800">
+                      <td className="py-3.5 px-4 min-w-[140px]">
                         <div className="flex items-center gap-3">
                           <ProgressBar progress={item.progress} size="sm" />
                           <span className={clsx(
-                            'text-[10px] font-black tracking-normal whitespace-nowrap',
-                            item.progress >= 100 ? 'text-emerald-400' : item.progress > 0 ? 'text-primary-600' : 'text-gray-600 dark:text-gray-400'
+                            'text-[10px] font-bold tracking-normal whitespace-nowrap',
+                            item.progress >= 100 ? 'text-emerald-400' : item.progress > 0 ? 'text-primary-600' : 'text-gray-800 dark:text-gray-200'
                           )}>
                             {item.progress}%
                           </span>
                         </div>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-4">
                         <button
                           onClick={() => setSelectedInvoice(item.invoice_id)}
-                          className="text-[10px] font-black font-semibold tracking-normal text-primary-600 hover:text-gray-900 dark:text-gray-100 border border-primary-600 hover:bg-[#FCD535] hover:text-black px-3 py-1.5 transition-all"
+                          className="px-4 py-1.5 rounded-lg text-xs font-bold text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-800/30 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
                         >
                           TOGGLE
                         </button>
@@ -349,7 +347,7 @@ export default function TraceProcess() {
         </div>
 
         {/* Footer Stats */}
-        <div className="mt-6 flex items-center gap-6 text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 px-2 ">
+        <div className="mt-6 flex items-center gap-6 text-[10px] font-black tracking-normal text-gray-700 dark:text-gray-300 px-2 ">
           <span>{items.length} TRACKED ITEMS</span>
           <span>·</span>
           <span className="text-emerald-400">{completedItems} COMPLETED</span>

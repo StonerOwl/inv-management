@@ -30,17 +30,17 @@ function ProgressBar({ progress, size = 'md' }) {
 
 function ConfirmModal({ title, message, confirmLabel, danger, onConfirm, onCancel, loading }) {
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-white dark:bg-gray-800/80 backdrop-blur-sm p-4 font-sans">
-      <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 w-full max-w-md p-6">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm p-4 font-sans">
+      <div className="aiq-card w-full max-w-md p-6">
         <div className="flex items-center gap-3 mb-4">
-          <AlertTriangle size={20} className={danger ? 'text-red-500' : 'text-primary-600'} />
-          <h3 className="text-lg font-black tracking-tighter  text-gray-900 dark:text-gray-100">{title}</h3>
+          <AlertTriangle size={20} className={danger ? 'text-red-500 dark:text-red-400' : 'text-primary-600 dark:text-primary-400'} />
+          <h3 className="text-lg font-extrabold tracking-tight text-gray-900 dark:text-gray-100">{title}</h3>
         </div>
-        <p className="text-xs text-gray-400 font-bold tracking-normal mb-6  leading-relaxed">{message}</p>
+        <p className="text-sm text-gray-800 dark:text-gray-200 mb-6 leading-relaxed">{message}</p>
         <div className="flex gap-3 justify-end">
           <button
             onClick={onCancel}
-            className="text-xs font-black font-semibold tracking-normal text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 hover:border-[#555] px-4 py-2 transition-all"
+            className="px-4 py-2 rounded-lg text-xs font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             CANCEL
           </button>
@@ -48,13 +48,13 @@ function ConfirmModal({ title, message, confirmLabel, danger, onConfirm, onCance
             onClick={onConfirm}
             disabled={loading}
             className={clsx(
-              'text-xs font-black font-semibold tracking-normal px-4 py-2 transition-all flex items-center gap-2',
+              'px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2',
               danger
-                ? 'text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-black'
-                : 'text-primary-600 border border-primary-600/30 hover:bg-[#FCD535] hover:text-black'
+                ? 'bg-red-500 hover:bg-red-600 text-white'
+                : 'bg-primary-600 hover:bg-primary-700 text-white'
             )}
           >
-            {loading && <Loader2 size={12} className="animate-spin" />}
+            {loading && <Loader2 size={14} className="animate-spin" />}
             {confirmLabel}
           </button>
         </div>
@@ -83,25 +83,25 @@ function ReassignModal({ invoiceId, currentCategory, categories, onClose, onSucc
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-white dark:bg-gray-800/80 backdrop-blur-sm p-4 font-sans">
-      <div className="bg-white dark:bg-gray-800 border-2 border-primary-600 w-full max-w-md overflow-hidden">
-        <div className="p-6 border-b-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm p-4 font-sans">
+      <div className="aiq-card w-full max-w-md overflow-hidden">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-black text-primary-600 tracking-tighter ">REASSIGN WORKFLOW</h2>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold tracking-normal mt-1">INVOICE #{invoiceId}</p>
+            <h2 className="text-xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">Reassign Workflow</h2>
+            <p className="text-sm text-gray-700 dark:text-gray-300 font-bold mt-1">Invoice #{invoiceId}</p>
           </div>
-          <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-colors p-2">
-            <X size={18} />
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+            <X size={20} />
           </button>
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-6">
           {/* Current */}
           <div>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-black font-semibold tracking-normal mb-2">CURRENT CATEGORY</p>
-            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3">
-              <GitBranch size={14} className="text-gray-500 dark:text-gray-400" />
-              <span className="text-sm font-black font-semibold tracking-normal text-gray-400">
+            <p className="text-xs text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider mb-2">Current Category</p>
+            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 px-4 py-3 rounded-lg">
+              <GitBranch size={16} className="text-gray-700 dark:text-gray-300" />
+              <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
                 {currentCategory || 'NONE'}
               </span>
             </div>
@@ -109,14 +109,14 @@ function ReassignModal({ invoiceId, currentCategory, categories, onClose, onSucc
 
           {/* Target */}
           <div>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-black font-semibold tracking-normal mb-2">NEW CATEGORY</p>
+            <p className="text-xs text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider mb-2">New Category</p>
             <div className="relative">
               <select
                 value={selectedCategory}
                 onChange={e => setSelectedCategory(e.target.value)}
-                className="w-full appearance-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 pr-10 text-sm font-black tracking-normal text-gray-900 dark:text-gray-100 focus:border-primary-600 outline-none  cursor-pointer"
+                className="aiq-input w-full appearance-none pr-10 cursor-pointer text-sm"
               >
-                <option value="">SELECT CATEGORY...</option>
+                <option value="">Select Category...</option>
                 {categories
                   .filter(c => c.name !== currentCategory)
                   .map(c => (
@@ -124,23 +124,23 @@ function ReassignModal({ invoiceId, currentCategory, categories, onClose, onSucc
                   ))
                 }
               </select>
-              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none" />
+              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 dark:text-gray-300 pointer-events-none" />
             </div>
           </div>
 
           {/* Warning */}
-          <div className="flex items-start gap-3 bg-[#FCD535]/5 border border-primary-600/20 p-3">
-            <AlertTriangle size={14} className="text-primary-600 shrink-0 mt-0.5" />
-            <p className="text-[9px] text-primary-600 font-bold font-semibold tracking-normal leading-relaxed">
-              THIS WILL OVERRIDE THE WORKFLOW FOR THIS INVOICE ONLY. THE PO'S CATEGORY WILL NOT CHANGE. EXISTING TRACKING PROGRESS WILL BE PRESERVED BUT MAY NOT ALIGN WITH THE NEW WORKFLOW.
+          <div className="flex items-start gap-3 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800/30 p-4 rounded-lg">
+            <AlertTriangle size={16} className="text-primary-600 dark:text-primary-400 shrink-0 mt-0.5" />
+            <p className="text-xs text-primary-700 dark:text-primary-300 font-medium leading-relaxed">
+              This will override the workflow for this invoice only. The PO's category will not change. Existing tracking progress will be preserved but may not align with the new workflow.
             </p>
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 justify-end pt-2">
+          <div className="flex gap-3 justify-end pt-4 border-t border-gray-100 dark:border-gray-800">
             <button
               onClick={onClose}
-              className="text-xs font-black font-semibold tracking-normal text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 hover:border-[#555] px-4 py-2 transition-all"
+              className="px-4 py-2 rounded-lg text-xs font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               CANCEL
             </button>
@@ -148,13 +148,13 @@ function ReassignModal({ invoiceId, currentCategory, categories, onClose, onSucc
               onClick={handleReassign}
               disabled={!selectedCategory || loading}
               className={clsx(
-                'text-xs font-black font-semibold tracking-normal px-4 py-2 transition-all flex items-center gap-2',
+                'px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2',
                 selectedCategory
-                  ? 'text-primary-600 border border-primary-600/30 hover:bg-[#FCD535] hover:text-black'
-                  : 'text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-800 cursor-not-allowed'
+                  ? 'bg-primary-600 hover:bg-primary-700 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
               )}
             >
-              {loading && <Loader2 size={12} className="animate-spin" />}
+              {loading && <Loader2 size={14} className="animate-spin" />}
               REASSIGN
             </button>
           </div>
@@ -185,93 +185,93 @@ function HistoryModal({ invoiceId, onClose }) {
   }, [invoiceId])
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-white dark:bg-gray-800/80 backdrop-blur-sm p-4 font-sans">
-      <div className="bg-white dark:bg-gray-800 border-2 border-primary-600 w-full max-w-2xl overflow-hidden max-h-[85vh] flex flex-col">
-        <div className="p-6 border-b-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between shrink-0">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm p-4 font-sans">
+      <div className="aiq-card w-full max-w-2xl overflow-hidden max-h-[85vh] flex flex-col">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 flex items-center justify-between shrink-0">
           <div>
-            <h2 className="text-lg font-black text-primary-600 tracking-tighter ">TRACKING HISTORY</h2>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold tracking-normal mt-1">
-              INVOICE #{invoiceId} · {data?.invoice_number || '—'}
+            <h2 className="text-xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">Tracking History</h2>
+            <p className="text-sm text-gray-700 dark:text-gray-300 font-bold mt-1">
+              Invoice #{invoiceId} · {data?.invoice_number || '—'}
               {data?.is_overridden && (
-                <span className="text-orange-400 ml-2">· OVERRIDDEN</span>
+                <span className="text-orange-500 dark:text-orange-400 ml-2">· OVERRIDDEN</span>
               )}
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-colors p-2">
-            <X size={18} />
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+            <X size={20} />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="text-center py-12">
-              <Loader2 size={32} className="animate-spin text-primary-600 mx-auto" />
+              <Loader2 size={32} className="animate-spin text-primary-500 mx-auto" />
             </div>
           ) : (
             <div className="space-y-6">
               {/* Info Bar */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-3">
-                  <p className="text-[9px] text-gray-600 dark:text-gray-400 font-black font-semibold tracking-normal">CURRENT CATEGORY</p>
-                  <p className="text-sm font-black font-semibold tracking-normal text-gray-900 dark:text-gray-100 mt-1">{data?.current_category || '—'}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 p-4 rounded-lg">
+                  <p className="text-xs text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider">Current Category</p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100 mt-1">{data?.current_category || '—'}</p>
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-3">
-                  <p className="text-[9px] text-gray-600 dark:text-gray-400 font-black font-semibold tracking-normal">ORIGINAL (PO)</p>
-                  <p className="text-sm font-black font-semibold tracking-normal text-gray-400 mt-1">{data?.original_category || '—'}</p>
+                <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 p-4 rounded-lg">
+                  <p className="text-xs text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider">Original (PO)</p>
+                  <p className="text-lg font-bold text-gray-700 dark:text-gray-300 mt-1">{data?.original_category || '—'}</p>
                 </div>
               </div>
 
               {/* Records */}
               <div>
-                <p className="text-[10px] text-primary-600 font-black font-semibold tracking-normal mb-3">
-                  TRACKING RECORDS ({data?.records?.length || 0})
+                <p className="text-xs text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider mb-3">
+                  Tracking Records ({data?.records?.length || 0})
                 </p>
                 {!data?.records || data.records.length === 0 ? (
-                  <div className="text-center py-8">
-                    <History size={32} className="mx-auto mb-3 text-gray-700 dark:text-gray-300" />
-                    <p className="text-xs text-gray-600 dark:text-gray-400 font-bold font-semibold tracking-normal">NO RECORDS YET</p>
+                  <div className="text-center py-12">
+                    <History size={48} className="mx-auto mb-4 text-gray-400 dark:text-gray-600" />
+                    <p className="text-sm text-gray-700 dark:text-gray-300 font-bold">No records yet.</p>
                   </div>
                 ) : (
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {data.records.map(r => (
                       <div key={r.id} className={clsx(
-                        'flex items-center gap-3 p-3 border',
+                        'flex items-start gap-3 p-4 rounded-lg border transition-colors',
                         r.completed
-                          ? 'bg-emerald-500/5 border-emerald-500/15'
-                          : 'bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800'
+                          ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-900/30'
+                          : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
                       )}>
                         {r.completed ? (
-                          <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+                          <CheckCircle2 size={18} className="text-emerald-500 shrink-0 mt-0.5" />
                         ) : (
-                          <Circle size={14} className="text-gray-700 dark:text-gray-300 shrink-0" />
+                          <Circle size={18} className="text-gray-600 dark:text-gray-400 shrink-0 mt-0.5" />
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[9px] font-black font-semibold tracking-normal text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-1.5 py-0.5">
+                            <span className="text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
                               {r.workflow_name}
                             </span>
                             <span className={clsx(
-                              'text-[10px] font-black font-semibold tracking-normal truncate',
-                              r.completed ? 'text-emerald-400' : 'text-gray-400'
+                              'text-sm font-bold truncate',
+                              r.completed ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-800 dark:text-gray-200'
                             )}>
                               {r.process_name}
                             </span>
                           </div>
                           {(r.completed_at || r.completed_by || r.notes) && (
-                            <div className="flex items-center gap-3 mt-1 flex-wrap">
+                            <div className="flex items-center gap-4 mt-2 flex-wrap">
                               {r.completed_at && (
-                                <span className="text-[8px] text-gray-600 dark:text-gray-400 font-bold flex items-center gap-1">
-                                  <Clock size={8} />{new Date(r.completed_at).toLocaleString()}
+                                <span className="text-xs text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1.5">
+                                  <Clock size={12} />{new Date(r.completed_at).toLocaleString()}
                                 </span>
                               )}
                               {r.completed_by && (
-                                <span className="text-[8px] text-gray-600 dark:text-gray-400 font-bold flex items-center gap-1">
-                                  <User size={8} />{r.completed_by}
+                                <span className="text-xs text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1.5">
+                                  <User size={12} />{r.completed_by}
                                 </span>
                               )}
                               {r.notes && (
-                                <span className="text-[8px] text-gray-500 dark:text-gray-400 font-bold flex items-center gap-1 italic">
-                                  <MessageSquare size={8} />{r.notes.substring(0, 50)}{r.notes.length > 50 ? '...' : ''}
+                                <span className="text-xs text-gray-800 dark:text-gray-200 font-medium flex items-center gap-1.5 italic bg-white dark:bg-gray-900/50 px-2 py-1 rounded">
+                                  <MessageSquare size={12} />{r.notes}
                                 </span>
                               )}
                             </div>
@@ -310,29 +310,29 @@ function NoteModal({ invoiceId, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-white dark:bg-gray-800/80 backdrop-blur-sm p-4 font-sans">
-      <div className="bg-white dark:bg-gray-800 border-2 border-primary-600 w-full max-w-md overflow-hidden">
-        <div className="p-6 border-b-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm p-4 font-sans">
+      <div className="aiq-card w-full max-w-md overflow-hidden">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-black text-primary-600 tracking-tighter ">ADD NOTE</h2>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold tracking-normal mt-1">INVOICE #{invoiceId}</p>
+            <h2 className="text-xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">Add Note</h2>
+            <p className="text-sm text-gray-700 dark:text-gray-300 font-bold mt-1">Invoice #{invoiceId}</p>
           </div>
-          <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-colors p-2">
-            <X size={18} />
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+            <X size={20} />
           </button>
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-6">
           <textarea
             value={note}
             onChange={e => setNote(e.target.value)}
-            placeholder="ENTER NOTE..."
+            placeholder="Enter note..."
             rows={4}
-            className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 text-xs font-bold tracking-normal text-gray-900 dark:text-gray-100 focus:border-primary-600 outline-none  placeholder:text-gray-700 dark:text-gray-300 resize-none"
+            className="aiq-input w-full resize-none py-3"
           />
-          <div className="flex gap-3 justify-end">
+          <div className="flex gap-3 justify-end border-t border-gray-100 dark:border-gray-800 pt-4">
             <button
               onClick={onClose}
-              className="text-xs font-black font-semibold tracking-normal text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 hover:border-[#555] px-4 py-2 transition-all"
+              className="px-4 py-2 rounded-lg text-xs font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               CANCEL
             </button>
@@ -340,13 +340,13 @@ function NoteModal({ invoiceId, onClose, onSuccess }) {
               onClick={handleSubmit}
               disabled={!note.trim() || loading}
               className={clsx(
-                'text-xs font-black font-semibold tracking-normal px-4 py-2 transition-all flex items-center gap-2',
+                'px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2',
                 note.trim()
-                  ? 'text-primary-600 border border-primary-600/30 hover:bg-[#FCD535] hover:text-black'
-                  : 'text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-800 cursor-not-allowed'
+                  ? 'bg-primary-600 hover:bg-primary-700 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
               )}
             >
-              {loading && <Loader2 size={12} className="animate-spin" />}
+              {loading && <Loader2 size={14} className="animate-spin" />}
               ADD NOTE
             </button>
           </div>
@@ -443,19 +443,19 @@ export default function ManageTracking() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col">
-      <div className="max-w-7xl mx-auto w-full px-8 flex-1 pb-20">
+      <div className="max-w-7xl mx-auto w-full px-8 flex-1 pb-20 pt-10">
         {/* Header */}
-        <div className="mb-8 border-b border-gray-200 dark:border-gray-700 pb-6 flex items-end justify-between">
+        <div className="mb-8 border-b border-gray-200 dark:border-gray-800 pb-6 flex items-end justify-between">
           <div>
-            <h1 className="text-5xl font-black tracking-tighter  flex items-center gap-5">
-              <div className="w-14 h-14 bg-[#FCD535] flex items-center justify-center">
-                <Settings2 size={30} className="text-black" />
+            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center">
+                <Settings2 size={28} />
               </div>
-              MANAGE TRACKING
+              Manage Tracking
             </h1>
-            <div className="text-sm font-bold tracking-normal text-gray-500 dark:text-gray-400 mt-3 flex items-center gap-4">
+            <div className="text-sm font-bold tracking-normal text-primary-600 dark:text-primary-400 mt-3 flex items-center gap-4">
               <span>&gt; REASSIGN · RESET · NOTES · HISTORY</span>
-              <div className="w-24 h-[1px] bg-[#333]"></div>
+              <div className="w-24 h-[1px] bg-primary-500"></div>
             </div>
           </div>
           <div className="flex gap-3 items-center">
@@ -463,97 +463,95 @@ export default function ManageTracking() {
               <select
                 value={categoryFilter}
                 onChange={e => setCategoryFilter(e.target.value)}
-                className="appearance-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2.5 pr-10 text-xs font-black tracking-normal text-gray-900 dark:text-gray-100 focus:border-primary-600 outline-none  cursor-pointer"
+                className="aiq-input appearance-none pr-10 cursor-pointer text-sm font-bold"
               >
                 <option value="">ALL CATEGORIES</option>
                 {allCategories.map(c => (
                   <option key={c.name} value={c.name}>{c.name.toUpperCase()}</option>
                 ))}
               </select>
-              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none" />
+              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 dark:text-gray-300 pointer-events-none" />
             </div>
-            <button onClick={fetchDashboard} className="btn-brutal-dark p-3 text-xs">
-              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            <button onClick={fetchDashboard} className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             </button>
           </div>
         </div>
 
         {/* Search */}
         <div className="relative mb-6">
-          <Settings2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400" />
+          <Settings2 size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400" />
           <input
             type="text"
-            placeholder="SEARCH BY INVOICE #, CATEGORY, PO NUMBER..."
+            placeholder="Search by Invoice #, Category, PO Number..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 pl-10 pr-4 py-2.5 text-xs font-bold tracking-normal text-gray-900 dark:text-gray-100 focus:border-primary-600 outline-none  placeholder:text-gray-700 dark:text-gray-300"
+            className="aiq-input w-full pl-10 py-2.5"
           />
         </div>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-3 hover:border-primary-600 transition-colors">
-            <div className="w-10 h-10 bg-[#FCD535] text-black flex items-center justify-center shrink-0">
-              <Package size={18} />
+          <div className="aiq-card p-6 flex items-start gap-4 hover:border-primary-500 dark:hover:border-primary-400 transition-colors group">
+            <div className="w-12 h-12 rounded-lg bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center shrink-0">
+              <Package size={24} />
             </div>
             <div>
-              <p className="text-[9px] text-gray-500 dark:text-gray-400 font-black font-semibold tracking-normal">TRACKED</p>
-              <p className="text-xl font-black tracking-tight text-primary-600">{items.length}</p>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider mb-1">Tracked</p>
+              <p className="text-3xl font-extrabold tracking-tight text-primary-600 dark:text-primary-400">{items.length}</p>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-3 hover:border-orange-500/50 transition-colors">
-            <div className="w-10 h-10 bg-orange-500 text-black flex items-center justify-center shrink-0">
-              <ArrowRightLeft size={18} />
+          <div className="aiq-card p-6 flex items-start gap-4 hover:border-orange-500 dark:hover:border-orange-400 transition-colors group">
+            <div className="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
+              <ArrowRightLeft size={24} />
             </div>
             <div>
-              <p className="text-[9px] text-gray-500 dark:text-gray-400 font-black font-semibold tracking-normal">OVERRIDDEN</p>
-              <p className="text-xl font-black tracking-tight text-orange-400">{overriddenCount}</p>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider mb-1">Overridden</p>
+              <p className="text-3xl font-extrabold tracking-tight text-orange-600 dark:text-orange-400">{overriddenCount}</p>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-3 hover:border-emerald-500/50 transition-colors">
-            <div className="w-10 h-10 bg-emerald-500 text-black flex items-center justify-center shrink-0">
-              <CheckCircle2 size={18} />
+          <div className="aiq-card p-6 flex items-start gap-4 hover:border-emerald-500 dark:hover:border-emerald-400 transition-colors group">
+            <div className="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <CheckCircle2 size={24} />
             </div>
             <div>
-              <p className="text-[9px] text-gray-500 dark:text-gray-400 font-black font-semibold tracking-normal">COMPLETED</p>
-              <p className="text-xl font-black tracking-tight text-emerald-400">
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider mb-1">Completed</p>
+              <p className="text-3xl font-extrabold tracking-tight text-emerald-600 dark:text-emerald-400">
                 {items.filter(i => i.progress >= 100).length}
               </p>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-3 hover:border-purple-500/50 transition-colors">
-            <div className="w-10 h-10 bg-purple-500 text-black flex items-center justify-center shrink-0">
-              <GitBranch size={18} />
+          <div className="aiq-card p-6 flex items-start gap-4 hover:border-purple-500 dark:hover:border-purple-400 transition-colors group">
+            <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+              <GitBranch size={24} />
             </div>
             <div>
-              <p className="text-[9px] text-gray-500 dark:text-gray-400 font-black font-semibold tracking-normal">CATEGORIES</p>
-              <p className="text-xl font-black tracking-tight text-purple-400">{allCategories.length}</p>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider mb-1">Categories</p>
+              <p className="text-3xl font-extrabold tracking-tight text-purple-600 dark:text-purple-400">{allCategories.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="divider-striped-yellow mb-8"></div>
-
         {/* Items Table */}
-        <div className="card-brutal-dark relative">
+        <div className="aiq-card relative overflow-hidden">
           {loading && (
-            <div className="absolute inset-0 bg-white dark:bg-gray-800/80 flex items-center justify-center z-10">
-              <Loader2 className="animate-spin text-primary-600" size={32} />
+            <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-10">
+              <Loader2 className="animate-spin text-primary-500" size={32} />
             </div>
           )}
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
-              <thead className="bg-white dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
                 <tr>
                   {['INVOICE #', 'PO', 'CATEGORY', 'PROGRESS', 'STATUS', 'ACTIONS'].map(h => (
-                    <th key={h} className="py-4 px-4 text-xs font-black tracking-normal text-primary-600 whitespace-nowrap border-r border-gray-100 dark:border-gray-800 last:border-0">{h}</th>
+                    <th key={h} className="py-3.5 px-4 text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-20 text-gray-600 dark:text-gray-400 font-bold tracking-normal">
+                    <td colSpan={6} className="text-center py-20 text-gray-800 dark:text-gray-200 font-bold tracking-normal">
                       <Settings2 size={48} className="mx-auto mb-4 opacity-20" />
                       {loading ? 'LOADING...' : 'NO INVOICES WITH WORKFLOWS FOUND.'}
                     </td>
@@ -563,100 +561,101 @@ export default function ManageTracking() {
                     <tr
                       key={item.invoice_id}
                       className={clsx(
-                        'border-b border-gray-100 dark:border-gray-800 hover:bg-gray-100 dark:bg-gray-800 transition-colors',
-                        idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'
+                        'border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors',
+                        idx % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/30'
                       )}
                     >
-                      <td className="py-3 px-4 text-sm font-bold border-r border-gray-100 dark:border-gray-800">
+                      <td className="py-3.5 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 font-mono">
                         {item.invoice_number || '—'}
                       </td>
-                      <td className="py-3 px-4 text-xs text-gray-400 border-r border-gray-100 dark:border-gray-800">
+                      <td className="py-3.5 px-4 text-sm text-gray-700 dark:text-gray-300">
                         {item.po_number || '—'}
                       </td>
-                      <td className="py-3 px-4 border-r border-gray-100 dark:border-gray-800">
+                      <td className="py-3.5 px-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-black font-semibold tracking-normal text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-1">
+                          <span className="text-[10px] font-bold tracking-wide text-cyan-500 dark:text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-full">
                             {item.category || '—'}
                           </span>
                           {item.is_overridden && (
-                            <span className="text-[8px] font-black font-semibold tracking-normal text-orange-400 bg-orange-500/10 border border-orange-500/20 px-1.5 py-0.5">
+                            <span className="text-[10px] font-bold tracking-wide text-orange-500 dark:text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-md flex items-center gap-1">
+                              <ArrowRightLeft size={10} />
                               OVERRIDE
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="py-3 px-4 min-w-[130px] border-r border-gray-100 dark:border-gray-800">
+                      <td className="py-3.5 px-4 min-w-[140px]">
                         <div className="flex items-center gap-3">
                           <ProgressBar progress={item.progress} size="sm" />
                           <span className={clsx(
-                            'text-[10px] font-black tracking-normal whitespace-nowrap',
-                            item.progress >= 100 ? 'text-emerald-400' : item.progress > 0 ? 'text-primary-600' : 'text-gray-600 dark:text-gray-400'
+                            'text-[10px] font-bold tracking-normal whitespace-nowrap',
+                            item.progress >= 100 ? 'text-emerald-400' : item.progress > 0 ? 'text-primary-600' : 'text-gray-800 dark:text-gray-200'
                           )}>
                             {item.progress}%
                           </span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 border-r border-gray-100 dark:border-gray-800">
+                      <td className="py-3.5 px-4">
                         {item.current_stage ? (
                           <span className={clsx(
-                            'text-[10px] font-black font-semibold tracking-normal px-2 py-1',
+                            'text-[10px] font-bold tracking-wide px-2.5 py-1 rounded-full',
                             item.current_stage === 'COMPLETED'
-                              ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'
-                              : 'text-primary-600 bg-[#FCD535]/10 border border-primary-600/20'
+                              ? 'text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'
+                              : 'text-primary-600 dark:text-primary-400 bg-primary-500/10 border border-primary-500/20'
                           )}>
                             {item.current_stage}
                           </span>
                         ) : (
-                          <span className="text-[10px] text-gray-600 dark:text-gray-400 font-bold font-semibold tracking-normal">NOT STARTED</span>
+                          <span className="text-[10px] text-gray-700 dark:text-gray-300 font-bold uppercase">Not Started</span>
                         )}
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-1.5">
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-2">
                           {/* Reassign */}
                           <button
                             onClick={() => setReassignInvoice({ id: item.invoice_id, category: item.category })}
-                            className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-primary-600 hover:bg-[#FCD535]/10 border border-transparent hover:border-primary-600/20 transition-all"
+                            className="p-1.5 text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-md transition-colors"
                             title="Reassign Workflow"
                           >
-                            <ArrowRightLeft size={14} />
+                            <ArrowRightLeft size={16} />
                           </button>
 
                           {/* Revert (only if overridden) */}
                           {item.is_overridden && (
                             <button
                               onClick={() => setRevertConfirm(item.invoice_id)}
-                              className="p-1.5 text-orange-500/50 hover:text-orange-400 hover:bg-orange-500/10 border border-transparent hover:border-orange-500/20 transition-all"
+                              className="p-1.5 text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-md transition-colors"
                               title="Revert to PO Default"
                             >
-                              <Undo2 size={14} />
+                              <Undo2 size={16} />
                             </button>
                           )}
 
                           {/* History */}
                           <button
                             onClick={() => setHistoryInvoice(item.invoice_id)}
-                            className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-purple-400 hover:bg-purple-500/10 border border-transparent hover:border-purple-500/20 transition-all"
+                            className="p-1.5 text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-md transition-colors"
                             title="View History"
                           >
-                            <History size={14} />
+                            <History size={16} />
                           </button>
 
                           {/* Add Note */}
                           <button
                             onClick={() => setNoteInvoice(item.invoice_id)}
-                            className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 border border-transparent hover:border-cyan-500/20 transition-all"
+                            className="p-1.5 text-gray-500 hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-md transition-colors"
                             title="Add Note"
                           >
-                            <MessageSquare size={14} />
+                            <MessageSquare size={16} />
                           </button>
 
                           {/* Reset */}
                           <button
                             onClick={() => setResetConfirm(item.invoice_id)}
-                            className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all"
+                            className="p-1.5 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
                             title="Reset Tracking"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>
@@ -669,7 +668,7 @@ export default function ManageTracking() {
         </div>
 
         {/* Footer */}
-        <div className="mt-6 flex items-center gap-6 text-[10px] font-black tracking-normal text-gray-500 dark:text-gray-400 px-2 ">
+        <div className="mt-6 flex items-center gap-6 text-[10px] font-black tracking-normal text-gray-700 dark:text-gray-300 px-2 ">
           <span>{items.length} TRACKED ITEMS</span>
           <span>·</span>
           <span className="text-orange-400">{overriddenCount} OVERRIDDEN</span>

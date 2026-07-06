@@ -33,12 +33,12 @@ export default function AnalyticsCharts({ data }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
       {/* Bar Chart: Processes per Stage */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+      <div className="aiq-card p-6">
         <div className="flex items-center gap-2 mb-6">
           <div className="w-1 h-5 bg-violet-500 rounded-full"></div>
-          <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Complexity: Processes per Stage</h3>
+          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Complexity: Processes per Stage</h3>
         </div>
-        <div className="h-64">
+        <div className="h-64 text-gray-800 dark:text-gray-200">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData.barData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -56,12 +56,12 @@ export default function AnalyticsCharts({ data }) {
       </div>
 
       {/* Pie Chart: Completion Status */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+      <div className="aiq-card p-6">
         <div className="flex items-center gap-2 mb-6">
           <div className="w-1 h-5 bg-emerald-500 rounded-full"></div>
-          <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Overall Stage Progress</h3>
+          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Overall Stage Progress</h3>
         </div>
-        <div className="h-64">
+        <div className="h-64 text-gray-800 dark:text-gray-200">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie

@@ -9,9 +9,9 @@ function Field({ label, value, editable, editKey, editValues, onChange }) {
   if (editable) {
     return (
       <div>
-        <label className="text-[10px] text-primary-600 font-black  tracking-normal">{label}</label>
+        <label className="text-[10px] text-primary-600 dark:text-primary-400 font-bold uppercase tracking-widest">{label}</label>
         <input
-          className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm outline-none focus:border-primary-600 transition-colors mt-1 font-bold"
+          className="aiq-input w-full mt-1"
           value={val}
           onChange={e => onChange(editKey, e.target.value)}
         />
@@ -20,21 +20,21 @@ function Field({ label, value, editable, editKey, editValues, onChange }) {
   }
   return (
     <div>
-      <p className="text-[10px] text-primary-600 font-black  tracking-normal">{label}</p>
-      <p className="text-sm text-gray-900 dark:text-gray-100 mt-1 font-bold">{value || '—'}</p>
+      <p className="text-[10px] text-gray-700 dark:text-gray-300 font-bold uppercase tracking-widest">{label}</p>
+      <p className="text-sm text-gray-900 dark:text-gray-100 mt-1 font-semibold">{value || '—'}</p>
     </div>
   )
 }
 
 function StatusBadge({ status }) {
   const cls = {
-    processed: 'bg-emerald-500 text-black',
-    needs_review: 'bg-[#FCD535] text-black',
-    error: 'bg-red-500 text-gray-900 dark:text-gray-100',
-    duplicate: 'bg-primary-50 dark:bg-primary-900/300 text-gray-900 dark:text-gray-100',
+    processed: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
+    needs_review: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+    error: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800',
+    duplicate: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700',
   }
   const label = { processed: 'PROCESSED', needs_review: 'REVIEW', error: 'ERROR', duplicate: 'DUP' }
-  return <span className={clsx('text-[10px] font-black px-2 py-1 font-semibold tracking-normal border border-black', cls[status] || 'bg-gray-50 dark:bg-gray-9000 text-gray-900 dark:text-gray-100')}>{label[status] || status}</span>
+  return <span className={clsx('text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wide border', cls[status] || 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700')}>{label[status] || status}</span>
 }
 
 export default function InvoiceDetail() {
@@ -80,36 +80,36 @@ export default function InvoiceDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   if (!invoice) {
     return (
-      <div className="p-8 text-center text-surface-500">Invoice not found.</div>
+      <div className="p-8 text-center text-gray-700 dark:text-gray-300">Invoice not found.</div>
     )
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col">
       
-      <div className="max-w-6xl mx-auto w-full px-8 flex-1 pb-20">
+      <div className="max-w-6xl mx-auto w-full px-8 flex-1 pb-20 pt-10">
         {/* Header */}
-        <div className="flex items-start justify-between mb-8 border-b border-gray-200 dark:border-gray-700 pb-6">
+        <div className="flex items-start justify-between mb-8 border-b border-gray-200 dark:border-gray-800 pb-6">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/invoices')} className="btn-brutal-dark p-2 rounded-none">
+            <button onClick={() => navigate('/invoices')} className="p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               <ArrowLeft size={18} />
             </button>
             <div>
-              <h1 className="text-5xl font-black tracking-tighter  truncate max-w-lg">
+              <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 truncate max-w-lg">
                 INV {invoice.invoice_number || `#${invoice.id}`}
               </h1>
               <div className="flex items-center gap-4 mt-2">
                 <StatusBadge status={invoice.status} />
-                <span className="text-xs font-bold tracking-normal text-gray-500 dark:text-gray-400">ID #{invoice.id}</span>
+                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">ID #{invoice.id}</span>
                 {invoice.confidence_score != null && (
-                  <span className="text-xs font-bold tracking-normal text-gray-500 dark:text-gray-400">
+                  <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
                     · CONF {(invoice.confidence_score * 100).toFixed(0)}%
                   </span>
                 )}
@@ -119,19 +119,19 @@ export default function InvoiceDetail() {
           <div className="flex gap-2">
             {editing ? (
               <>
-                <button onClick={() => { setEditing(false); setEditValues({}) }} className="btn-brutal-dark px-4 py-2 flex items-center gap-2 text-xs">
+                <button onClick={() => { setEditing(false); setEditValues({}) }} className="px-4 py-2.5 flex items-center gap-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                   <X size={14} /> CANCEL
                 </button>
-                <button onClick={saveEdits} disabled={saving} className="bg-[#FCD535] text-black border border-primary-600 hover:bg-white dark:bg-gray-800 hover:text-primary-600 font-black  px-4 py-2 transition-all flex items-center gap-2 text-xs">
+                <button onClick={saveEdits} disabled={saving} className="aiq-btn px-4 py-2.5 flex items-center gap-2 text-xs">
                   <Save size={14} /> {saving ? 'SAVING...' : 'SAVE CHANGES'}
                 </button>
               </>
             ) : (
               <>
-                <button onClick={() => setEditing(true)} className="btn-brutal-dark px-4 py-2 flex items-center gap-2 text-xs">
+                <button onClick={() => setEditing(true)} className="aiq-btn px-4 py-2.5 flex items-center gap-2 text-xs">
                   <Edit2 size={14} /> EDIT
                 </button>
-                <button onClick={handleDelete} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500 px-4 py-2 text-xs font-black  transition-all flex items-center gap-2">
+                <button onClick={handleDelete} className="px-4 py-2.5 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 text-xs font-bold transition-colors flex items-center gap-2">
                   <Trash2 size={14} /> DELETE
                 </button>
               </>
@@ -143,10 +143,10 @@ export default function InvoiceDetail() {
           {/* Main info */}
           <div className="lg:col-span-2 space-y-8">
             {/* Invoice details */}
-            <div className="card-brutal-dark p-8 relative">
-              <div className="absolute top-0 left-0 w-2 h-full bg-[#FCD535]" />
-              <h2 className="text-lg font-black text-gray-900 dark:text-gray-100  tracking-normal mb-6 flex items-center gap-2">
-                <Receipt size={18} className="text-primary-600" /> INVOICE DETAILS
+            <div className="aiq-card p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-primary-500 rounded-r-full" />
+              <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-6 flex items-center gap-2">
+                <Receipt size={16} className="text-primary-600 dark:text-primary-400" /> Invoice Details
               </h2>
               <div className="grid grid-cols-2 gap-6">
                 <Field label="INVOICE NUMBER" value={invoice.invoice_number} editable={editing} editKey="invoice_number" editValues={editValues} onChange={handleEdit} />
@@ -158,13 +158,13 @@ export default function InvoiceDetail() {
 
             {/* Linked PO */}
             {invoice.linked_po && (
-              <div className="card-brutal-dark p-8 relative">
-                <div className="absolute top-0 left-0 w-2 h-full bg-cyan-400" />
+              <div className="aiq-card p-8 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500 rounded-r-full" />
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-black text-cyan-400  tracking-normal flex items-center gap-2">
-                    <Link2 size={18} /> LINKED PURCHASE ORDER
+                  <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider flex items-center gap-2">
+                    <Link2 size={16} className="text-cyan-500 dark:text-cyan-400" /> Linked Purchase Order
                   </h2>
-                  <span className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-3 py-1 text-xs font-black font-semibold tracking-normal">
+                  <span className="bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800 px-3 py-1 text-[10px] font-bold rounded-full tracking-wide">
                     {invoice.linked_po.status}
                   </span>
                 </div>
@@ -174,16 +174,16 @@ export default function InvoiceDetail() {
                   <Field label="CATEGORY" value={invoice.linked_po.category} editable={false} />
                   <Field label="QUANTITY" value={`${invoice.linked_po.quantity} ${invoice.linked_po.unit.toUpperCase()}`} editable={false} />
                 </div>
-                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
                   <Field label="ITEM NAME" value={invoice.linked_po.item_name} editable={false} />
                 </div>
               </div>
             )}
 
             {/* Seller */}
-            <div className="card-brutal-dark p-8 relative">
-              <div className="absolute top-0 left-0 w-2 h-full bg-[#FCD535]" />
-              <h2 className="text-lg font-black text-gray-900 dark:text-gray-100  tracking-normal mb-6">SELLER</h2>
+            <div className="aiq-card p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-primary-500 rounded-r-full" />
+              <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-6">Seller</h2>
               <div className="grid grid-cols-2 gap-6">
                 <Field label="GSTIN" value={invoice.seller_gstin} editable={editing} editKey="seller_gstin" editValues={editValues} onChange={handleEdit} />
               </div>
@@ -191,33 +191,33 @@ export default function InvoiceDetail() {
 
             {/* Line Items */}
             {invoice.line_items?.length > 0 && (
-              <div className="card-brutal-dark relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-2 h-full bg-[#FCD535]" />
-                <div className="px-8 py-6 border-b border-gray-200 dark:border-gray-700">
-                  <h2 className="text-lg font-black text-gray-900 dark:text-gray-100  tracking-normal flex items-center gap-2">
-                    <Package size={18} className="text-primary-600" /> LINE ITEMS [{invoice.line_items.length}]
+              <div className="aiq-card relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-primary-500 rounded-r-full" />
+                <div className="px-8 py-6 border-b border-gray-100 dark:border-gray-800">
+                  <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider flex items-center gap-2">
+                    <Package size={16} className="text-primary-600 dark:text-primary-400" /> Line Items [{invoice.line_items.length}]
                   </h2>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
-                    <thead className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
                       <tr>
                         {['ITEM', 'HSN', 'QTY', 'UNIT PRICE', 'TOTAL', 'TAX'].map(h => (
-                          <th key={h} className="py-3 px-4 text-[10px] font-black tracking-normal text-primary-600 whitespace-nowrap">{h}</th>
+                          <th key={h} className="py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 whitespace-nowrap">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {invoice.line_items.map((item, i) => (
-                        <tr key={i} className="border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-white dark:bg-gray-800 transition-colors">
-                          <td className="py-3 px-4 font-bold text-gray-900 dark:text-gray-100 max-w-xs text-sm">
+                        <tr key={i} className="border-b border-gray-50 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                          <td className="py-3.5 px-4 font-bold text-gray-900 dark:text-gray-100 max-w-xs text-sm">
                             <span className="block truncate">{item.name}</span>
                           </td>
-                          <td className="py-3 px-4 font-sans text-xs text-gray-500 dark:text-gray-400">{item.hsn_code || '—'}</td>
-                          <td className="py-3 px-4 text-center font-bold text-sm">{item.quantity}</td>
-                          <td className="py-3 px-4 font-bold text-sm text-gray-300">{formatCurrency(item.unit_price)}</td>
-                          <td className="py-3 px-4 font-black text-gray-900 dark:text-gray-100 text-sm">{formatCurrency(item.total_price)}</td>
-                          <td className="py-3 px-4 text-xs font-bold text-gray-500 dark:text-gray-400">
+                          <td className="py-3.5 px-4 font-mono text-xs text-gray-700 dark:text-gray-300">{item.hsn_code || '—'}</td>
+                          <td className="py-3.5 px-4 text-center font-bold text-sm text-gray-900 dark:text-gray-100">{item.quantity}</td>
+                          <td className="py-3.5 px-4 font-semibold text-sm text-gray-700 dark:text-gray-300">{formatCurrency(item.unit_price)}</td>
+                          <td className="py-3.5 px-4 font-bold text-gray-900 dark:text-gray-100 text-sm">{formatCurrency(item.total_price)}</td>
+                          <td className="py-3.5 px-4 text-xs font-bold text-gray-700 dark:text-gray-300">
                             {item.tax_rate != null ? `${item.tax_rate}%` : '—'}
                           </td>
                         </tr>
@@ -232,55 +232,55 @@ export default function InvoiceDetail() {
           {/* Sidebar: Financials + Taxes + Metadata */}
           <div className="space-y-8">
             {/* Totals */}
-            <div className="card-brutal-dark p-8">
-              <h2 className="text-lg font-black text-gray-900 dark:text-gray-100  tracking-normal mb-6">FINANCIALS</h2>
+            <div className="aiq-card p-8">
+              <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-6">Financials</h2>
               <div className="space-y-4">
                 {invoice.taxes?.map((t, i) => (
-                  <div key={i} className="flex justify-between text-sm font-bold border-b border-gray-100 dark:border-gray-800 pb-2">
-                    <span className="text-gray-400">{t.tax_type} {t.rate != null ? `(${t.rate}%)` : ''}</span>
-                    <span className="text-gray-300">{formatCurrency(t.amount)}</span>
+                  <div key={i} className="flex justify-between text-sm font-semibold border-b border-gray-100 dark:border-gray-800 pb-2">
+                    <span className="text-gray-700 dark:text-gray-300">{t.tax_type} {t.rate != null ? `(${t.rate}%)` : ''}</span>
+                    <span className="text-gray-700 dark:text-gray-300">{formatCurrency(t.amount)}</span>
                   </div>
                 ))}
                 <div className="pt-2 flex justify-between items-end">
-                  <span className="text-primary-600 font-black tracking-normal text-sm">GRAND TOTAL</span>
-                  <span className="text-3xl font-black text-gray-900 dark:text-gray-100">{formatCurrency(invoice.grand_total)}</span>
+                  <span className="text-primary-600 dark:text-primary-400 font-bold uppercase tracking-wider text-xs">Grand Total</span>
+                  <span className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">{formatCurrency(invoice.grand_total)}</span>
                 </div>
               </div>
             </div>
 
             {/* Processing metadata */}
-            <div className="card-brutal-dark p-8">
-              <h2 className="text-lg font-black text-gray-900 dark:text-gray-100  tracking-normal mb-6">METADATA</h2>
-              <div className="space-y-4 text-sm font-bold">
+            <div className="aiq-card p-8">
+              <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-6">Metadata</h2>
+              <div className="space-y-4 text-sm">
                 <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-2">
-                  <span className="text-gray-500 dark:text-gray-400 text-xs tracking-normal">SOURCE</span>
-                  <span className="text-xs text-black bg-[#FCD535] px-2 py-0.5  tracking-normal">{invoice.source_type}</span>
+                  <span className="text-gray-700 dark:text-gray-300 text-xs font-bold uppercase tracking-wider">Source</span>
+                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 border border-primary-200 dark:border-primary-800">{invoice.source_type}</span>
                 </div>
                 {invoice.ocr_confidence != null && (
                   <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-2">
-                    <span className="text-gray-500 dark:text-gray-400 text-xs tracking-normal">OCR CONF</span>
-                    <span className="text-gray-900 dark:text-gray-100">{invoice.ocr_confidence?.toFixed(1)}%</span>
+                    <span className="text-gray-700 dark:text-gray-300 text-xs font-bold uppercase tracking-wider">OCR Conf</span>
+                    <span className="text-gray-900 dark:text-gray-100 font-semibold">{invoice.ocr_confidence?.toFixed(1)}%</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-2">
-                  <span className="text-gray-500 dark:text-gray-400 text-xs tracking-normal">AI CONF</span>
-                  <span className="text-gray-900 dark:text-gray-100">{invoice.confidence_score != null ? `${(invoice.confidence_score * 100).toFixed(0)}%` : '—'}</span>
+                  <span className="text-gray-700 dark:text-gray-300 text-xs font-bold uppercase tracking-wider">AI Conf</span>
+                  <span className="text-gray-900 dark:text-gray-100 font-semibold">{invoice.confidence_score != null ? `${(invoice.confidence_score * 100).toFixed(0)}%` : '—'}</span>
                 </div>
               </div>
             </div>
 
             {/* Raw text toggle */}
             {invoice.raw_text && (
-              <div className="card-brutal-dark overflow-hidden">
+              <div className="aiq-card overflow-hidden">
                 <button
                   onClick={() => setShowRaw(r => !r)}
-                  className="w-full px-6 py-4 text-sm font-black text-primary-600 hover:bg-[#FCD535] hover:text-black  tracking-normal flex items-center justify-between transition-colors"
+                  className="w-full px-6 py-4 text-sm font-bold text-primary-600 dark:text-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 uppercase tracking-wider flex items-center justify-between transition-colors"
                 >
-                  <span>RAW TEXT</span>
-                  <span className="text-xs">{showRaw ? '[ HIDE ]' : '[ SHOW ]'}</span>
+                  <span>Raw Text</span>
+                  <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{showRaw ? '[ HIDE ]' : '[ SHOW ]'}</span>
                 </button>
                 {showRaw && (
-                  <pre className="text-[10px] text-gray-500 dark:text-gray-400 font-sans p-6 max-h-64 overflow-y-auto whitespace-pre-wrap bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                  <pre className="text-[11px] text-gray-800 dark:text-gray-200 font-mono p-6 max-h-64 overflow-y-auto whitespace-pre-wrap bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-800">
                     {invoice.raw_text}
                   </pre>
                 )}
