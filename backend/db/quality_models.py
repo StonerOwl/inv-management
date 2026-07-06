@@ -18,6 +18,7 @@ class QualityNote(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     project_name = Column(String(200), nullable=False, index=True)   # e.g. "Coconut Oil"
+    project_id = Column(String(100), nullable=True, index=True)      # e.g. "PRSJ-2026-001", from the project's QR
     batch_id = Column(String(100), nullable=False, index=True)       # e.g. "PRSJ-2026-001-0001"
     workflow_stage = Column(String(100), nullable=True)
     process = Column(String(100), nullable=True)
@@ -38,6 +39,7 @@ class QualityNote(Base):
         return {
             "id": self.id,
             "project_name": self.project_name,
+            "project_id": self.project_id,
             "batch_id": self.batch_id,
             "workflow_stage": self.workflow_stage,
             "process": self.process,

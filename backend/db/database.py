@@ -56,6 +56,15 @@ def init_db() -> None:
     except Exception:
         pass
 
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE quality_notes ADD COLUMN project_id VARCHAR(100)"))
+            conn.commit()
+            logger.info("Added project_id column to quality_notes")
+    except Exception:
+        # Expected if column already exists
+        pass
+
 
 def seed_default_categories() -> None:
     """Insert the 3 default categories if they don't exist yet."""

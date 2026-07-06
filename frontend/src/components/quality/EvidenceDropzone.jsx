@@ -3,8 +3,6 @@ import { useDropzone } from 'react-dropzone'
 import { UploadCloud, X, Image, Thermometer, ScanEye, FileSpreadsheet, BadgeCheck, FileText, FileType2, File as FileGeneric } from 'lucide-react'
 import clsx from 'clsx'
 
-// Per-file icon so a mixed category (e.g. "QA Device Report", which accepts
-// PDF/DOCX/XLS) still shows what each attached file actually is at a glance.
 function fileTypeIcon(fileName = '') {
   const ext = fileName.split('.').pop()?.toLowerCase()
   if (ext === 'pdf') return { Icon: FileText, cls: 'text-red-500' }
@@ -14,8 +12,6 @@ function fileTypeIcon(fileName = '') {
   return { Icon: FileGeneric, cls: 'text-gray-400' }
 }
 
-// Each category maps to its own dropzone so uploads are visually categorized
-// as soon as they land, per the Evidence & Attachments requirement.
 const CATEGORIES = [
   { key: 'visual_image', label: 'Visual Image', icon: Image, accept: { 'image/*': [] }, hint: 'JPG, PNG, WEBP' },
   { key: 'nir_image', label: 'NIR Image', icon: ScanEye, accept: { 'image/*': [] }, hint: 'JPG, PNG, TIFF' },
@@ -96,12 +92,6 @@ function CategoryDropzone({ category, files, onAdd, onRemove }) {
   )
 }
 
-/**
- * Uncontrolled by default -- keeps its own { category: File[] } state and calls
- * onChange(evidenceByCategory) whenever it changes, so the parent can attach
- * these to the note payload (e.g. as multipart FormData, same pattern as
- * api/client.js `createNote`).
- */
 export default function EvidenceDropzone({ onChange }) {
   const [evidence, setEvidence] = useState(() =>
     Object.fromEntries(CATEGORIES.map((c) => [c.key, []]))
@@ -123,14 +113,14 @@ export default function EvidenceDropzone({ onChange }) {
   }
 
   return (
-    <div className="card-brutal-dark p-6">
+    <div className="card-brutal-dark p-6 h-full flex flex-col">
       <div className="flex items-center gap-2 mb-5">
         <UploadCloud size={18} className="text-primary-600" />
         <h3 className="text-sm font-black uppercase tracking-wide text-gray-900 dark:text-gray-100">
           Evidence & Attachments
         </h3>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
         {CATEGORIES.map((category) => (
           <CategoryDropzone
             key={category.key}

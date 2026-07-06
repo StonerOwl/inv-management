@@ -5,7 +5,6 @@ const api = axios.create({
   timeout: 30000,
 })
 
-// Attach JWT token to all requests
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token')
   if (token) {
@@ -14,7 +13,6 @@ api.interceptors.request.use(config => {
   return config
 })
 
-// ── Upload ────────────────────────────────────────────────────────────────────
 export const uploadInvoices = (files, onProgress) => {
   const form = new FormData()
   files.forEach(f => form.append('files', f))
@@ -26,7 +24,6 @@ export const uploadInvoices = (files, onProgress) => {
 export const getJobStatus = (jobId) => api.get(`/upload/job/${jobId}`)
 export const listJobs = () => api.get('/upload/jobs')
 
-// ── Invoices ──────────────────────────────────────────────────────────────────
 export const listInvoices = (params) => api.get('/invoices', { params })
 export const getUnmatchedInvoices = (params) => api.get('/invoices/unmatched', { params })
 export const getInvoice = (id) => api.get(`/invoices/${id}`)
@@ -35,8 +32,6 @@ export const deleteInvoice = (id) => api.delete(`/invoices/${id}`)
 export const suggestPOs = (id) => api.get(`/invoices/${id}/suggest-po`)
 export const linkPO = (invoiceId, poId) => api.put(`/invoices/${invoiceId}/link-po?po_id=${poId}`)
 
-// ── Export ────────────────────────────────────────────────────────────────────
-// ── Export ────────────────────────────────────────────────────────────────────
 const downloadBlob = async (url, filename) => {
   const response = await api.get(url, { responseType: 'blob' })
   const blobUrl = window.URL.createObjectURL(new Blob([response.data]))
@@ -57,7 +52,6 @@ export const exportExcel = (params) => {
   return downloadBlob(`/invoices/export/excel${query ? '?' + query : ''}`, 'invoices.xlsx')
 }
 
-// ── Notes ─────────────────────────────────────────────────────────────────────
 export const getNotes = (targetType = null, targetId = null) => {
   const params = {}
   if (targetType) params.target_type = targetType
@@ -76,23 +70,18 @@ export const createNote = (targetType, targetId, content, files = []) => {
   })
 }
 
-// ── Stats ─────────────────────────────────────────────────────────────────────
 export const getStats = () => api.get('/stats')
 export const getHealth = () => api.get('/health')
 
-// ── JSON Files ────────────────────────────────────────────────────────────────
 export const listJsonFiles = () => api.get('/json-files')
 export const getJsonFileUrl = (jobId, filename) => `/api/json-files/${jobId}/${filename}`
 export const downloadJsonFile = (jobId, filename) => {
   window.open(getJsonFileUrl(jobId, filename), '_blank')
 }
 
-// ── Natural Language Query ────────────────────────────────────────────────────
-// ── Natural Language Query ────────────────────────────────────────────────────
 export const runNLQuery = (data) => api.post('/query/nl', data, { timeout: 120000 })
 export const getQuerySuggestions = () => api.get('/query/suggestions')
 
-// ── Auth & Users (Admin) ──────────────────────────────────────────────────────
 export const login = (data) => api.post('/auth/token', data, {
   headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
 })
@@ -101,7 +90,6 @@ export const listUsers = () => api.get('/auth/users')
 export const createUser = (data) => api.post('/auth/users', data)
 export const updateUser = (id, data) => api.put(`/auth/users/${id}`, data)
 
-// ── Purchase Orders ───────────────────────────────────────────────────────────
 export const createPO = (data) => api.post('/po', data)
 export const listPOs = (params) => api.get('/po', { params })
 export const getPO = (id) => api.get(`/po/${id}`)
@@ -118,42 +106,35 @@ export const exportPOExcel = (params) => {
   return downloadBlob(`/po/export/excel${query ? '?' + query : ''}`, 'purchase_orders.xlsx')
 }
 
-// ── Product Catalog ───────────────────────────────────────────────────────────
 export const listProducts = (params) => api.get('/products', { params })
 export const createProduct = (data) => api.post('/products', data)
 export const updateProduct = (id, data) => api.put(`/products/${id}`, data)
 export const deleteProduct = (id) => api.delete(`/products/${id}`)
 
-// ── Categories ────────────────────────────────────────────────────────────────
 export const listCategories = () => api.get('/categories')
 export const createCategory = (data) => api.post('/categories', data)
 export const updateCategory = (id, data) => api.put(`/categories/${id}`, data)
 export const deleteCategory = (id) => api.delete(`/categories/${id}`)
 
-// ── Workflows ─────────────────────────────────────────────────────────────────
 export const createWorkflow = (catId, data) => api.post(`/categories/${catId}/workflows`, data)
 export const updateWorkflow = (catId, wid, data) => api.put(`/categories/${catId}/workflows/${wid}`, data)
 export const deleteWorkflow = (catId, wid) => api.delete(`/categories/${catId}/workflows/${wid}`)
 
-// ── Processes ─────────────────────────────────────────────────────────────────
 export const createProcess = (catId, wid, data) => api.post(`/categories/${catId}/workflows/${wid}/processes`, data)
 export const updateProcess = (catId, wid, pid, data) => api.put(`/categories/${catId}/workflows/${wid}/processes/${pid}`, data)
 export const deleteProcess = (catId, wid, pid) => api.delete(`/categories/${catId}/workflows/${wid}/processes/${pid}`)
 
-// ── Process Tracking ──────────────────────────────────────────────────────────
 export const getInvoiceTracking = (invoiceId) => api.get(`/tracking/invoice/${invoiceId}`)
 export const toggleProcess = (invoiceId, processId, data) => api.put(`/tracking/invoice/${invoiceId}/process/${processId}`, data)
 export const toggleWorkflow = (invoiceId, workflowId, data) => api.put(`/tracking/invoice/${invoiceId}/workflow/${workflowId}`, data)
 export const getTrackingDashboard = (params) => api.get('/tracking/dashboard', { params })
 
-// ── Tracking Manage ───────────────────────────────────────────────────────────
 export const reassignTrackingCategory = (invoiceId, data) => api.put(`/tracking/manage/invoice/${invoiceId}/reassign-category`, data)
 export const revertTrackingCategory = (invoiceId) => api.put(`/tracking/manage/invoice/${invoiceId}/revert-category`)
 export const resetTracking = (invoiceId) => api.delete(`/tracking/manage/invoice/${invoiceId}/reset`)
 export const getTrackingHistory = (invoiceId) => api.get(`/tracking/manage/invoice/${invoiceId}/history`)
 export const addTrackingNote = (invoiceId, data) => api.put(`/tracking/manage/invoice/${invoiceId}/note`, data)
 
-// ── PWS ──────────────────────────────────────────────────────────────────────
 export const getPWSItems = () => api.get('/pws/items')
 export const createPWSItem = (data) => api.post('/pws/items', data)
 export const updatePWSItem = (id, data) => api.put(`/pws/items/${id}`, data)
@@ -161,18 +142,11 @@ export const getPWSAssignments = () => api.get('/pws/assignments')
 export const createPWSAssignment = (data) => api.post('/pws/assignments', data)
 export const deletePWSAssignment = (parentId, childId) => api.delete(`/pws/assignments/${parentId}/${childId}`)
 
-// ── Quality Management ──────────────────────────────────────────────────────
-// Backed by backend/api/routes/quality.py (see that file for the Pydantic
-// schemas). Falls back to local optimistic state in the UI if these 404
-// because the router hasn't been registered in backend/api/main.py yet.
 export const createQualityNote = (data) => api.post('/quality/notes', data)
 export const listQualityNotes = (params) => api.get('/quality/notes', { params })
 export const approveQualityNote = (id) => api.put(`/quality/notes/${id}/approve`)
 export const getQualitySummary = () => api.get('/quality/summary')
 
-// evidenceByCategory: { visual_image: File[], nir_image: File[], ... } -- keys
-// must match EvidenceDropzone.jsx's category keys, which match the backend's
-// per-category form fields in POST /quality/notes/:id/evidence.
 export const uploadQualityEvidence = (noteId, evidenceByCategory) => {
   const formData = new FormData()
   let hasFiles = false
@@ -187,5 +161,8 @@ export const uploadQualityEvidence = (noteId, evidenceByCategory) => {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
+
+export const getQualityNoteQRCode = (noteId) => api.get(`/quality/notes/${noteId}/qrcode`)
+export const verifyQualityNoteQR = (payload) => api.post('/quality/notes/verify', { payload })
 
 export default api

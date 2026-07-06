@@ -1,17 +1,15 @@
 import { useState } from 'react'
-import { ClipboardPlus, Loader2, AlertTriangle, ScanLine } from 'lucide-react'
+import { ClipboardPlus, Loader2, AlertTriangle, ScanLine, Printer, ShieldCheck, XCircle } from 'lucide-react'
 import clsx from 'clsx'
 
 import ScanBatchModal from '../batch/ScanBatchModal'
 import { parseBatchScan } from '../../utils/batchScan'
+import { getQualityNoteQRCode, verifyQualityNoteQR } from '../../api/client'
 
 export const NOTE_TYPES = ['Inspection', 'Deviation', 'Audit', 'Calibration', 'Corrective Action']
 export const NOTE_STATUSES = ['Open', 'In Progress', 'Pending Approval', 'Resolved', 'Closed']
 export const SEVERITIES = ['Low', 'Medium', 'High']
 
-// Placeholder taxonomy -- in this repo, Workflow / Process names already exist
-// per-category under Track & Trace (see api/client.js: listCategories / createWorkflow).
-// Swap these for `useEffect(() => listCategories()...)` results to stay in sync.
 const WORKFLOW_STAGES = ['Raw Material Intake', 'Processing', 'Packaging', 'Warehousing', 'Dispatch']
 const PROCESSES = ['Visual Inspection', 'Lab Testing', 'Weight Verification', 'Label Check', 'Final QA Sign-off']
 
@@ -45,26 +43,64 @@ const inputCls = 'w-full bg-white dark:bg-gray-800 border border-gray-200 dark:b
 
 const SEVERITY_DOT = { Low: 'bg-emerald-500', Medium: 'bg-amber-500', High: 'bg-red-500' }
 
-/**
- * onSave(note) should call the FastAPI endpoint (POST /api/quality/notes, see
- * backend/api/routes/quality.py) and return the created note. It may reject --
- * the form surfaces that as an inline error and keeps the user's input.
- */
+function handlePrintQr(qr) {
+  const win = window.open('', '_blank', 'width=380,height=440')
+  if (!win) return
+  win.document.write(`
+    <html>
+      <head>
+        <title>${qr.note_display_id}</title>
+        <style>
+          body { font-family: system-ui, sans-serif; text-align: center; padding: 28px; }
+          img { width: 220px; height: 220px; }
+          p { font-family: monospace; font-weight: 700; margin-top: 14px; font-size: 13px; }
+        </style>
+      </head>
+      <body>
+        <img src="${qr.image_base64}" />
+        <p>${qr.note_display_id}</p>
+        <script>window.onload = () => { window.print(); window.close(); }</script>
+      </body>
+    </html>
+  `)
+  win.document.close()
+}
+
 export default function QualityNoteForm({ onSave, projectOptions = [] }) {
   const [note, setNote] = useState(emptyNote)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [savedFlash, setSavedFlash] = useState(false)
   const [scanOpen, setScanOpen] = useState(false)
+  const [qr, setQr] = useState(null)
+  const [qrLoading, setQrLoading] = useState(false)
+  const [verifying, setVerifying] = useState(false)
+  const [verifyResult, setVerifyResult] = useState(null)
 
   const update = (field) => (e) => setNote((n) => ({ ...n, [field]: e.target.value }))
 
-  // Reads whatever project/batch QR the Projects module prints (see
-  // BatchIdentityCard, or the Project ID QR from Create PWS) and drops it
-  // straight into the form -- Project ID, Project Name, Batch ID, and
-  // Workflow Stage if the code carries one. Only backfills fields that are
-  // still empty, so it never clobbers something the inspector already typed.
-  const handleScanDetected = (raw) => {
+  const handleScanDetected = async (raw) => {
+    let parsed = null
+    try {
+      parsed = JSON.parse(raw)
+    } catch {
+      parsed = null
+    }
+
+    if (parsed && parsed.type === 'quality_note') {
+      setVerifyResult(null)
+      setVerifying(true)
+      try {
+        const { data } = await verifyQualityNoteQR(raw)
+        setVerifyResult(data)
+      } catch (err) {
+        setVerifyResult({ valid: false, reason: 'Could not reach the server to verify this code.' })
+      } finally {
+        setVerifying(false)
+      }
+      return
+    }
+
     const { batchId, projectId, projectName, workflowStage } = parseBatchScan(raw)
     setNote((n) => ({
       ...n,
@@ -84,10 +120,24 @@ export default function QualityNoteForm({ onSave, projectOptions = [] }) {
     setError(null)
     setSaving(true)
     try {
-      await onSave?.(note)
+      const created = await onSave?.(note)
       setNote(emptyNote)
       setSavedFlash(true)
       setTimeout(() => setSavedFlash(false), 2000)
+
+      setQr(null)
+      setVerifyResult(null)
+      if (created?.id) {
+        setQrLoading(true)
+        try {
+          const { data } = await getQualityNoteQRCode(created.id)
+          setQr(data)
+        } catch (err) {
+          setQr(null)
+        } finally {
+          setQrLoading(false)
+        }
+      }
     } catch (err) {
       setError(err?.response?.data?.detail || 'Failed to save quality note. Please try again.')
     } finally {
@@ -97,7 +147,7 @@ export default function QualityNoteForm({ onSave, projectOptions = [] }) {
 
   return (
     <>
-    <form onSubmit={handleSubmit} className="card-brutal-dark p-6">
+    <form onSubmit={handleSubmit} className="card-brutal-dark p-6 h-full flex flex-col">
       <div className="flex items-center gap-2 mb-5">
         <ClipboardPlus size={18} className="text-primary-600" />
         <h3 className="text-sm font-black uppercase tracking-wide text-gray-900 dark:text-gray-100">
@@ -219,6 +269,53 @@ export default function QualityNoteForm({ onSave, projectOptions = [] }) {
         </button>
         {savedFlash && <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Saved ✓</span>}
       </div>
+
+      {qrLoading && (
+        <div className="mt-5 flex items-center gap-2 text-xs font-semibold text-gray-500 dark:text-gray-400">
+          <Loader2 size={14} className="animate-spin" /> Generating QR label…
+        </div>
+      )}
+
+      {qr && !qrLoading && (
+        <div className="mt-5 border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex items-center gap-4">
+          <img src={qr.image_base64} alt={qr.note_display_id} className="w-20 h-20 bg-white rounded-lg p-1" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Note QR Label</p>
+            <p className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">{qr.note_display_id}</p>
+            <button
+              type="button"
+              onClick={() => handlePrintQr(qr)}
+              className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-primary-600 hover:text-primary-700"
+            >
+              <Printer size={13} /> Print label
+            </button>
+          </div>
+        </div>
+      )}
+
+      {verifying && (
+        <div className="mt-5 flex items-center gap-2 text-xs font-semibold text-gray-500 dark:text-gray-400">
+          <Loader2 size={14} className="animate-spin" /> Verifying scanned code…
+        </div>
+      )}
+
+      {verifyResult && !verifying && (
+        <div
+          className={clsx(
+            'mt-5 flex items-start gap-2 text-xs font-semibold rounded-lg px-3 py-2.5 border',
+            verifyResult.valid
+              ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/40'
+              : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-900/40'
+          )}
+        >
+          {verifyResult.valid ? <ShieldCheck size={14} className="shrink-0 mt-0.5" /> : <XCircle size={14} className="shrink-0 mt-0.5" />}
+          <span>
+            {verifyResult.valid
+              ? `Verified against server records — ${verifyResult.note?.note_type} note, status ${verifyResult.note?.status}.`
+              : verifyResult.reason || 'This code could not be verified.'}
+          </span>
+        </div>
+      )}
     </form>
 
     <ScanBatchModal open={scanOpen} onClose={() => setScanOpen(false)} onDetected={handleScanDetected} />
