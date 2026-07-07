@@ -21,6 +21,9 @@ const SIDEBAR_OPTIONS = {
     { label: 'Dashboard', path: '/dashboard-overview', icon: Home },
     { label: 'Inventory', path: '/inventory/dashboard', icon: Package },
   ],
+  'quality': [
+    { label: 'Dashboard', path: '/quality' },
+  ],
   'app-management': [
     { label: 'User', path: '/users', icon: Package },
     { label: 'Create P/W/S', path: '/app-management/create-pws', icon: Layers },
@@ -50,6 +53,7 @@ export default function AppLayout() {
     if (path.startsWith('/inventory')) return 'inventory';
     if (path.startsWith('/dashboard-overview') || path === '/upload' || path === '/invoices') return 'dashboard';
     if (path.startsWith('/purchase')) return 'purchase';
+    if (path.startsWith('/quality')) return 'quality';
     if (path.startsWith('/app-management') || path === '/users') return 'app-management';
     if (path.startsWith('/analytics') || path.startsWith('/tracking')) return 'analytics';
     if (path.startsWith('/admin')) return 'admin';

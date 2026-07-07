@@ -24,6 +24,7 @@ import RegisterInventory from './pages/RegisterInventory'
 import SearchInventory from './pages/SearchInventory'
 import CreatePWS from './pages/CreatePWS'
 import Settings from './pages/Settings'
+import QualityManagement from './pages/QualityManagement'
 import { AuthProvider } from './context/AuthContext'
 import { UploadProvider } from './context/UploadContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -72,6 +73,8 @@ export default function App() {
 
                     <Route path="/analytics" element={<TrackTracePage />} />
                     <Route path="/analytics/farm-to-fork" element={<FarmToForkPage />} />
+
+                    <Route path="/quality" element={<QualityManagement />} />
 
                     <Route path="/preview-bg" element={<BackgroundPreview />} />
                     <Route path="/modify" element={<ProtectedRoute requireUpload={true}><Modify /></ProtectedRoute>} />

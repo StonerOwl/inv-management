@@ -56,6 +56,15 @@ def init_db() -> None:
     except Exception:
         pass
 
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE quality_notes ADD COLUMN project_id VARCHAR(100)"))
+            conn.commit()
+            logger.info("Added project_id column to quality_notes")
+    except Exception:
+        # Expected if column already exists
+        pass
+
 
 def seed_default_admin() -> None:
     """Create a default admin user (admin/admin) if no users exist yet."""
