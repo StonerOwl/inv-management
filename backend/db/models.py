@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import (
-    Column, DateTime, Float, ForeignKey, Integer, String, Text, Boolean, func
+    Column, DateTime, Float, ForeignKey, Integer, String, Text, Boolean, UniqueConstraint, func
 )
 from sqlalchemy.orm import DeclarativeBase, relationship
 from pgvector.sqlalchemy import Vector
@@ -306,9 +306,16 @@ class PWSItem(Base):
     __tablename__ = "pws_items"
 
     id = Column(String(50), primary_key=True, index=True)
-    type = Column(String(20), index=True, nullable=False) # 'project', 'workflow', 'state'
+    type = Column(String(20), index=True, nullable=False) # 'project', 'workflow', 'stage', 'process'
     name = Column(String(200), nullable=False)
-    project_code = Column(String(50), nullable=True) # E.g., the 5-digit generated ID
+    project_code = Column(String(50), nullable=True) # E.g., PRSJ-2026-001-B001 (Project ID)
+    batch_id = Column(String(50), nullable=True)     # E.g., PBSJ-2026-001
+    product = Column(String(200), nullable=True)
+    work_order = Column(String(100), nullable=True)
+    category = Column(String(100), nullable=True)
+    start_date = Column(String(50), nullable=True)
+    target_date = Column(String(50), nullable=True)
+    location = Column(String(200), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
     def to_dict(self) -> dict:
@@ -317,6 +324,13 @@ class PWSItem(Base):
             "type": self.type,
             "name": self.name,
             "project_code": self.project_code,
+            "batch_id": self.batch_id,
+            "product": self.product,
+            "work_order": self.work_order,
+            "category": self.category,
+            "start_date": self.start_date,
+            "target_date": self.target_date,
+            "location": self.location,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
@@ -334,6 +348,28 @@ class PWSAssignment(Base):
             "parent_id": self.parent_id,
             "child_id": self.child_id,
         }
+
+
+class InvoiceProjectAssignment(Base):
+    __tablename__ = "invoice_project_assignments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    invoice_id = Column(Integer, ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False, index=True)
+    project_id = Column(String(50), ForeignKey("pws_items.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("invoice_id", "project_id", name="uq_invoice_project_assignment"),
+    )
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "invoice_id": self.invoice_id,
+            "project_id": self.project_id,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
 
 class Note(Base):
     __tablename__ = "notes"

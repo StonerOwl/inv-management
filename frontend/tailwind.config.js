@@ -31,18 +31,6 @@ export default {
           900: '#14532d',
           950: '#052e16',
         },
-        surface: {
-          900: '#000000', // Black Background
-          800: '#0a0a0a', // Sidebar and slightly elevated backgrounds
-          700: '#171717', // Inputs
-          600: '#262626', 
-          500: '#737373', // Muted text
-          400: '#a3a3a3', // Lighter text
-          300: '#d4d4d4', // Bright text
-          200: '#262626', // Borders
-          100: '#171717', // Hover backgrounds
-          50: '#ffffff', // White text
-        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -50,23 +38,23 @@ export default {
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'mesh-gradient': 'linear-gradient(135deg, #052e16 0%, #000000 100%)',
       },
       animation: {
-        'fade-in': 'fadeIn 0.4s ease-out',
-        'slide-up': 'slideUp 0.3s ease-out',
+        'fade-in': 'fadeIn 0.3s ease-out',
+        'slide-up': 'slideUp 0.25s ease-out',
         'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
         'spin-slow': 'spin 3s linear infinite',
       },
       keyframes: {
         fadeIn: { from: { opacity: 0 }, to: { opacity: 1 } },
-        slideUp: { from: { transform: 'translateY(16px)', opacity: 0 }, to: { transform: 'translateY(0)', opacity: 1 } },
-        pulseGlow: { '0%, 100%': { boxShadow: '0 0 10px rgba(22,163,74,0.3)' }, '50%': { boxShadow: '0 0 30px rgba(22,163,74,0.7)' } },
+        slideUp: { from: { transform: 'translateY(12px)', opacity: 0 }, to: { transform: 'translateY(0)', opacity: 1 } },
+        pulseGlow: { '0%, 100%': { boxShadow: '0 0 8px rgba(37,99,235,0.2)' }, '50%': { boxShadow: '0 0 24px rgba(37,99,235,0.5)' } },
       },
       boxShadow: {
-        'glow': '0 0 20px rgba(22,163,74,0.4)',
-        'glow-sm': '0 0 10px rgba(22,163,74,0.3)',
-        'card': '0 4px 24px rgba(0,0,0,0.4)',
+        'soft': '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
+        'card': '0 2px 8px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.08)',
+        'card-hover': '0 8px 24px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.08)',
+        'nav': '0 1px 3px rgba(0,0,0,0.05)',
       },
     },
   },

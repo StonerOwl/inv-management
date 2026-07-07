@@ -1,0 +1,358 @@
+import React, { useState, useEffect, useRef } from 'react'
+import { getPWSItems, getProjectAnalytics } from '../../api/client'
+import WorkflowTimeline from './WorkflowTimeline'
+import AnalyticsCards from './AnalyticsCards'
+import StageProcessList from './StageProcessList'
+import AnalyticsCharts from './AnalyticsCharts'
+
+const NAV_TABS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'summary', label: 'Summary' },
+  { id: 'analytics', label: 'Flow Analytics' },
+]
+
+export default function TrackTracePage() {
+  const [projects, setProjects] = useState([])
+  const [selectedProject, setSelectedProject] = useState(null)
+  const [projectAnalytics, setProjectAnalytics] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [fetchingDetails, setFetchingDetails] = useState(false)
+  const [activeTab, setActiveTab] = useState('overview')
+
+  const overviewRef = useRef(null)
+  const summaryRef = useRef(null)
+  const analyticsRef = useRef(null)
+
+  useEffect(() => {
+    getPWSItems()
+      .then(res => {
+        const projectItems = (res.data || []).filter(item => item.type === 'project')
+        setProjects(projectItems)
+        if (projectItems.length > 0) setSelectedProject(projectItems[0])
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    if (!selectedProject) { setProjectAnalytics(null); return }
+    setFetchingDetails(true)
+    getProjectAnalytics(selectedProject.id)
+      .then(res => setProjectAnalytics(res.data))
+      .catch(() => setProjectAnalytics(null))
+      .finally(() => setFetchingDetails(false))
+  }, [selectedProject])
+
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId)
+    const target = tabId === 'overview' ? overviewRef : (tabId === 'summary' ? summaryRef : analyticsRef)
+    target.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const handleProjectChange = (e) => {
+    const project = projects.find(item => item.id === e.target.value) || null
+    setSelectedProject(project)
+  }
+
+  const timelineData = projectAnalytics
+    ? {
+      category: projectAnalytics.project?.name || selectedProject?.name,
+      invoice: {
+        invoice_id: projectAnalytics.invoices?.[0]?.id || null,
+        invoice_number: projectAnalytics.invoices?.[0]?.invoice_number || `Batch #${selectedProject?.project_code || selectedProject?.id}`,
+        description: projectAnalytics.invoices?.[0]?.description || projectAnalytics.project?.name,
+        current_stage: projectAnalytics.invoices?.[0]?.current_stage || projectAnalytics.workflows?.[0]?.stages?.[0]?.name || 'Not started',
+        progress: projectAnalytics.invoices?.[0]?.progress || 0,
+      },
+      workflows: projectAnalytics.workflows || [],
+      stages: (projectAnalytics.workflows || []).flatMap(workflow =>
+        (workflow.stages || []).map((stage, index) => ({
+          id: stage.id,
+          workflow_id: workflow.id,
+          workflow_name: workflow.name,
+          name: stage.name,
+          description: `Stage ${index + 1} in ${workflow.name}`,
+          completed: false,
+          completed_at: null,
+          processes: stage.processes || [],
+        }))
+      ),
+      current_workflow: projectAnalytics.workflows?.[0]?.name || 'Not started',
+      invoices: projectAnalytics.invoices || [],
+    }
+    : null
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-0 w-full min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-800 px-6 pt-6 pb-0 sticky top-0 z-20 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-primary-500 mb-1">Analytics Dashboard</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">Track & Trace</h1>
+          </div>
+
+          <div className="flex items-center gap-2 pb-1">
+            <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Project</label>
+            <select
+              className="aiq-input appearance-none py-2 px-4 min-w-[220px]"
+              value={selectedProject?.id || ''}
+              onChange={handleProjectChange}
+            >
+              {projects.length === 0 ? (
+                <option value="">No projects created yet</option>
+              ) : (
+                projects.map(project => (
+                  <option key={project.id} value={project.id}>{project.name}</option>
+                ))
+              )}
+            </select>
+          </div>
+        </div>
+
+        <div className="flex gap-1">
+          {NAV_TABS.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabClick(tab.id)}
+              className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-all duration-150 focus:outline-none ${activeTab === tab.id
+                  ? 'border-primary-600 text-primary-600 dark:text-primary-400 dark:border-primary-400'
+                  : 'border-transparent text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+                }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {projects.length === 0 ? (
+        <div className="aiq-card p-16 text-center mt-6 mx-6 border-dashed border-2">
+          <svg className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2-2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          </svg>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">No Projects Found</h3>
+          <p className="text-gray-700 dark:text-gray-300 mt-1 text-sm font-medium">Create projects in the project management flow to view analytics.</p>
+        </div>
+      ) : fetchingDetails || !timelineData ? (
+        <div className="flex justify-center items-center h-40">
+          <div className="w-6 h-6 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-10 pb-16">
+
+          <section ref={overviewRef} className="scroll-mt-24">
+            <ProjectsOverview projects={projects} />
+          </section>
+
+          <section ref={summaryRef} className="scroll-mt-24 px-6 pt-4">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-1 h-6 bg-primary-600 rounded-full"></div>
+              <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Summary</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <MetaCard
+                icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>}
+                label="Project ID"
+                value={selectedProject?.project_code || selectedProject?.id}
+                accent="indigo"
+              />
+              <MetaCard
+                icon={<BatchIcon />}
+                label="Batch ID"
+                value={timelineData.invoice.invoice_number}
+                accent="blue"
+              />
+              <MetaCard
+                icon={<StageIcon />}
+                label="Current Stage"
+                value={timelineData.invoice.current_stage}
+                accent="indigo"
+              />
+              <MetaCard
+                icon={<WorkflowIcon />}
+                label="Current Workflow"
+                value={timelineData.current_workflow}
+                accent="violet"
+              />
+            </div>
+
+            <AnalyticsCards data={timelineData} />
+            <AnalyticsCharts data={timelineData} />
+          </section>
+
+          <section ref={analyticsRef} className="scroll-mt-24 px-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-1 h-6 bg-indigo-600 rounded-full"></div>
+              <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Flow Analytics</h2>
+            </div>
+
+            <WorkflowTimeline data={timelineData} />
+
+            <div className="mt-6">
+              <StageProcessList data={timelineData} />
+            </div>
+          </section>
+
+          <section className="px-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-1 h-6 bg-gray-400 dark:bg-gray-600 rounded-full"></div>
+              <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Linked Invoices</h2>
+              <span className="ml-1 text-xs font-semibold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 px-2.5 py-0.5 rounded-full border border-primary-200 dark:border-primary-800">
+                {timelineData.invoices.length}
+              </span>
+            </div>
+
+            {timelineData.invoices.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 p-10 text-center text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900/50">
+                No invoices have been mapped to this project yet.
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {timelineData.invoices.map(invoice => (
+                  <div key={invoice.id} className="aiq-card p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-bold text-gray-900 dark:text-gray-100 text-sm">{invoice.invoice_number}</p>
+                        <p className="text-xs text-gray-700 dark:text-gray-300 mt-0.5">{invoice.file_name}</p>
+                      </div>
+                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 uppercase tracking-wide">
+                        {invoice.status || 'pending'}
+                      </span>
+                    </div>
+                    {invoice.description && (
+                      <p className="text-xs text-gray-700 dark:text-gray-300 mt-3 leading-relaxed">{invoice.description}</p>
+                    )}
+                    <div className="mt-4">
+                      <div className="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>Stage: <span className="font-semibold text-gray-800 dark:text-gray-200">{invoice.current_stage || 'Not started'}</span></span>
+                        <span className="font-semibold text-gray-800 dark:text-gray-200">{invoice.progress || 0}%</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-primary-500 rounded-full" style={{ width: `${invoice.progress || 0}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MetaCard({ icon, label, value, accent }) {
+  const accentMap = {
+    blue: 'bg-blue-50 dark:bg-blue-900/30 border-blue-100 dark:border-blue-800 text-blue-600 dark:text-blue-400',
+    indigo: 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-100 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400',
+    violet: 'bg-violet-50 dark:bg-violet-900/30 border-violet-100 dark:border-violet-800 text-violet-600 dark:text-violet-400',
+  }
+  const iconClass = accentMap[accent] || accentMap.blue
+
+  return (
+    <div className="aiq-card p-5 flex items-center gap-4">
+      <div className={`w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0 ${iconClass}`}>
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300">{label}</p>
+        <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mt-0.5 break-words">{value || 'N/A'}</p>
+      </div>
+    </div>
+  )
+}
+
+function BatchIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  )
+}
+
+function StageIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+    </svg>
+  )
+}
+
+function WorkflowIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+  )
+}
+
+function ProjectsOverview({ projects }) {
+  const liveProjects = projects.filter(p => {
+    if (!p.start_date || !p.target_date) return false;
+    const now = new Date();
+    const start = new Date(p.start_date);
+    const target = new Date(p.target_date);
+    return now >= start && now <= target;
+  });
+
+  return (
+    <div className="px-6 pt-8">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-1 h-6 bg-emerald-600 rounded-full"></div>
+        <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Live Projects Overview</h2>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="aiq-card p-6 flex flex-col justify-center items-center">
+          <p className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Total Live Projects</p>
+          <p className="text-4xl font-black text-emerald-600 dark:text-emerald-400">{liveProjects.length}</p>
+        </div>
+        <div className="aiq-card p-6 flex flex-col justify-center items-center">
+          <p className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Total Projects</p>
+          <p className="text-4xl font-black text-primary-600 dark:text-primary-400">{projects.length}</p>
+        </div>
+      </div>
+
+      <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-4">Live Projects List</h3>
+      {liveProjects.length === 0 ? (
+        <div className="p-10 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-center text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900/50">
+          No live projects currently.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {liveProjects.map(p => (
+            <div key={p.id} className="aiq-card p-5">
+              <div className="flex justify-between items-start mb-2">
+                <h4 className="font-bold text-gray-900 dark:text-gray-100">{p.name}</h4>
+                <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-black tracking-wider rounded-md border border-emerald-200 dark:border-emerald-800">LIVE</span>
+              </div>
+              <div className="flex gap-4 text-xs mt-3">
+                {p.project_code && (
+                  <div>
+                    <p className="text-gray-600 dark:text-gray-400 uppercase font-bold text-[9px] mb-0.5">Project ID</p>
+                    <p className="font-semibold text-gray-700 dark:text-gray-300">{p.project_code}</p>
+                  </div>
+                )}
+                {p.batch_id && (
+                  <div>
+                    <p className="text-gray-600 dark:text-gray-400 uppercase font-bold text-[9px] mb-0.5">Batch ID</p>
+                    <p className="font-semibold text-gray-700 dark:text-gray-300">{p.batch_id}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

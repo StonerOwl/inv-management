@@ -1,25 +1,33 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FolderPlus, GitCommit, GitBranch, XCircle, CheckCircle, ChevronRight, Plus, Settings2, Trash2 } from 'lucide-react';
+import { FolderPlus, GitCommit, GitBranch, XCircle, CheckCircle, ChevronRight, Plus, Settings2, Trash2, Pencil } from 'lucide-react';
 import clsx from 'clsx';
 import QRCode from 'react-qr-code';
-import { getPWSItems, createPWSItem, updatePWSItem, getPWSAssignments, createPWSAssignment, deletePWSAssignment } from '../api/client';
+import { getPWSItems, createPWSItem, updatePWSItem, deletePWSItem, getPWSAssignments, createPWSAssignment, deletePWSAssignment } from '../api/client';
 import NoteTarget from '../components/NoteTarget';
 
 export default function CreatePWS() {
+  const [viewMode, setViewMode] = useState('tree'); // 'tree', 'create', 'manage'
   const [activeModal, setActiveModal] = useState(null);
   const [name, setName] = useState('');
+  const [product, setProduct] = useState('');
+  const [category, setCategory] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [targetDate, setTargetDate] = useState('');
+  const [batchId, setBatchId] = useState('');
   const [createdItems, setCreatedItems] = useState([]);
-  
+  const [editingItem, setEditingItem] = useState(null);
+
   // Management State
-  const [manageMode, setManageMode] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [projectWorkflows, setProjectWorkflows] = useState({}); // { projectId: [workflowId, ...] }
-  const [workflowStates, setWorkflowStates] = useState({}); // { workflowId: [stateId, ...] }
-  
+  const [workflowStages, setWorkflowStages] = useState({}); // { workflowId: [stageId, ...] }
+  const [stageProcesses, setStageProcesses] = useState({}); // { stageId: [processId, ...] }
+
   // Dropdown states for assignment
   const [workflowToAssign, setWorkflowToAssign] = useState('');
-  const [stateToAssign, setStateToAssign] = useState({}); // { workflowId: stateIdToAssign }
-  
+  const [stageToAssign, setStageToAssign] = useState({}); // { workflowId: stageIdToAssign }
+  const [processToAssign, setProcessToAssign] = useState({}); // { stageId: processIdToAssign }
+
   // Project ID and QR state
   const [projectIds, setProjectIds] = useState({}); // { projectId: 5-digit-id }
 
@@ -29,7 +37,7 @@ export default function CreatePWS() {
         getPWSItems(),
         getPWSAssignments()
       ]);
-      
+
       setCreatedItems(items || []);
 
       // Load existing project codes
@@ -40,23 +48,27 @@ export default function CreatePWS() {
         }
       });
       setProjectIds(existingCodes);
-      
+
       // Rebuild assignment mappings
       const pwMap = {};
       const wsMap = {};
+      const spMap = {};
       (assignments || []).forEach(assign => {
         const parent = items.find(i => i.id === assign.parent_id);
         const child = items.find(i => i.id === assign.child_id);
         if (parent && child) {
           if (parent.type === 'project' && child.type === 'workflow') {
             pwMap[parent.id] = [...(pwMap[parent.id] || []), child.id];
-          } else if (parent.type === 'workflow' && child.type === 'state') {
+          } else if (parent.type === 'workflow' && child.type === 'stage') {
             wsMap[parent.id] = [...(wsMap[parent.id] || []), child.id];
+          } else if (parent.type === 'stage' && child.type === 'process') {
+            spMap[parent.id] = [...(spMap[parent.id] || []), child.id];
           }
         }
       });
       setProjectWorkflows(pwMap);
-      setWorkflowStates(wsMap);
+      setWorkflowStages(wsMap);
+      setStageProcesses(spMap);
     } catch (err) {
       console.error('Failed to load PWS data:', err);
     }
@@ -67,34 +79,102 @@ export default function CreatePWS() {
   }, [fetchData]);
 
   const handleOpenModal = (type) => {
+    setEditingItem(null);
     setActiveModal(type);
     setName('');
+    setProduct('');
+    setCategory('');
+    setStartDate('');
+    setTargetDate('');
+    setBatchId('');
+  };
+
+  const handleEditItem = (item, e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    setEditingItem(item);
+    setActiveModal(item.type);
+    setName(item.name || '');
+    if (item.type === 'project') {
+      setProduct(item.product || '');
+      setCategory(item.category || '');
+      setStartDate(item.start_date || '');
+      setTargetDate(item.target_date || '');
+      setBatchId(item.batch_id || '');
+    }
   };
 
   const handleCloseModal = () => {
     setActiveModal(null);
+    setEditingItem(null);
     setName('');
+    setProduct('');
+    setCategory('');
+    setStartDate('');
+    setTargetDate('');
+    setBatchId('');
   };
 
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!name.trim()) return;
 
-    const newItem = {
-      id: `pws_${Date.now()}`,
+    const itemData = {
       type: activeModal,
       name: name.trim(),
     };
 
+    if (activeModal === 'project') {
+      itemData.product = product;
+      itemData.category = category;
+      itemData.start_date = startDate;
+      itemData.target_date = targetDate;
+      itemData.batch_id = batchId;
+    }
+
     try {
-      const { data } = await createPWSItem(newItem);
-      setCreatedItems((prev) => [data, ...prev]);
+      if (editingItem) {
+        const { data } = await updatePWSItem(editingItem.id, itemData);
+        setCreatedItems((prev) => prev.map(item => item.id === editingItem.id ? data : item));
+      } else {
+        itemData.id = `pws_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+        const { data } = await createPWSItem(itemData);
+        setCreatedItems((prev) => [data, ...prev]);
+      }
       handleCloseModal();
     } catch (err) {
-      console.error('Failed to create item:', err);
+      console.error('Failed to save item:', err);
     }
   };
 
+  const handleDeleteProject = async (projectId) => {
+    if (!window.confirm("Are you sure you want to delete this project? This will also remove any of its hierarchy assignments.")) return;
+    try {
+      await deletePWSItem(projectId);
+      setCreatedItems(prev => prev.filter(item => item.id !== projectId));
+      setSelectedProjectId(null);
+    } catch (err) {
+      console.error('Failed to delete project:', err);
+      alert('Failed to delete project. Please check the console.');
+    }
+  };
+
+  const handleDeleteItem = async (itemId, e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    if (!window.confirm("Are you sure you want to delete this item? This action cannot be undone.")) return;
+    try {
+      await deletePWSItem(itemId);
+      setCreatedItems(prev => prev.filter(item => item.id !== itemId));
+    } catch (err) {
+      console.error('Failed to delete item:', err);
+      alert('Failed to delete item. Please check the console.');
+    }
+  };
   const assignWorkflow = async (projectId) => {
     if (!workflowToAssign) return;
     try {
@@ -109,203 +189,324 @@ export default function CreatePWS() {
     }
   };
 
-  const assignState = async (workflowId) => {
-    const sToAssign = stateToAssign[workflowId];
+  const assignStage = async (workflowId) => {
+    const sToAssign = stageToAssign[workflowId];
     if (!sToAssign) return;
     try {
       await createPWSAssignment({ parent_id: workflowId, child_id: sToAssign });
-      setWorkflowStates(prev => ({
+      setWorkflowStages(prev => ({
         ...prev,
         [workflowId]: [...(prev[workflowId] || []), sToAssign]
       }));
-      setStateToAssign(prev => ({ ...prev, [workflowId]: '' }));
+      setStageToAssign(prev => ({ ...prev, [workflowId]: '' }));
     } catch (err) {
-      console.error('Failed to assign state:', err);
+      console.error('Failed to assign stage:', err);
     }
   };
 
-  const removeWorkflow = async (projectId, workflowId) => {
+  const assignProcess = async (stageId) => {
+    const pToAssign = processToAssign[stageId];
+    if (!pToAssign) return;
     try {
-      await deletePWSAssignment(projectId, workflowId);
-      setProjectWorkflows(prev => ({
+      await createPWSAssignment({ parent_id: stageId, child_id: pToAssign });
+      setStageProcesses(prev => ({
         ...prev,
-        [projectId]: prev[projectId].filter(id => id !== workflowId)
+        [stageId]: [...(prev[stageId] || []), pToAssign]
       }));
+      setProcessToAssign(prev => ({ ...prev, [stageId]: '' }));
     } catch (err) {
-      console.error('Failed to remove workflow:', err);
+      console.error('Failed to assign process:', err);
     }
   };
 
-  const removeState = async (workflowId, stateId) => {
+  const removeAssignment = async (parentId, childId, mapSetter) => {
     try {
-      await deletePWSAssignment(workflowId, stateId);
-      setWorkflowStates(prev => ({
+      await deletePWSAssignment(parentId, childId);
+      mapSetter(prev => ({
         ...prev,
-        [workflowId]: prev[workflowId].filter(id => id !== stateId)
+        [parentId]: prev[parentId].filter(id => id !== childId)
       }));
     } catch (err) {
-      console.error('Failed to remove state:', err);
+      console.error('Failed to remove assignment:', err);
     }
   };
 
   const getIcon = (type, size = 24) => {
-    switch(type) {
+    switch (type) {
       case 'project': return <FolderPlus size={size} />;
-      case 'state': return <GitCommit size={size} />;
       case 'workflow': return <GitBranch size={size} />;
+      case 'stage': return <GitCommit size={size} />;
+      case 'process': return <Settings2 size={size} />;
       default: return null;
     }
   };
 
   const projects = createdItems.filter(i => i.type === 'project');
   const workflows = createdItems.filter(i => i.type === 'workflow');
-  const states = createdItems.filter(i => i.type === 'state');
+  const stages = createdItems.filter(i => i.type === 'stage');
+  const processes = createdItems.filter(i => i.type === 'process');
+
+  const renderRecentlyCreated = (items, typeLabel) => (
+    <div className="flex flex-col gap-2">
+      <h4 className="text-xs font-bold text-gray-700 dark:text-gray-300 tracking-normal mb-2 border-b border-gray-200 dark:border-gray-700 pb-2 capitalize">{typeLabel}s</h4>
+      {items.length === 0 ? (
+        <div className="text-xs text-gray-800 dark:text-gray-200 italic">No {typeLabel}s created yet</div>
+      ) : (
+        items.map((item, idx) => (
+          <NoteTarget
+            key={item.id}
+            targetType={item.type}
+            targetId={item.id}
+            className={clsx("flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 group/item", idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900')}
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-primary-600">{getIcon(item.type, 20)}</div>
+              <div className="text-sm font-bold truncate max-w-[100px]" title={item.name}>{item.name}</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => handleEditItem(item, e)}
+                className="opacity-0 group-hover/item:opacity-100 text-blue-500 hover:text-blue-700 transition-opacity p-1"
+                title={`Edit ${typeLabel}`}
+              >
+                <Pencil size={14} />
+              </button>
+              <button
+                onClick={(e) => handleDeleteItem(item.id, e)}
+                className="opacity-0 group-hover/item:opacity-100 text-red-500 hover:text-red-700 transition-opacity p-1"
+                title={`Delete ${typeLabel}`}
+              >
+                <Trash2 size={14} />
+              </button>
+              <CheckCircle size={14} className="text-emerald-500 shrink-0" />
+            </div>
+          </NoteTarget>
+        ))
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col -m-8 p-8 relative">
-      <div className="max-w-6xl mx-auto w-full pb-20">
-        
+      <div className="max-w-7xl mx-auto w-full pb-20">
+
         {/* Header */}
-        <div className="mb-12 border-b border-gray-200 dark:border-gray-700 pb-6 flex items-end justify-between">
+        <div className="mb-12 border-b border-gray-200 dark:border-gray-800 pb-6 flex items-end justify-between">
           <div>
-            <h1 className="text-5xl font-black tracking-tighter  text-primary-600">
-              {manageMode ? 'Manage Project' : 'Create P/W/S'}
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
+              {viewMode === 'tree' ? 'Project Hierarchy' : viewMode === 'create' ? 'Create Items' : 'Manage Project'}
             </h1>
-            <div className="text-sm font-bold tracking-normal text-gray-500 dark:text-gray-400 mt-2 ">
-              Project · Workflow · State Management
+            <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-2">
+              Project · Workflow · Stage · Process
             </div>
           </div>
-          
-          <button 
-            onClick={() => setManageMode(!manageMode)}
-            className="flex items-center gap-2 border border-primary-600 text-primary-600 px-6 py-3 font-black  tracking-normal text-xs hover:bg-[#FCD535] hover:text-black transition-colors"
-          >
-            {manageMode ? (
-              <>Back to Creation</>
-            ) : (
-              <><Settings2 size={16} /> Manage Project</>
+
+          <div className="flex gap-4">
+            {viewMode !== 'tree' && (
+              <button
+                onClick={() => setViewMode('tree')}
+                className="aiq-btn-ghost flex items-center gap-2"
+              >
+                Back to Tree
+              </button>
             )}
-          </button>
+            {viewMode !== 'create' && (
+              <button
+                onClick={() => setViewMode('create')}
+                className="aiq-btn-ghost text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center gap-2"
+              >
+                <Plus size={16} /> Create
+              </button>
+            )}
+            {viewMode !== 'manage' && (
+              <button
+                onClick={() => setViewMode('manage')}
+                className="aiq-btn-primary flex items-center gap-2"
+              >
+                <Settings2 size={16} /> Manage Project
+              </button>
+            )}
+          </div>
         </div>
 
-        {!manageMode ? (
-          <>
-            {/* Action Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-              <button onClick={() => handleOpenModal('project')} className="card-brutal-dark border border-gray-200 dark:border-gray-700 p-8 flex flex-col items-center justify-center gap-4 hover:border-primary-600 hover:bg-[#FCD535]/5 transition-all group">
-                <div className="w-16 h-16 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 group-hover:border-primary-600 group-hover:text-primary-600 flex items-center justify-center transition-colors">
+        {viewMode === 'tree' && (
+          <div className="space-y-4">
+            {projects.length === 0 ? (
+              <div className="text-center py-12 text-gray-500 font-bold border-2 border-dashed border-gray-200 dark:border-gray-700">
+                No projects found. Click "Create" to get started.
+              </div>
+            ) : (
+              projects.map(p => {
+                let isLive = false;
+                if (p.start_date && p.target_date) {
+                  const now = new Date();
+                  const start = new Date(p.start_date);
+                  const target = new Date(p.target_date);
+                  if (now >= start && now <= target) {
+                    isLive = true;
+                  }
+                }
+                return (
+                <details key={p.id} className="group aiq-card overflow-hidden mb-4" open>
+                  <summary className="p-4 font-bold text-lg text-gray-900 dark:text-gray-100 flex justify-between items-center cursor-pointer outline-none select-none hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open:border-gray-100 dark:group-open:border-gray-800">
+                    <div className="flex items-center gap-3">
+                      <ChevronRight size={20} className="group-open:rotate-90 transition-transform text-gray-400" />
+                      <FolderPlus size={20} className="text-primary-600 dark:text-primary-400" /> {p.name}
+                    </div>
+                    <div className="flex items-center gap-3 text-xs tracking-wider">
+                      <span className={clsx("px-3 py-1 rounded-full font-bold", isLive ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700")}>
+                        {isLive ? "LIVE" : "FINISHED"}
+                      </span>
+                      {p.project_code && (
+                        <span className="bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 px-3 py-1 border border-primary-200 dark:border-primary-800">
+                          ID: {p.project_code}
+                        </span>
+                      )}
+                      {p.batch_id && (
+                        <span className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-3 py-1 border border-gray-200 dark:border-gray-700">
+                          BATCH: {p.batch_id}
+                        </span>
+                      )}
+                    </div>
+                  </summary>
+
+                  <div className="p-6 bg-gray-50/50 dark:bg-gray-900/20">
+                    {(p.product || projectWorkflows[p.id]?.length > 0 || p.category || p.start_date || p.target_date) && (
+                      <div className="mb-6 bg-white dark:bg-gray-800/80 p-5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex flex-wrap gap-x-10 gap-y-4 text-sm">
+                        {p.product && <div><span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Product</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.product}</span></div>}
+                        {projectWorkflows[p.id]?.length > 0 && (
+                          <div>
+                            <span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Work Order / Workflow</span>
+                            <span className="font-semibold text-gray-900 dark:text-gray-100">
+                              {projectWorkflows[p.id].map(wId => workflows.find(w => w.id === wId)?.name).filter(Boolean).join(', ')}
+                            </span>
+                          </div>
+                        )}
+                        {p.category && <div><span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Category</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.category}</span></div>}
+                        {p.start_date && <div><span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Start Date</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.start_date}</span></div>}
+                        {p.target_date && <div><span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Target Date</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.target_date}</span></div>}
+                      </div>
+                    )}
+                    <div className="pl-4 space-y-4 border-l-2 border-gray-200 dark:border-gray-700">
+                      {(projectWorkflows[p.id] || []).map(wId => {
+                        const wf = workflows.find(w => w.id === wId);
+                        if (!wf) return null;
+                        return (
+                          <details key={wId} className="group/wf" open>
+                            <summary className="py-2 font-bold text-lg text-gray-800 dark:text-gray-200 flex items-center gap-3 cursor-pointer outline-none select-none hover:text-primary-600 transition-colors list-none [&::-webkit-details-marker]:hidden relative">
+                              <div className="absolute -left-[18px] top-1/2 w-4 h-0.5 bg-gray-200 dark:bg-gray-700"></div>
+                              <ChevronRight size={18} className="group-open/wf:rotate-90 transition-transform text-gray-400" />
+                              <GitBranch size={18} className="text-gray-500" /> {wf.name}
+                            </summary>
+
+                            <div className="pl-8">
+                              <div className="pl-4 space-y-3 border-l-2 border-gray-100 dark:border-gray-800">
+                                {(workflowStages[wId] || []).map(sId => {
+                                  const st = stages.find(s => s.id === sId);
+                                  if (!st) return null;
+                                  return (
+                                    <details key={sId} className="group/st" open>
+                                      <summary className="py-1.5 font-semibold text-md text-gray-700 dark:text-gray-300 flex items-center gap-3 cursor-pointer outline-none select-none hover:text-primary-600 transition-colors list-none [&::-webkit-details-marker]:hidden relative">
+                                        <div className="absolute -left-[18px] top-1/2 w-4 h-0.5 bg-gray-100 dark:bg-gray-800"></div>
+                                        <ChevronRight size={16} className="group-open/st:rotate-90 transition-transform text-gray-400" />
+                                        <GitCommit size={16} className="text-emerald-500" /> {st.name}
+                                      </summary>
+
+                                      <div className="pl-8 py-2">
+                                        <div className="pl-4 space-y-2 border-l border-dashed border-gray-200 dark:border-gray-700">
+                                          {(stageProcesses[sId] || []).length === 0 ? (
+                                            <div className="text-xs text-gray-400 italic relative flex items-center">
+                                              <div className="absolute -left-[17px] top-1/2 w-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+                                              No processes
+                                            </div>
+                                          ) : (
+                                            (stageProcesses[sId] || []).map(procId => {
+                                              const proc = processes.find(pr => pr.id === procId);
+                                              if (!proc) return null;
+                                              return (
+                                                <div key={procId} className="text-sm font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2 relative">
+                                                  <div className="absolute -left-[17px] top-1/2 w-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+                                                  <Settings2 size={14} className="text-gray-400" /> {proc.name}
+                                                </div>
+                                              )
+                                            })
+                                          )}
+                                        </div>
+                                      </div>
+                                    </details>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          </details>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </details>
+              )})
+            )}
+          </div>
+        )}
+
+        {viewMode === 'create' && (
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+              <button onClick={() => handleOpenModal('project')} className="aiq-card p-6 flex flex-col items-center justify-center gap-4 hover:border-primary-600 dark:hover:border-primary-500 hover:shadow-md transition-all group">
+                <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-xl group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center transition-colors">
                   <FolderPlus size={32} />
                 </div>
-                <h2 className="text-xl font-black font-semibold tracking-normal">Create Project</h2>
+                <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Create Project</h2>
               </button>
 
-              <button onClick={() => handleOpenModal('state')} className="card-brutal-dark border border-gray-200 dark:border-gray-700 p-8 flex flex-col items-center justify-center gap-4 hover:border-primary-600 hover:bg-[#FCD535]/5 transition-all group">
-                <div className="w-16 h-16 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 group-hover:border-primary-600 group-hover:text-primary-600 flex items-center justify-center transition-colors">
-                  <GitCommit size={32} />
-                </div>
-                <h2 className="text-xl font-black font-semibold tracking-normal">Create State</h2>
-              </button>
-
-              <button onClick={() => handleOpenModal('workflow')} className="card-brutal-dark border border-gray-200 dark:border-gray-700 p-8 flex flex-col items-center justify-center gap-4 hover:border-primary-600 hover:bg-[#FCD535]/5 transition-all group">
-                <div className="w-16 h-16 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 group-hover:border-primary-600 group-hover:text-primary-600 flex items-center justify-center transition-colors">
+              <button onClick={() => handleOpenModal('workflow')} className="aiq-card p-6 flex flex-col items-center justify-center gap-4 hover:border-primary-600 dark:hover:border-primary-500 hover:shadow-md transition-all group">
+                <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center transition-colors">
                   <GitBranch size={32} />
                 </div>
-                <h2 className="text-xl font-black font-semibold tracking-normal">Create Workflow</h2>
+                <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Create Workflow</h2>
+              </button>
+
+              <button onClick={() => handleOpenModal('stage')} className="aiq-card p-6 flex flex-col items-center justify-center gap-4 hover:border-primary-600 dark:hover:border-primary-500 hover:shadow-md transition-all group">
+                <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center transition-colors">
+                  <GitCommit size={32} />
+                </div>
+                <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Create Stage</h2>
+              </button>
+
+              <button onClick={() => handleOpenModal('process')} className="aiq-card p-6 flex flex-col items-center justify-center gap-4 hover:border-primary-600 dark:hover:border-primary-500 hover:shadow-md transition-all group">
+                <div className="w-16 h-16 bg-violet-50 dark:bg-violet-900/30 rounded-xl group-hover:bg-violet-100 dark:group-hover:bg-violet-900/50 text-violet-600 dark:text-violet-400 flex items-center justify-center transition-colors">
+                  <Settings2 size={32} />
+                </div>
+                <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Create Process</h2>
               </button>
             </div>
 
-            {/* Recent Creations */}
             {createdItems.length > 0 && (
               <div>
                 <h3 className="text-sm font-black tracking-normal text-primary-600 mb-4 ">Recently Created</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  
-                  {/* Projects Column */}
-                  <div className="flex flex-col gap-2">
-                    <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400  tracking-normal mb-2 border-b border-gray-200 dark:border-gray-700 pb-2">Projects</h4>
-                    {projects.length === 0 ? (
-                      <div className="text-xs text-gray-600 dark:text-gray-400 italic">No projects created yet</div>
-                    ) : (
-                      projects.map((item, idx) => (
-                        <NoteTarget
-                          key={item.id} 
-                          targetType="project"
-                          targetId={item.id}
-                          className={clsx("flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700", idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900')}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="text-primary-600">{getIcon(item.type, 20)}</div>
-                            <div className="text-sm font-bold truncate max-w-[100px]">{item.name}</div>
-                          </div>
-                          <CheckCircle size={14} className="text-emerald-500" />
-                        </NoteTarget>
-                      ))
-                    )}
-                  </div>
-
-                  {/* States Column */}
-                  <div className="flex flex-col gap-2">
-                    <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400  tracking-normal mb-2 border-b border-gray-200 dark:border-gray-700 pb-2">States</h4>
-                    {states.length === 0 ? (
-                      <div className="text-xs text-gray-600 dark:text-gray-400 italic">No states created yet</div>
-                    ) : (
-                      states.map((item, idx) => (
-                        <NoteTarget 
-                          key={item.id} 
-                          targetType="state"
-                          targetId={item.id}
-                          className={clsx("flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700", idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900')}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="text-primary-600">{getIcon(item.type, 20)}</div>
-                            <div className="text-sm font-bold truncate max-w-[100px]">{item.name}</div>
-                          </div>
-                          <CheckCircle size={14} className="text-emerald-500" />
-                        </NoteTarget>
-                      ))
-                    )}
-                  </div>
-
-                  {/* Workflows Column */}
-                  <div className="flex flex-col gap-2">
-                    <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400  tracking-normal mb-2 border-b border-gray-200 dark:border-gray-700 pb-2">Workflows</h4>
-                    {workflows.length === 0 ? (
-                      <div className="text-xs text-gray-600 dark:text-gray-400 italic">No workflows created yet</div>
-                    ) : (
-                      workflows.map((item, idx) => (
-                        <NoteTarget 
-                          key={item.id} 
-                          targetType="workflow"
-                          targetId={item.id}
-                          className={clsx("flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700", idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900')}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="text-primary-600">{getIcon(item.type, 20)}</div>
-                            <div className="text-sm font-bold truncate max-w-[100px]">{item.name}</div>
-                          </div>
-                          <CheckCircle size={14} className="text-emerald-500" />
-                        </NoteTarget>
-                      ))
-                    )}
-                  </div>
-
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  {renderRecentlyCreated(projects, 'project')}
+                  {renderRecentlyCreated(workflows, 'workflow')}
+                  {renderRecentlyCreated(stages, 'stage')}
+                  {renderRecentlyCreated(processes, 'process')}
                 </div>
               </div>
             )}
-          </>
-        ) : (
+          </div>
+        )}
+
+        {viewMode === 'manage' && (
           <div className="flex gap-8">
-            {/* Left: Project List */}
             <div className="w-1/3 flex flex-col gap-4">
               <h3 className="text-sm font-black tracking-normal text-gray-400 ">Select Project</h3>
               <div className="flex flex-col gap-2">
                 {projects.length === 0 ? (
-                  <div className="p-8 border border-gray-200 dark:border-gray-700 border-dashed text-center text-gray-600 dark:text-gray-400 text-sm font-bold">
-                    No projects found.<br/>Go back and create one.
+                  <div className="p-8 border border-gray-200 dark:border-gray-700 border-dashed text-center text-gray-800 dark:text-gray-200 text-sm font-bold">
+                    No projects found.<br />Go to Create view first.
                   </div>
                 ) : (
                   projects.map(p => (
-                    <NoteTarget 
+                    <NoteTarget
                       key={p.id}
                       as="button"
                       targetType="project"
@@ -313,9 +514,9 @@ export default function CreatePWS() {
                       onClick={() => setSelectedProjectId(p.id)}
                       className={clsx(
                         "p-4 border text-left flex items-center justify-between transition-colors",
-                        selectedProjectId === p.id 
-                          ? "border-primary-600 bg-[#FCD535]/10 text-primary-600" 
-                          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-500 text-gray-300"
+                        selectedProjectId === p.id
+                          ? "border-primary-600 bg-[#FCD535]/10 text-primary-600"
+                          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-500 text-gray-500"
                       )}
                     >
                       <div className="flex items-center gap-3">
@@ -329,88 +530,98 @@ export default function CreatePWS() {
               </div>
             </div>
 
-            {/* Right: Project Hierarchy */}
-            <div className="w-2/3 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-8 min-h-[500px]">
+            <div className="w-2/3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-8 min-h-[500px]">
               {!selectedProjectId ? (
-                <div className="h-full flex items-center justify-center text-gray-600 dark:text-gray-400 font-bold font-semibold tracking-normal">
+                <div className="h-full flex items-center justify-center text-gray-700 dark:text-gray-300 font-semibold tracking-normal">
                   Select a project to manage
                 </div>
               ) : (
                 <div className="flex flex-col h-full">
                   <div className="mb-8 border-b border-gray-100 dark:border-gray-800 pb-6 flex justify-between items-start">
                     <div>
-                      <h2 className="text-3xl font-black  tracking-tighter text-primary-600 flex items-center gap-3">
+                      <h2 className="text-3xl font-black tracking-tighter text-primary-600 flex items-center gap-3">
                         <FolderPlus size={28} />
                         {projects.find(p => p.id === selectedProjectId)?.name}
                       </h2>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold tracking-normal mt-2">
+                      <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold tracking-normal mt-2">
                         Hierarchy Management
                       </div>
                     </div>
 
                     <div className="flex items-center gap-4">
-                      {!projectIds[selectedProjectId] ? (
-                        <button 
-                          onClick={async () => {
-                            const newId = Math.floor(10000 + Math.random() * 90000).toString();
-                            try {
-                              await updatePWSItem(selectedProjectId, { project_code: newId });
-                              setProjectIds(prev => ({...prev, [selectedProjectId]: newId}));
-                            } catch (err) {
-                              console.error("Failed to save Project ID", err);
-                            }
-                          }}
-                          className="px-4 py-2 border border-primary-600 text-primary-600 font-black text-xs hover:bg-[#FCD535] hover:border-[#FCD535] hover:text-black transition-colors"
-                        >
-                          Generate ID & QR
-                        </button>
-                      ) : (
-                        <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-2 border border-gray-200 dark:border-gray-700">
-                          <div className="flex flex-col items-end justify-center pr-4 border-r border-gray-200 dark:border-gray-700">
-                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Project ID</span>
-                            <span className="text-xl font-black text-primary-600 tracking-widest">{projectIds[selectedProjectId]}</span>
+                      {(() => {
+                        const p = projects.find(proj => proj.id === selectedProjectId);
+                        if (!p || !p.project_code) return null;
+                        return (
+                          <div className="flex gap-6">
+                            <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 min-w-[300px]">
+                              <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">Project Batch Details</h4>
+                              <div className="grid grid-cols-[100px_1fr] gap-y-2 text-xs">
+                                <div className="text-gray-700 dark:text-gray-300">Project Name</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.name}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Project ID</div><div className="font-bold text-primary-600 dark:text-primary-400">{p.project_code}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Batch ID</div><div className="font-bold text-primary-600 dark:text-primary-400">{p.batch_id}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Product</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.product}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Work Order / Workflow</div><div className="font-semibold text-gray-900 dark:text-gray-100">{projectWorkflows[p.id]?.length > 0 ? projectWorkflows[p.id].map(wId => workflows.find(w => w.id === wId)?.name).filter(Boolean).join(', ') : 'Not Assigned'}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Category</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.category}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Start Date</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.start_date}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Target Date</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.target_date}</div>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-4">
+                              <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <div className="text-xs text-gray-700 dark:text-gray-300 mb-1">Project ID</div>
+                                <div className="text-xl font-black text-primary-600 dark:text-primary-400 mb-2">{p.project_code}</div>
+                                <QRCode value={p.project_code} size={64} className="bg-white p-1 rounded" />
+                              </div>
+                              <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <div className="text-xs text-gray-700 dark:text-gray-300 mb-1">Batch ID</div>
+                                <div className="text-xl font-black text-primary-600 dark:text-primary-400 mb-2">{p.batch_id}</div>
+                                <QRCode value={p.batch_id} size={64} className="bg-white p-1 rounded" />
+                              </div>
+                              <button
+                                onClick={() => handleDeleteProject(p.id)}
+                                className="mt-auto px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800 font-bold text-sm transition-colors flex items-center justify-center gap-2 rounded-lg"
+                              >
+                                <Trash2 size={16} /> Delete Project
+                              </button>
+                            </div>
                           </div>
-                          <div className="bg-white p-1">
-                            <QRCode value={projectIds[selectedProjectId]} size={48} />
-                          </div>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                   </div>
 
                   <div className="flex-1 overflow-y-auto pr-4">
-                    {/* Assign Workflow */}
-                    <div className="flex items-end gap-4 mb-6 p-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800">
+                    <div className="flex items-end gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-lg">
                       <div className="flex-1">
-                        <label className="block text-xs font-bold tracking-normal text-gray-400 mb-2 ">
+                        <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 ">
                           Assign Workflow
                         </label>
-                        <select 
+                        <select
                           value={workflowToAssign}
                           onChange={(e) => setWorkflowToAssign(e.target.value)}
-                          className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2 outline-none focus:border-primary-600 font-sans text-sm appearance-none"
+                          className="aiq-input"
                         >
                           <option value="">-- Select Workflow --</option>
                           {workflows
                             .filter(w => !(projectWorkflows[selectedProjectId] || []).includes(w.id))
                             .map(w => (
                               <option key={w.id} value={w.id}>{w.name}</option>
-                          ))}
+                            ))}
                         </select>
                       </div>
-                      <button 
+                      <button
                         onClick={() => assignWorkflow(selectedProjectId)}
                         disabled={!workflowToAssign}
-                        className="h-10 px-6 bg-[#FCD535] text-black font-black  tracking-normal text-xs hover:bg-white dark:bg-gray-800 disabled:opacity-50 transition-colors flex items-center gap-2"
+                        className="aiq-btn-primary h-[42px] px-6 text-sm flex items-center gap-2"
                       >
                         <Plus size={16} /> Assign
                       </button>
                     </div>
 
-                    {/* Assigned Workflows List */}
                     <div className="flex flex-col gap-6">
                       {(projectWorkflows[selectedProjectId] || []).length === 0 ? (
-                        <div className="text-center py-8 text-gray-600 dark:text-gray-400 text-sm font-bold  tracking-normal border border-dashed border-gray-200 dark:border-gray-700">
+                        <div className="text-center py-8 text-gray-800 dark:text-gray-200 text-sm font-bold  tracking-normal border border-dashed border-gray-200 dark:border-gray-700">
                           No workflows assigned
                         </div>
                       ) : (
@@ -421,58 +632,106 @@ export default function CreatePWS() {
                             <NoteTarget as="div" targetType="workflow" targetId={wId} key={wId} className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 relative">
                               <div className="flex justify-between items-start mb-4 pb-4 border-b border-gray-100 dark:border-gray-800">
                                 <div className="flex items-center gap-3 text-gray-900 dark:text-gray-100">
-                                  <div className="p-2 bg-[#222] text-primary-600"><GitBranch size={16}/></div>
+                                  <div className="p-2 bg-[#222] text-primary-600"><GitBranch size={16} /></div>
                                   <span className="font-bold text-lg">{wf.name}</span>
                                 </div>
-                                <button onClick={() => removeWorkflow(selectedProjectId, wId)} className="text-red-500 hover:text-red-400 p-2">
+                                <button onClick={() => removeAssignment(selectedProjectId, wId, setProjectWorkflows)} className="text-red-500 hover:text-red-400 p-2">
                                   <Trash2 size={16} />
                                 </button>
                               </div>
 
-                              {/* States Assignment under Workflow */}
                               <div className="pl-6 border-l-2 border-gray-100 dark:border-gray-800">
                                 <div className="flex items-end gap-3 mb-4">
                                   <div className="flex-1">
-                                    <select 
-                                      value={stateToAssign[wId] || ''}
-                                      onChange={(e) => setStateToAssign({...stateToAssign, [wId]: e.target.value})}
-                                      className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-300 px-3 py-1.5 outline-none focus:border-primary-600 font-sans text-xs appearance-none"
+                                    <select
+                                      value={stageToAssign[wId] || ''}
+                                      onChange={(e) => setStageToAssign({ ...stageToAssign, [wId]: e.target.value })}
+                                      className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-400 px-3 py-1.5 outline-none focus:border-primary-600 font-sans text-xs appearance-none"
                                     >
-                                      <option value="">-- Assign State --</option>
-                                      {states
-                                        .filter(s => !(workflowStates[wId] || []).includes(s.id))
+                                      <option value="">-- Assign Stage --</option>
+                                      {stages
+                                        .filter(s => !(workflowStages[wId] || []).includes(s.id))
                                         .map(s => (
                                           <option key={s.id} value={s.id}>{s.name}</option>
-                                      ))}
+                                        ))}
                                     </select>
                                   </div>
-                                  <button 
-                                    onClick={() => assignState(wId)}
-                                    disabled={!stateToAssign[wId]}
-                                    className="h-8 px-4 border border-gray-200 dark:border-gray-700 text-gray-400 font-bold  tracking-normal text-[10px] hover:text-primary-600 hover:border-primary-600 disabled:opacity-50 transition-colors"
+                                  <button
+                                    onClick={() => assignStage(wId)}
+                                    disabled={!stageToAssign[wId]}
+                                    className="h-8 px-4 border border-gray-200 dark:border-gray-700 text-gray-500 font-bold tracking-normal text-[10px] hover:text-primary-600 hover:border-primary-600 disabled:opacity-50 transition-colors"
                                   >
                                     Assign
                                   </button>
                                 </div>
 
-                                {/* Assigned States List */}
-                                <div className="flex flex-col gap-2 mt-4">
-                                  {(workflowStates[wId] || []).length === 0 ? (
-                                    <div className="text-xs text-gray-600 dark:text-gray-400 italic">No states assigned</div>
+                                <div className="flex flex-col gap-4 mt-4">
+                                  {(workflowStages[wId] || []).length === 0 ? (
+                                    <div className="text-xs text-gray-500 italic">No stages assigned</div>
                                   ) : (
-                                    (workflowStates[wId] || []).map(sId => {
-                                      const st = states.find(s => s.id === sId);
+                                    (workflowStages[wId] || []).map(sId => {
+                                      const st = stages.find(s => s.id === sId);
                                       if (!st) return null;
                                       return (
-                                        <NoteTarget as="div" targetType="state" targetId={sId} key={sId} className="flex items-center justify-between bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800 p-2 pr-3">
-                                          <div className="flex items-center gap-2 text-gray-300 text-sm font-bold">
-                                            <div className="text-emerald-500"><GitCommit size={14}/></div>
-                                            {st.name}
+                                        <div key={sId} className="border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4">
+                                          <NoteTarget as="div" targetType="stage" targetId={sId} className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 text-md font-bold">
+                                              <div className="text-emerald-500"><GitCommit size={14} /></div>
+                                              {st.name}
+                                            </div>
+                                            <button onClick={() => removeAssignment(wId, sId, setWorkflowStages)} className="text-gray-400 hover:text-red-500">
+                                              <XCircle size={14} />
+                                            </button>
+                                          </NoteTarget>
+
+                                          <div className="pl-6 border-l-2 border-gray-200 dark:border-gray-700">
+                                            <div className="flex items-end gap-3 mb-4">
+                                              <div className="flex-1">
+                                                <select
+                                                  value={processToAssign[sId] || ''}
+                                                  onChange={(e) => setProcessToAssign({ ...processToAssign, [sId]: e.target.value })}
+                                                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-400 px-3 py-1 outline-none focus:border-primary-600 font-sans text-xs appearance-none"
+                                                >
+                                                  <option value="">-- Assign Process --</option>
+                                                  {processes
+                                                    .filter(p => !(stageProcesses[sId] || []).includes(p.id))
+                                                    .map(p => (
+                                                      <option key={p.id} value={p.id}>{p.name}</option>
+                                                    ))}
+                                                </select>
+                                              </div>
+                                              <button
+                                                onClick={() => assignProcess(sId)}
+                                                disabled={!processToAssign[sId]}
+                                                className="h-6 px-3 border border-gray-200 dark:border-gray-700 text-gray-500 font-bold tracking-normal text-[10px] hover:text-primary-600 hover:border-primary-600 disabled:opacity-50 transition-colors"
+                                              >
+                                                Assign
+                                              </button>
+                                            </div>
+
+                                            <div className="flex flex-col gap-2">
+                                              {(stageProcesses[sId] || []).length === 0 ? (
+                                                <div className="text-xs text-gray-500 italic">No processes assigned</div>
+                                              ) : (
+                                                (stageProcesses[sId] || []).map(pId => {
+                                                  const proc = processes.find(p => p.id === pId);
+                                                  if (!proc) return null;
+                                                  return (
+                                                    <NoteTarget as="div" targetType="process" targetId={pId} key={pId} className="flex items-center justify-between bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800 p-2 pr-3">
+                                                      <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 text-sm font-bold">
+                                                        <Settings2 size={12} />
+                                                        {proc.name}
+                                                      </div>
+                                                      <button onClick={() => removeAssignment(sId, pId, setStageProcesses)} className="text-gray-400 hover:text-red-500">
+                                                        <XCircle size={12} />
+                                                      </button>
+                                                    </NoteTarget>
+                                                  )
+                                                })
+                                              )}
+                                            </div>
                                           </div>
-                                          <button onClick={() => removeState(wId, sId)} className="text-gray-500 dark:text-gray-400 hover:text-red-500">
-                                            <XCircle size={14} />
-                                          </button>
-                                        </NoteTarget>
+                                        </div>
                                       )
                                     })
                                   )}
@@ -493,35 +752,59 @@ export default function CreatePWS() {
 
       {/* Creation Modal */}
       {activeModal && (
-        <div className="fixed inset-0 bg-white dark:bg-gray-800/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 w-full max-w-md shadow-2xl relative">
-            <button onClick={handleCloseModal} className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-colors">
+        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl w-full max-w-md shadow-2xl relative overflow-hidden">
+            <button onClick={handleCloseModal} className="absolute top-4 right-4 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100 transition-colors">
               <XCircle size={24} />
             </button>
             <div className="p-8">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="text-primary-600">{getIcon(activeModal, 32)}</div>
-                <h2 className="text-2xl font-black  tracking-tighter">New {activeModal}</h2>
+              <div className="flex items-center gap-4 mb-6 text-primary-600 dark:text-primary-400">
+                {getIcon(activeModal, 32)}
+                <h2 className="text-2xl font-black tracking-tighter uppercase">{editingItem ? 'Edit' : 'New'} {activeModal}</h2>
               </div>
               <form onSubmit={handleCreate}>
                 <div className="mb-8">
-                  <label className="block text-xs font-bold tracking-normal text-gray-400 mb-2 ">{activeModal} Name</label>
+                  <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">{activeModal} Name</label>
                   <input
                     type="text"
                     autoFocus
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={`ENTER ${activeModal.toUpperCase()} NAME...`}
-                    className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-4 py-3 outline-none focus:border-primary-600 transition-colors font-sans text-sm"
+                    className="aiq-input"
                     required
                   />
                 </div>
-                <div className="flex justify-end gap-4">
-                  <button type="button" onClick={handleCloseModal} className="px-6 py-2 border border-gray-200 dark:border-gray-700 text-gray-400 font-bold  tracking-normal text-xs hover:bg-[#222] hover:text-gray-900 dark:text-gray-100 transition-colors">
-                    Cancel
+                {activeModal === 'project' && (
+                  <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div>
+                      <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Product</label>
+                      <input type="text" value={product} onChange={e => setProduct(e.target.value)} className="aiq-input" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Category</label>
+                      <input type="text" value={category} onChange={e => setCategory(e.target.value)} className="aiq-input" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Start Date</label>
+                      <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="aiq-input" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Target Date</label>
+                      <input type="date" value={targetDate} onChange={e => setTargetDate(e.target.value)} className="aiq-input" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Batch ID</label>
+                      <input type="text" value={batchId} onChange={e => setBatchId(e.target.value)} className="aiq-input" />
+                    </div>
+                  </div>
+                )}
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800 mt-4">
+                  <button type="button" onClick={handleCloseModal} className="aiq-btn-ghost">
+                    CANCEL
                   </button>
-                  <button type="submit" disabled={!name.trim()} className="px-6 py-2 bg-[#FCD535] text-black font-black  tracking-normal text-xs hover:bg-white dark:bg-gray-800 disabled:opacity-50 transition-colors">
-                    Create
+                  <button type="submit" disabled={!name.trim()} className="aiq-btn-primary">
+                    {editingItem ? 'SAVE CHANGES' : 'CREATE'}
                   </button>
                 </div>
               </form>

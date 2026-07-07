@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { listUsers, createUser, updateUser } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { Plus, Edit, ShieldCheck, Upload } from 'lucide-react'
@@ -82,59 +83,56 @@ export default function UserManagement() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col">
       
       <div className="max-w-7xl mx-auto w-full px-8 flex-1 pb-20">
-        <div className="mb-12 border-b border-gray-200 dark:border-gray-700 pb-6 flex items-end justify-between">
+        <div className="mb-12 border-b border-gray-200 dark:border-gray-800 pb-6 flex items-end justify-between mt-8">
           <div>
-            <h1 className="text-7xl font-black tracking-tighter ">Users</h1>
-            <div className="text-sm font-bold tracking-normal text-primary-600 mt-2 flex items-center gap-4">
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">Users</h1>
+            <div className="text-sm font-semibold text-primary-600 dark:text-primary-400 mt-2 flex items-center gap-4">
               <span>&gt; ACCESS MANAGEMENT [{users.length}]</span>
-              <div className="w-32 h-[1px] bg-[#FCD535]"></div>
             </div>
           </div>
           <button
             onClick={handleOpenCreate}
-            className="btn-brutal-dark px-6 py-3 flex items-center gap-2 text-sm font-black font-semibold tracking-normal"
+            className="aiq-btn-primary flex items-center gap-2"
           >
             <Plus size={16} /> ADD USER
           </button>
         </div>
 
-        <div className="divider-striped-yellow mb-8"></div>
-
         {loading ? (
-          <div className="text-center py-12 text-primary-600 font-black font-semibold tracking-normal text-2xl animate-pulse">Loading Users...</div>
+          <div className="text-center py-12 text-primary-600 font-semibold tracking-normal text-xl animate-pulse">Loading Users...</div>
         ) : error ? (
-          <div className="text-center py-12 text-red-500 font-black font-semibold tracking-normal text-2xl">{error}</div>
+          <div className="text-center py-12 text-red-500 font-semibold tracking-normal text-xl">{error}</div>
         ) : (
-          <div className="card-brutal-dark relative">
+          <div className="aiq-card relative">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
-                <thead className="bg-white dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
                   <tr>
-                    <th className="py-4 px-4 text-xs font-black tracking-normal text-primary-600 whitespace-nowrap border-r border-gray-100 dark:border-gray-800">USER</th>
-                    <th className="py-4 px-4 text-xs font-black tracking-normal text-primary-600 whitespace-nowrap border-r border-gray-100 dark:border-gray-800">ROLE</th>
-                    <th className="py-4 px-4 text-xs font-black tracking-normal text-primary-600 whitespace-nowrap border-r border-gray-100 dark:border-gray-800">PERMISSIONS</th>
-                    <th className="py-4 px-4 text-xs font-black tracking-normal text-primary-600 whitespace-nowrap border-r border-gray-100 dark:border-gray-800">STATUS</th>
-                    <th className="py-4 px-4 text-xs font-black tracking-normal text-primary-600 whitespace-nowrap">ACTION</th>
+                    <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 whitespace-nowrap">USER</th>
+                    <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 whitespace-nowrap">ROLE</th>
+                    <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 whitespace-nowrap">PERMISSIONS</th>
+                    <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 whitespace-nowrap">STATUS</th>
+                    <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 whitespace-nowrap">ACTION</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                   {users.map((u, idx) => (
-                    <tr key={u.id} className={clsx("border-b border-gray-100 dark:border-gray-800 hover:bg-gray-100 dark:bg-gray-800 transition-colors", idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900')}>
-                      <td className="py-3 px-4 text-sm font-bold border-r border-gray-100 dark:border-gray-800">
+                    <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
+                      <td className="py-4 px-6 text-sm font-semibold text-gray-900 dark:text-gray-100">
                         {u.username}
-                        {u.id === currentUser.id && <span className="ml-3 text-[10px] bg-[#FCD535] text-black px-1.5 py-0.5 font-semibold tracking-normal">YOU</span>}
+                        {u.id === currentUser.id && <span className="ml-3 text-[10px] bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 px-2 py-0.5 rounded-full font-bold tracking-normal">YOU</span>}
                       </td>
-                      <td className="py-3 px-4 text-xs font-bold  border-r border-gray-100 dark:border-gray-800">
-                        {u.role === 'admin' ? <span className="text-purple-400 flex items-center gap-2"><ShieldCheck size={14}/> ADMIN</span> : <span className="text-gray-500 dark:text-gray-400">USER</span>}
+                      <td className="py-4 px-6 text-sm font-medium">
+                        {u.role === 'admin' ? <span className="text-purple-600 dark:text-purple-400 flex items-center gap-2"><ShieldCheck size={16}/> ADMIN</span> : <span className="text-gray-700 dark:text-gray-300">USER</span>}
                       </td>
-                      <td className="py-3 px-4 text-xs font-bold  border-r border-gray-100 dark:border-gray-800">
-                        {u.role === 'admin' || u.can_upload ? <span className="text-emerald-500 flex items-center gap-2"><Upload size={14}/> CAN UPLOAD</span> : <span className="text-gray-600 dark:text-gray-400">READ-ONLY</span>}
+                      <td className="py-4 px-6 text-sm font-medium">
+                        {u.role === 'admin' || u.can_upload ? <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-2"><Upload size={16}/> CAN UPLOAD</span> : <span className="text-gray-700 dark:text-gray-300">READ-ONLY</span>}
                       </td>
-                      <td className="py-3 px-4 text-xs font-bold  border-r border-gray-100 dark:border-gray-800">
-                        {u.is_active ? <span className="text-emerald-500">ACTIVE</span> : <span className="text-red-500">INACTIVE</span>}
+                      <td className="py-4 px-6 text-sm font-medium">
+                        {u.is_active ? <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">ACTIVE</span> : <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800">INACTIVE</span>}
                       </td>
-                      <td className="py-3 px-4 text-xs font-bold ">
-                        <button onClick={() => handleOpenEdit(u)} className="text-primary-600 hover:text-gray-900 dark:text-gray-100 flex items-center gap-2 transition-colors">
+                      <td className="py-4 px-6 text-sm font-medium">
+                        <button onClick={() => handleOpenEdit(u)} className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 flex items-center gap-2 transition-colors font-bold">
                           <Edit size={14} /> EDIT
                         </button>
                       </td>
@@ -148,103 +146,104 @@ export default function UserManagement() {
       </div>
 
       {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-gray-800/80 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-[8px_8px_0px_0px_rgba(252,213,53,1)] w-full max-w-md overflow-hidden">
-            <div className="p-6 border-b-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-              <h2 className="text-2xl font-black text-primary-600 tracking-tighter ">
-                {editingUser ? 'EDIT USER' : 'CREATE USER'}
+      {isModalOpen && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4 sm:p-6 overflow-y-auto">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-2xl w-full max-w-md flex flex-col max-h-[90vh] overflow-hidden relative">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-800 shrink-0">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                {editingUser ? 'Edit User' : 'Create User'}
               </h2>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
               <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 font-semibold tracking-normal mb-2">Username</label>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 tracking-wide mb-1.5">Username</label>
                 <input
                   type="text"
                   disabled={!!editingUser}
                   required
                   value={formData.username}
                   onChange={e => setFormData({...formData, username: e.target.value})}
-                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm font-bold text-gray-900 dark:text-gray-100 focus:border-primary-600 outline-none disabled:opacity-50 disabled:bg-gray-50 dark:bg-gray-900"
+                  className="aiq-input disabled:bg-gray-50 disabled:dark:bg-gray-800/50 disabled:text-gray-500"
                 />
               </div>
               
               {!editingUser && (
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 font-semibold tracking-normal mb-2">Password</label>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 tracking-wide mb-1.5">Password</label>
                   <input
                     type="password"
                     required
                     value={formData.password}
                     onChange={e => setFormData({...formData, password: e.target.value})}
-                    className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm font-bold text-gray-900 dark:text-gray-100 focus:border-primary-600 outline-none"
+                    className="aiq-input"
                   />
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 font-semibold tracking-normal mb-2">Role</label>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 tracking-wide mb-1.5">Role</label>
                   <select
                     value={formData.role}
                     onChange={e => setFormData({...formData, role: e.target.value})}
                     disabled={editingUser?.id === currentUser.id}
-                    className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm font-bold text-gray-900 dark:text-gray-100 focus:border-primary-600 outline-none disabled:opacity-50 appearance-none "
+                    className="aiq-input appearance-none disabled:bg-gray-50 disabled:dark:bg-gray-800/50 disabled:text-gray-500"
                   >
-                    <option value="user" className="bg-white dark:bg-gray-800">USER</option>
-                    <option value="admin" className="bg-white dark:bg-gray-800">ADMIN</option>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
                   </select>
                 </div>
                 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 font-semibold tracking-normal mb-2">Status</label>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 tracking-wide mb-1.5">Status</label>
                   <select
                     value={formData.is_active ? 'true' : 'false'}
                     onChange={e => setFormData({...formData, is_active: e.target.value === 'true'})}
                     disabled={editingUser?.id === currentUser.id}
-                    className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm font-bold text-gray-900 dark:text-gray-100 focus:border-primary-600 outline-none disabled:opacity-50 appearance-none "
+                    className="aiq-input appearance-none disabled:bg-gray-50 disabled:dark:bg-gray-800/50 disabled:text-gray-500"
                   >
-                    <option value="true" className="bg-white dark:bg-gray-800">ACTIVE</option>
-                    <option value="false" className="bg-white dark:bg-gray-800">INACTIVE</option>
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
                   </select>
                 </div>
               </div>
 
               {formData.role === 'user' && (
                 <div>
-                  <label className="flex items-center gap-4 p-4 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:border-primary-600 transition-colors">
+                  <label className="flex items-center gap-4 p-4 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-lg cursor-pointer hover:border-primary-500 transition-colors">
                     <input
                       type="checkbox"
                       checked={formData.can_upload}
                       onChange={e => setFormData({...formData, can_upload: e.target.checked})}
-                      className="w-5 h-5 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 text-primary-600 focus:ring-0 checked:bg-[#FCD535]"
+                      className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
                     />
                     <div>
-                      <span className="block text-sm font-black font-semibold tracking-normal text-gray-900 dark:text-gray-100">ALLOW UPLOADS</span>
-                      <span className="block text-xs text-gray-500 dark:text-gray-400 font-bold  mt-1">Can this user upload?</span>
+                      <span className="block text-sm font-semibold text-gray-900 dark:text-gray-100">Allow Uploads</span>
+                      <span className="block text-xs text-gray-700 dark:text-gray-300 mt-0.5">Can this user upload invoices?</span>
                     </div>
                   </label>
                 </div>
               )}
 
-              <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-800 mt-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-3 text-xs font-black font-semibold tracking-normal text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-colors"
+                  className="aiq-btn-ghost"
                 >
-                  CANCEL
+                  Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn-brutal-dark px-8 py-3 text-xs font-black font-semibold tracking-normal"
+                  className="aiq-btn-primary"
                 >
-                  {editingUser ? 'SAVE CHANGES' : 'CREATE USER'}
+                  {editingUser ? 'Save Changes' : 'Create User'}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

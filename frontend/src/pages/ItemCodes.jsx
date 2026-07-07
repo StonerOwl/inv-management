@@ -184,10 +184,10 @@ function CategoryManagerDrawer({ open, onClose, categories, onRefresh }) {
             </div>
             <div>
               <h2 className="text-xl font-black tracking-tighter  text-gray-900 dark:text-gray-100">MANAGE CATEGORIES</h2>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold tracking-normal mt-1">&gt; WORKFLOWS · PROCESSES</p>
+              <p className="text-[10px] text-gray-700 dark:text-gray-300 font-bold tracking-normal mt-1">&gt; WORKFLOWS · PROCESSES</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-colors p-2">
+          <button onClick={onClose} className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100 transition-colors p-2">
             <X size={20} />
           </button>
         </div>
@@ -232,7 +232,7 @@ function CategoryManagerDrawer({ open, onClose, categories, onRefresh }) {
                   className="p-4 flex items-center gap-3 cursor-pointer hover:bg-gray-100 dark:bg-gray-800 transition-colors"
                   onClick={() => setExpandedCat(isExpanded ? null : cat.id)}
                 >
-                  <button className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-colors pointer-events-none">
+                  <button className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100 transition-colors pointer-events-none">
                     <ChevronRight size={14} className={clsx('transition-transform', isExpanded && 'rotate-90')} />
                   </button>
                   <div className={clsx('w-3 h-3 rounded-sm', `bg-${cat.color}-500`)} />
@@ -253,14 +253,14 @@ function CategoryManagerDrawer({ open, onClose, categories, onRefresh }) {
                         {COLOR_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                       </select>
                       <button onClick={() => handleRenameCategory(cat.id)} className="text-primary-600 hover:text-gray-900 dark:text-gray-100"><Save size={14} /></button>
-                      <button onClick={() => setEditingCat(null)} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100"><X size={14} /></button>
+                      <button onClick={() => setEditingCat(null)} className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100"><X size={14} /></button>
                     </div>
                   ) : (
                     <>
                       <span className={clsx('text-sm font-black font-semibold tracking-normal flex-1', cc.color)}>{cat.name}</span>
-                      <span className="text-[10px] text-gray-600 dark:text-gray-400 font-bold tracking-normal">{cat.workflows?.length || 0} WORKFLOWS</span>
-                      <button onClick={(e) => { e.stopPropagation(); setEditingCat(cat.id); setEditCatName(cat.name); setEditCatColor(cat.color) }} className="text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors p-1"><Pencil size={12} /></button>
-                      <button onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat.id) }} className="text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors p-1"><Trash2 size={12} /></button>
+                      <span className="text-[10px] text-gray-800 dark:text-gray-200 font-bold tracking-normal">{cat.workflows?.length || 0} WORKFLOWS</span>
+                      <button onClick={(e) => { e.stopPropagation(); setEditingCat(cat.id); setEditCatName(cat.name); setEditCatColor(cat.color) }} className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition-colors p-1"><Pencil size={12} /></button>
+                      <button onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat.id) }} className="text-gray-700 dark:text-gray-300 hover:text-red-400 transition-colors p-1"><Trash2 size={12} /></button>
                     </>
                   )}
                 </div>
@@ -296,7 +296,7 @@ function CategoryManagerDrawer({ open, onClose, categories, onRefresh }) {
                             className="p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-100 dark:bg-gray-800 transition-colors"
                             onClick={() => setExpandedWf(wfExpanded ? null : wf.id)}
                           >
-                            <button className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-colors pointer-events-none">
+                            <button className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100 transition-colors pointer-events-none">
                               <ChevronRight size={12} className={clsx('transition-transform', wfExpanded && 'rotate-90')} />
                             </button>
                             <GitBranch size={12} className="text-primary-600" />
@@ -310,14 +310,14 @@ function CategoryManagerDrawer({ open, onClose, categories, onRefresh }) {
                                   autoFocus
                                 />
                                 <button onClick={() => handleRenameWorkflow(cat.id, wf.id)} className="text-primary-600"><Save size={12} /></button>
-                                <button onClick={() => setEditingWf(null)} className="text-gray-500 dark:text-gray-400"><X size={12} /></button>
+                                <button onClick={() => setEditingWf(null)} className="text-gray-700 dark:text-gray-300"><X size={12} /></button>
                               </div>
                             ) : (
                               <>
                                 <span className="text-xs font-black font-semibold tracking-normal text-gray-900 dark:text-gray-100 flex-1">{wf.name}</span>
-                                <span className="text-[10px] text-gray-600 dark:text-gray-400 font-bold">{wf.processes?.length || 0} STEPS</span>
-                                <button onClick={(e) => { e.stopPropagation(); setEditingWf(wf.id); setEditWfName(wf.name) }} className="text-gray-500 dark:text-gray-400 hover:text-primary-600 p-1"><Pencil size={10} /></button>
-                                <button onClick={(e) => { e.stopPropagation(); handleDeleteWorkflow(cat.id, wf.id) }} className="text-gray-500 dark:text-gray-400 hover:text-red-400 p-1"><Trash2 size={10} /></button>
+                                <span className="text-[10px] text-gray-800 dark:text-gray-200 font-bold">{wf.processes?.length || 0} STEPS</span>
+                                <button onClick={(e) => { e.stopPropagation(); setEditingWf(wf.id); setEditWfName(wf.name) }} className="text-gray-700 dark:text-gray-300 hover:text-primary-600 p-1"><Pencil size={10} /></button>
+                                <button onClick={(e) => { e.stopPropagation(); handleDeleteWorkflow(cat.id, wf.id) }} className="text-gray-700 dark:text-gray-300 hover:text-red-400 p-1"><Trash2 size={10} /></button>
                               </>
                             )}
                           </div>
@@ -347,7 +347,7 @@ function CategoryManagerDrawer({ open, onClose, categories, onRefresh }) {
                               {/* Process List */}
                               {(wf.processes || []).map((proc, idx) => (
                                 <div key={proc.id} className="flex items-center gap-2 py-1 px-2 hover:bg-white dark:bg-gray-800 transition-colors group">
-                                  <span className="text-[10px] text-gray-600 dark:text-gray-400 font-black w-6 shrink-0">{idx + 1}.</span>
+                                  <span className="text-[10px] text-gray-800 dark:text-gray-200 font-black w-6 shrink-0">{idx + 1}.</span>
                                   {editingProc === proc.id ? (
                                     <div className="flex-1 flex gap-2">
                                       <input
@@ -358,20 +358,20 @@ function CategoryManagerDrawer({ open, onClose, categories, onRefresh }) {
                                         autoFocus
                                       />
                                       <button onClick={() => handleRenameProcess(cat.id, wf.id, proc.id)} className="text-emerald-500"><Save size={10} /></button>
-                                      <button onClick={() => setEditingProc(null)} className="text-gray-500 dark:text-gray-400"><X size={10} /></button>
+                                      <button onClick={() => setEditingProc(null)} className="text-gray-700 dark:text-gray-300"><X size={10} /></button>
                                     </div>
                                   ) : (
                                     <>
                                       <span className="text-[10px] font-bold tracking-normal text-gray-300  flex-1">{proc.name}</span>
-                                      <button onClick={() => { setEditingProc(proc.id); setEditProcName(proc.name) }} className="text-gray-600 dark:text-gray-400 hover:text-primary-600 opacity-0 group-hover:opacity-100 transition-all"><Pencil size={10} /></button>
-                                      <button onClick={() => handleDeleteProcess(cat.id, wf.id, proc.id)} className="text-gray-600 dark:text-gray-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={10} /></button>
+                                      <button onClick={() => { setEditingProc(proc.id); setEditProcName(proc.name) }} className="text-gray-800 dark:text-gray-200 hover:text-primary-600 opacity-0 group-hover:opacity-100 transition-all"><Pencil size={10} /></button>
+                                      <button onClick={() => handleDeleteProcess(cat.id, wf.id, proc.id)} className="text-gray-800 dark:text-gray-200 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={10} /></button>
                                     </>
                                   )}
                                 </div>
                               ))}
 
                               {(wf.processes || []).length === 0 && (
-                                <p className="text-[10px] text-gray-600 dark:text-gray-400 font-bold font-semibold tracking-normal py-2">NO PROCESSES DEFINED YET</p>
+                                <p className="text-[10px] text-gray-800 dark:text-gray-200 font-bold font-semibold tracking-normal py-2">NO PROCESSES DEFINED YET</p>
                               )}
                             </div>
                           )}
@@ -380,7 +380,7 @@ function CategoryManagerDrawer({ open, onClose, categories, onRefresh }) {
                     })}
 
                     {(cat.workflows || []).length === 0 && (
-                      <p className="text-[10px] text-gray-600 dark:text-gray-400 font-bold font-semibold tracking-normal">NO WORKFLOWS — ADD ONE ABOVE</p>
+                      <p className="text-[10px] text-gray-800 dark:text-gray-200 font-bold font-semibold tracking-normal">NO WORKFLOWS — ADD ONE ABOVE</p>
                     )}
                   </div>
                 )}
@@ -389,7 +389,7 @@ function CategoryManagerDrawer({ open, onClose, categories, onRefresh }) {
           })}
 
           {categories.length === 0 && (
-            <div className="text-center py-8 text-gray-600 dark:text-gray-400 font-bold font-semibold tracking-normal text-xs">
+            <div className="text-center py-8 text-gray-800 dark:text-gray-200 font-bold font-semibold tracking-normal text-xs">
               NO CATEGORIES YET
             </div>
           )}
@@ -521,60 +521,59 @@ export default function ItemCodes() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col">
 
-      <div className="max-w-7xl mx-auto w-full px-8 flex-1 pb-20">
+      <div className="max-w-7xl mx-auto w-full px-8 flex-1 pb-20 pt-10">
         {/* Header */}
-        <div className="mb-8 border-b border-gray-200 dark:border-gray-700 pb-6 flex items-end justify-between">
+        <div className="mb-8 border-b border-gray-200 dark:border-gray-800 pb-6 flex items-end justify-between">
           <div>
-            <h1 className="text-7xl font-black tracking-tighter ">Item Codes</h1>
-            <div className="text-sm font-bold tracking-normal text-primary-600 mt-2 flex items-center gap-4">
+            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">Item Codes</h1>
+            <div className="text-sm font-bold tracking-normal text-primary-600 dark:text-primary-400 mt-2 flex items-center gap-4">
               <span>&gt; PRODUCT CATALOG [{products.length}]</span>
-              <div className="w-32 h-[1px] bg-[#FCD535]"></div>
+              <div className="w-32 h-[1px] bg-primary-500"></div>
             </div>
           </div>
           <div className="flex gap-3">
             <button
               onClick={() => setShowCategoryManager(true)}
-              className="btn-brutal-dark px-5 py-3 flex items-center gap-2 text-xs font-black font-semibold tracking-normal border-primary-600 text-primary-600 hover:bg-[#FCD535] hover:text-black transition-colors"
+              className="px-5 py-2.5 flex items-center gap-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               <Settings2 size={14} /> MANAGE CATEGORIES
             </button>
             <button
               onClick={handleOpenCreate}
-              className="btn-brutal-dark px-6 py-3 flex items-center gap-2 text-sm font-black font-semibold tracking-normal"
+              className="aiq-btn px-6 py-2.5 flex items-center gap-2 text-sm"
             >
               <Plus size={16} /> ADD ITEM
             </button>
           </div>
         </div>
 
-        <div className="divider-striped-yellow mb-8"></div>
 
         {/* Search & Filter Bar */}
         <div className="flex items-center gap-4 mb-6 flex-wrap">
           <div className="relative flex-1 min-w-[200px] max-w-md">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-500 dark:text-primary-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search items or codes..."
-              className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 pl-9 pr-4 py-2.5 text-xs font-bold text-gray-900 dark:text-gray-100 focus:border-primary-600 outline-none placeholder-gray-700"
+              className="aiq-input w-full pl-9"
             />
           </div>
           <div className="relative">
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="appearance-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2.5 pr-10 text-xs font-black tracking-normal text-gray-900 dark:text-gray-100 focus:border-primary-600 outline-none  cursor-pointer"
+              className="aiq-input appearance-none pr-10 cursor-pointer font-bold"
             >
               <option value="">ALL CATEGORIES</option>
               {categoryNames.map(c => (
                 <option key={c} value={c}>{c.toUpperCase()}</option>
               ))}
             </select>
-            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none" />
+            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 dark:text-gray-300 pointer-events-none" />
           </div>
-          <span className="text-xs text-gray-600 dark:text-gray-400 font-bold tracking-normal">
+          <span className="text-xs text-gray-800 dark:text-gray-200 font-bold tracking-normal">
             {products.length} ITEM{products.length !== 1 ? 'S' : ''}
           </span>
         </div>
@@ -587,21 +586,21 @@ export default function ItemCodes() {
         ) : error ? (
           <div className="text-center py-12 text-red-500 font-black font-semibold tracking-normal text-2xl">{error}</div>
         ) : products.length === 0 ? (
-          <div className="card-brutal-dark p-16 text-center">
-            <Tag size={48} className="mx-auto mb-4 text-gray-600 dark:text-gray-400" />
-            <p className="text-xl font-black tracking-normal text-gray-500 dark:text-gray-400 ">No Products</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-bold">Click "ADD ITEM" to register your first product.</p>
+          <div className="aiq-card p-16 text-center">
+            <Tag size={48} className="mx-auto mb-4 text-gray-400 dark:text-gray-600" />
+            <p className="text-xl font-bold text-gray-700 dark:text-gray-300">No Products</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">Click "ADD ITEM" to register your first product.</p>
           </div>
         ) : (
-          <div className="card-brutal-dark relative">
+          <div className="aiq-card relative overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
-                <thead className="bg-white dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                   <tr>
-                    <th className="py-4 px-4 text-xs font-black tracking-normal text-primary-600 whitespace-nowrap border-r border-gray-100 dark:border-gray-800">ITEM CODE</th>
-                    <th className="py-4 px-4 text-xs font-black tracking-normal text-primary-600 whitespace-nowrap border-r border-gray-100 dark:border-gray-800">ITEM NAME</th>
-                    <th className="py-4 px-4 text-xs font-black tracking-normal text-primary-600 whitespace-nowrap border-r border-gray-100 dark:border-gray-800">CATEGORY</th>
-                    <th className="py-4 px-4 text-xs font-black tracking-normal text-primary-600 whitespace-nowrap">ACTIONS</th>
+                    <th className="py-3.5 px-4 text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 whitespace-nowrap">ITEM CODE</th>
+                    <th className="py-3.5 px-4 text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 whitespace-nowrap">ITEM NAME</th>
+                    <th className="py-3.5 px-4 text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 whitespace-nowrap">CATEGORY</th>
+                    <th className="py-3.5 px-4 text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 whitespace-nowrap">ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -612,19 +611,19 @@ export default function ItemCodes() {
                       <tr
                         key={product.id}
                         className={clsx(
-                          'border-b border-gray-100 dark:border-gray-800 hover:bg-gray-100 dark:bg-gray-800 transition-colors',
-                          idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'
+                          'border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors',
+                          idx % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/30'
                         )}
                       >
-                        <td className="py-3 px-4 text-sm font-bold text-primary-600 border-r border-gray-100 dark:border-gray-800 font-sans">
+                        <td className="py-3.5 px-4 text-sm font-bold text-primary-600 dark:text-primary-400 font-mono">
                           {product.item_code}
                         </td>
-                        <td className="py-3 px-4 text-sm font-bold border-r border-gray-100 dark:border-gray-800">
+                        <td className="py-3.5 px-4 text-sm font-bold text-gray-900 dark:text-gray-100">
                           {product.item_name}
                         </td>
-                        <td className="py-3 px-4 border-r border-gray-100 dark:border-gray-800">
+                        <td className="py-3.5 px-4">
                           <span className={clsx(
-                            'inline-flex items-center px-2.5 py-1 text-[10px] font-black font-semibold tracking-normal rounded-sm border',
+                            'inline-flex items-center px-2.5 py-1 text-[10px] font-bold tracking-wide rounded-full border',
                             cc.bg, cc.color, cc.border
                           )}>
                             {product.category}
@@ -641,7 +640,7 @@ export default function ItemCodes() {
                             </button>
                             <button
                               onClick={() => setDeleteConfirm(product.id)}
-                              className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-black font-semibold tracking-normal text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors"
+                              className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-black font-semibold tracking-normal text-gray-700 dark:text-gray-300 hover:text-red-400 transition-colors"
                               title="Delete"
                             >
                               <Trash2 size={12} /> DELETE
@@ -660,51 +659,51 @@ export default function ItemCodes() {
 
       {/* Create / Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-gray-800/80 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-[8px_8px_0px_0px_rgba(252,213,53,1)] w-full max-w-md overflow-hidden">
-            <div className="p-6 border-b-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-              <h2 className="text-2xl font-black text-primary-600 tracking-tighter ">
-                {editingProduct ? 'EDIT ITEM' : 'ADD NEW ITEM'}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm p-4">
+          <div className="aiq-card w-full max-w-md overflow-hidden">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+              <h2 className="text-xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">
+                {editingProduct ? 'Edit Item' : 'Add New Item'}
               </h2>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 font-semibold tracking-normal mb-2">Item Name</label>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Item Name</label>
                 <input
                   type="text"
                   required
                   value={formData.item_name}
                   onChange={(e) => setFormData({ ...formData, item_name: e.target.value })}
                   placeholder="e.g. Office Chair Ergonomic"
-                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm font-bold text-gray-900 dark:text-gray-100 focus:border-primary-600 outline-none placeholder-gray-700"
+                  className="aiq-input w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 font-semibold tracking-normal mb-2">Item Code</label>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Item Code</label>
                 <input
                   type="text"
                   required
                   value={formData.item_code}
                   onChange={(e) => setFormData({ ...formData, item_code: e.target.value.toUpperCase() })}
                   placeholder="e.g. OFC-001"
-                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm font-bold text-gray-900 dark:text-gray-100 focus:border-primary-600 outline-none placeholder-gray-700 font-sans "
+                  className="aiq-input w-full font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 font-semibold tracking-normal mb-2">Category</label>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Category</label>
                 <div className="relative">
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full appearance-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm font-bold text-gray-900 dark:text-gray-100 focus:border-primary-600 outline-none  cursor-pointer"
+                    className="aiq-input w-full appearance-none cursor-pointer"
                   >
                     {categoryNames.map(c => (
                       <option key={c} value={c} className="bg-white dark:bg-gray-800">{c.toUpperCase()}</option>
                     ))}
                   </select>
-                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 dark:text-gray-300 pointer-events-none" />
                 </div>
                 
                 {/* Process Preview */}
@@ -714,17 +713,17 @@ export default function ItemCodes() {
                     {selectedCategoryWorkflows.map(wf => (
                       <div key={wf.id}>
                         <div className="flex items-center gap-2 mb-1">
-                          <GitBranch size={10} className="text-gray-500 dark:text-gray-400" />
+                          <GitBranch size={10} className="text-gray-700 dark:text-gray-300" />
                           <span className="text-[10px] font-black text-gray-300 ">{wf.name}</span>
                         </div>
                         <div className="space-y-1 pl-4 border-l border-gray-200 dark:border-gray-700 ml-1.5">
                           {wf.processes?.length > 0 ? wf.processes.map((proc, idx) => (
                             <div key={proc.id} className="flex items-center gap-2 text-[10px] text-gray-400 font-bold tracking-normal">
-                              <span className="text-gray-600 dark:text-gray-400 w-4">{idx + 1}.</span>
+                              <span className="text-gray-800 dark:text-gray-200 w-4">{idx + 1}.</span>
                               <span className="">{proc.name}</span>
                             </div>
                           )) : (
-                            <p className="text-[10px] text-gray-600 dark:text-gray-400 font-bold tracking-normal">NO PROCESSES</p>
+                            <p className="text-[10px] text-gray-800 dark:text-gray-200 font-bold tracking-normal">NO PROCESSES</p>
                           )}
                         </div>
                       </div>
@@ -733,18 +732,18 @@ export default function ItemCodes() {
                 )}
               </div>
 
-              <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex justify-end gap-4 pt-4 border-t border-gray-100 dark:border-gray-800">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-3 text-xs font-black font-semibold tracking-normal text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-colors"
+                  className="px-6 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                 >
                   CANCEL
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="btn-brutal-dark px-8 py-3 text-xs font-black font-semibold tracking-normal disabled:opacity-50 flex items-center gap-2"
+                  className="aiq-btn px-8 py-2.5 text-xs disabled:opacity-50 flex items-center gap-2"
                 >
                   <Save size={14} />
                   {submitting ? 'SAVING...' : editingProduct ? 'SAVE CHANGES' : 'ADD ITEM'}
@@ -757,23 +756,23 @@ export default function ItemCodes() {
 
       {/* Delete Confirm Modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-gray-800/80 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-[8px_8px_0px_0px_rgba(252,213,53,1)] w-full max-w-sm overflow-hidden">
-            <div className="p-6 border-b-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-              <h2 className="text-xl font-black text-red-400 tracking-tighter ">CONFIRM DELETE</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm p-4">
+          <div className="aiq-card w-full max-w-sm overflow-hidden">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+              <h2 className="text-xl font-extrabold text-red-600 dark:text-red-400 tracking-tight">Confirm Delete</h2>
             </div>
             <div className="p-6">
-              <p className="text-sm text-gray-400 font-bold mb-6">This will permanently remove this item from the product catalog.</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 mb-6">This will permanently remove this item from the product catalog.</p>
               <div className="flex justify-end gap-4">
                 <button
                   onClick={() => setDeleteConfirm(null)}
-                  className="px-6 py-3 text-xs font-black font-semibold tracking-normal text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-colors"
+                  className="px-6 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                 >
                   CANCEL
                 </button>
                 <button
                   onClick={() => handleDelete(deleteConfirm)}
-                  className="px-6 py-3 text-xs font-black font-semibold tracking-normal text-red-400 border border-red-500/30 hover:bg-red-500/20 transition-colors"
+                  className="px-6 py-2.5 rounded-lg text-xs font-bold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
                 >
                   DELETE
                 </button>

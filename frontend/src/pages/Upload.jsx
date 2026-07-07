@@ -10,15 +10,15 @@ import clsx from 'clsx'
 function FileRow({ file, removed, onRemove }) {
   const sizeKB = (file.size / 1024).toFixed(0)
   return (
-    <div className="flex items-center justify-between bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 group">
+    <div className="flex items-center justify-between bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 group rounded-lg">
       <div className="flex items-center gap-3 min-w-0">
-        <FileText size={16} className="text-primary-600 shrink-0" />
-        <span className="text-sm font-bold truncate">{file.name}</span>
-        <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">{sizeKB} KB</span>
+        <FileText size={16} className="text-primary-600 dark:text-primary-400 shrink-0" />
+        <span className="text-sm font-bold truncate text-gray-900 dark:text-gray-100">{file.name}</span>
+        <span className="text-xs text-gray-700 dark:text-gray-300 shrink-0">{sizeKB} KB</span>
       </div>
       <button
         onClick={() => onRemove(file)}
-        className="text-gray-600 dark:text-gray-400 hover:text-red-500 transition-colors ml-2 shrink-0"
+        className="text-gray-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors ml-2 shrink-0"
       >
         <XCircle size={16} />
       </button>
@@ -59,7 +59,7 @@ function TerminalLogs({ logs }) {
             type="checkbox" 
             checked={autoScroll} 
             onChange={(e) => setAutoScroll(e.target.checked)}
-            className="mr-1.5 w-3 h-3 accent-[#00ff00] cursor-pointer"
+            className="mr-1.5 w-3 h-3 accent-primary-500 cursor-pointer"
           />
           Auto-scroll
         </label>
@@ -83,16 +83,16 @@ function TerminalLogs({ logs }) {
 
 function ResultRow({ result, navigate }) {
   const statusIcons = {
-    ok: <CheckCircle size={16} className="text-primary-600" />,
-    error: <XCircle size={16} className="text-red-500" />,
-    duplicate: <RefreshCw size={16} className="text-gray-400" />,
-    pending: <Loader2 size={16} className="text-gray-500 dark:text-gray-400 animate-spin" />,
+    ok: <CheckCircle size={16} className="text-primary-600 dark:text-primary-400" />,
+    error: <XCircle size={16} className="text-red-500 dark:text-red-400" />,
+    duplicate: <RefreshCw size={16} className="text-gray-600 dark:text-gray-400" />,
+    pending: <Loader2 size={16} className="text-gray-700 dark:text-gray-300 animate-spin" />,
   }
   return (
-    <div className="flex items-center justify-between py-3 px-4 border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-white dark:bg-gray-800 transition-colors">
+    <div className="flex items-center justify-between py-3 px-4 border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
       <div className="flex items-center gap-3 min-w-0">
-        {statusIcons[result.status] || <Clock size={16} className="text-gray-600 dark:text-gray-400" />}
-        <span className="text-sm font-bold truncate">{result.file_name}</span>
+        {statusIcons[result.status] || <Clock size={16} className="text-gray-800 dark:text-gray-200" />}
+        <span className="text-sm font-bold truncate text-gray-900 dark:text-gray-100">{result.file_name}</span>
       </div>
       <div className="flex items-center gap-2 ml-2 shrink-0 font-sans">
         {result.status === 'ok' && (
@@ -100,7 +100,7 @@ function ResultRow({ result, navigate }) {
             <span className="text-xs text-gray-400">#{result.invoice_id} · CONF {(result.confidence * 100).toFixed(0)}%</span>
             <button 
               onClick={() => navigate(`/inventory/register/${result.invoice_id}`)}
-              className="text-[10px] font-black tracking-normal text-black bg-[#FCD535] px-2 py-1  hover:bg-white dark:bg-gray-800 transition-colors"
+              className="text-[10px] font-black tracking-normal text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 px-3 py-1 rounded-full transition-colors"
             >
               REGISTER
             </button>
@@ -110,7 +110,7 @@ function ResultRow({ result, navigate }) {
           <span className="text-xs text-red-500 max-w-xs truncate" title={result.error}>{result.error}</span>
         )}
         {result.status === 'duplicate' && (
-          <span className="text-xs text-gray-500 dark:text-gray-400">EXISTS (#{result.invoice_id})</span>
+          <span className="text-xs text-gray-700 dark:text-gray-300">EXISTS (#{result.invoice_id})</span>
         )}
       </div>
     </div>
@@ -160,12 +160,12 @@ export default function Upload() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col">
       
-      <div className="max-w-5xl mx-auto w-full px-8 flex-1 pb-20">
-        <div className="mb-12 border-b border-gray-200 dark:border-gray-700 pb-6 flex items-end justify-between">
-          <h1 className="text-7xl font-black tracking-tighter ">Upload</h1>
-          <div className="text-sm font-bold tracking-normal text-primary-600 mb-2 flex items-center gap-4">
+      <div className="max-w-5xl mx-auto w-full px-8 flex-1 pb-20 pt-10">
+        <div className="mb-12 border-b border-gray-200 dark:border-gray-800 pb-6 flex items-end justify-between">
+          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">Upload</h1>
+          <div className="text-sm font-bold tracking-normal text-primary-600 dark:text-primary-400 mb-2 flex items-center gap-4">
             <span>&gt; BATCH · EXTRACTION · QUEUE</span>
-            <div className="w-32 h-[1px] bg-[#FCD535]"></div>
+            <div className="w-32 h-[1px] bg-primary-500"></div>
           </div>
         </div>
 
@@ -173,41 +173,42 @@ export default function Upload() {
         <div
           {...getRootProps()}
           className={clsx(
-            'card-brutal-dark border-2 border-dashed border-[#555] p-16 text-center cursor-pointer relative overflow-hidden',
-            isDragActive && 'border-primary-600 bg-[#FCD535]/5',
+            'aiq-card border-2 border-dashed border-gray-300 dark:border-gray-700 p-16 text-center cursor-pointer relative overflow-hidden transition-all duration-200',
+            isDragActive && 'border-primary-500 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/10 scale-[1.02]',
+            !isDragActive && 'hover:border-primary-400 dark:hover:border-primary-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
           )}
         >
           {isDragActive && (
-            <div className="absolute inset-0 border-[6px] border-primary-600 pointer-events-none z-10" />
+            <div className="absolute inset-0 border-[6px] border-primary-500/20 pointer-events-none z-10 rounded-xl" />
           )}
           <input {...getInputProps()} />
           <div className={clsx(
-            'w-20 h-20 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center mx-auto mb-6 transition-transform duration-300',
-            isDragActive && 'scale-110 border-primary-600 text-primary-600'
+            'w-20 h-20 rounded-2xl bg-white dark:bg-gray-800 border-2 flex items-center justify-center mx-auto mb-6 transition-all duration-300 shadow-sm',
+            isDragActive ? 'scale-110 border-primary-500 text-primary-600 dark:text-primary-400 shadow-md shadow-primary-500/20' : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 group-hover:border-primary-300'
           )}>
             <UploadIcon size={32} />
           </div>
-          <p className="font-black text-2xl  tracking-normal mb-2">
+          <p className="font-extrabold text-2xl tracking-tight text-gray-900 dark:text-gray-100 mb-2">
             {isDragActive ? 'DROP TO QUEUE' : 'DRAG & DROP INVOICES'}
           </p>
-          <p className="text-gray-500 dark:text-gray-400 text-sm font-bold mb-6 tracking-wider">OR CLICK TO BROWSE FILES</p>
-          <p className="text-gray-600 dark:text-gray-400 text-xs tracking-normal">PDF, JPG, PNG, TIFF, WEBP · MAX 50MB EACH</p>
+          <p className="text-gray-700 dark:text-gray-300 text-sm font-bold mb-6 tracking-wider">OR CLICK TO BROWSE FILES</p>
+          <p className="text-gray-500 dark:text-gray-500 text-xs font-semibold">PDF, JPG, PNG, TIFF, WEBP · MAX 50MB EACH</p>
         </div>
 
         {/* File list */}
         {files.length > 0 && (
           <div className="mt-8">
-            <div className="divider-striped-yellow mb-8"></div>
+            <div className="w-full h-1 bg-gradient-to-r from-primary-500/20 via-primary-500/40 to-primary-500/20 mb-8 rounded-full"></div>
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-bold tracking-normal text-primary-600">
+              <span className="text-sm font-bold tracking-normal text-primary-600 dark:text-primary-400">
                 &gt; QUEUE [{files.length}]
               </span>
-              <button onClick={clearAll} className="text-xs font-bold tracking-normal text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-colors">
+              <button onClick={clearAll} className="text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
                 [ CLEAR ALL ]
               </button>
             </div>
             
-            <div className="max-h-64 overflow-y-auto space-y-2 mb-6">
+            <div className="max-h-64 overflow-y-auto space-y-2 mb-6 pr-2">
               {files.map(f => <FileRow key={f.name} file={f} onRemove={removeFile} />)}
             </div>
             
@@ -215,14 +216,14 @@ export default function Upload() {
               <button
                 onClick={startUpload}
                 disabled={uploading || !!jobId}
-                className="btn-brutal-dark px-8 py-4 flex items-center gap-3 text-lg"
+                className="aiq-btn flex items-center gap-3 text-sm px-8 py-4"
               >
                 {uploading ? (
-                  <><Loader2 size={20} className="animate-spin" /> UPLOADING... {uploadPct}%</>
+                  <><Loader2 size={18} className="animate-spin" /> UPLOADING... {uploadPct}%</>
                 ) : jobId ? (
-                  <><CheckCircle size={20} /> UPLOAD COMPLETE</>
+                  <><CheckCircle size={18} /> UPLOAD COMPLETE</>
                 ) : (
-                  <><UploadIcon size={20} /> PROCESS {files.length} FILE{files.length !== 1 ? 'S' : ''}</>
+                  <><UploadIcon size={18} /> PROCESS {files.length} FILE{files.length !== 1 ? 'S' : ''}</>
                 )}
               </button>
             </div>
@@ -240,16 +241,16 @@ export default function Upload() {
         {job && (
           <div className="mt-12">
             <div className="flex items-center justify-between mb-4">
-               <h2 className="text-2xl font-black  tracking-tighter">Processing Job</h2>
-               <p className="text-gray-500 dark:text-gray-400 text-xs font-bold tracking-normal">ID: {jobId}</p>
+               <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-gray-100">Processing Job</h2>
+               <p className="text-gray-700 dark:text-gray-300 text-xs font-bold tracking-normal">ID: {jobId}</p>
             </div>
             
-            <div className="card-brutal-dark p-6">
-              <div className="flex items-center justify-between mb-4 text-sm font-bold font-semibold tracking-normal">
+            <div className="aiq-card p-6">
+              <div className="flex items-center justify-between mb-4 text-sm font-bold tracking-normal">
                 <div className="flex gap-4">
-                  <span className="text-primary-600">DONE: {job.processed}</span>
-                  {job.failed > 0 && <span className="text-red-500">FAIL: {job.failed}</span>}
-                  {job.pending > 0 && <span className="text-gray-500 dark:text-gray-400">PEND: {job.pending}</span>}
+                  <span className="text-primary-600 dark:text-primary-400">DONE: {job.processed}</span>
+                  {job.failed > 0 && <span className="text-red-500 dark:text-red-400">FAIL: {job.failed}</span>}
+                  {job.pending > 0 && <span className="text-gray-700 dark:text-gray-300">PEND: {job.pending}</span>}
                 </div>
                 <span className={clsx(
                   job.status === 'done' && 'text-primary-600',
@@ -261,13 +262,13 @@ export default function Upload() {
               </div>
               
               {/* Progress bar */}
-              <div className="h-4 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 mb-6">
+              <div className="h-4 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 mb-6 rounded-full overflow-hidden">
                 <div
                   className={clsx(
                     'h-full transition-all duration-500',
-                    job.status === 'done' ? 'bg-[#FCD535]' :
+                    job.status === 'done' ? 'bg-primary-500' :
                     job.status === 'failed' ? 'bg-red-500' :
-                    'bg-white dark:bg-gray-800 progress-stripe',
+                    'bg-primary-400 animate-pulse',
                   )}
                   style={{ width: `${processPct}%` }}
                 />
@@ -278,7 +279,7 @@ export default function Upload() {
 
               {/* Per-file results */}
               {job.results.length > 0 && (
-                <div className="max-h-80 overflow-y-auto border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <div className="max-h-80 overflow-y-auto border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-lg">
                   {job.results.map((r, i) => <ResultRow key={i} result={r} navigate={navigate} />)}
                 </div>
               )}

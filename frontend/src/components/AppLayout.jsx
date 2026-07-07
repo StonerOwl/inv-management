@@ -7,36 +7,37 @@ import { useNotes } from '../context/NotesContext';
 import NotesDrawer from './NotesDrawer';
 import { ErrorBoundary } from './ErrorBoundary';
 import clsx from 'clsx';
-import { Zap, Moon, Sun, Database } from 'lucide-react';
+import { Zap, Moon, Sun, Database, Layers, GitBranch, Home, Package, Search, Sparkles, HelpCircle, Settings as SettingsIcon, MessageSquare, ChevronRight, ShieldCheck, Folder } from 'lucide-react';
 
 const MAIN_TABS = [
-  { id: 'inventory', label: 'Inventory', color: 'bg-primary-600', path: '/inventory/dashboard' },
-  { id: 'track-trace', label: 'Track & Trace', color: 'bg-emerald-600', path: '/tracking' },
-  { id: 'quality', label: 'Quality Management', color: 'bg-rose-600', path: '/quality' },
-  { id: 'app-management', label: 'Application Management', color: 'bg-indigo-600', path: '/users' },
+  { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard-overview' },
+  { id: 'inventory', label: 'Inventory', icon: Package, path: '/inventory/dashboard' },
+  { id: 'app-management', label: 'Projects', icon: Folder, path: '/users' },
+  { id: 'analytics', label: 'Analytics', icon: GitBranch, path: '/analytics' },
 ];
 
 const SIDEBAR_OPTIONS = {
-  'inventory': [
-    { label: 'Upload', path: '/upload' },
-    { label: 'Register', path: '/inventory/register' },
-    { label: 'Manage', path: '/invoices' },
-    { label: 'Search', path: '/inventory/search' },
-  ],
-  'track-trace': [
-    { label: 'Trace Inv', path: '/tracking/trace-inv' },
-    { label: 'Trace Workflow', path: '/tracking/workflow' },
-    { label: 'Trace Process', path: '/tracking/process' },
-    { label: 'Manage', path: '/tracking/manage' },
+  'dashboard': [
+    { label: 'Dashboard', path: '/dashboard-overview', icon: Home },
+    { label: 'Inventory', path: '/inventory/dashboard', icon: Package },
   ],
   'quality': [
     { label: 'Dashboard', path: '/quality' },
   ],
   'app-management': [
-    { label: 'User', path: '/users' },
-    { label: 'Create P/W/S', path: '/app-management/create-pws' },
-  ]
+    { label: 'User', path: '/users', icon: Package },
+    { label: 'Create P/W/S', path: '/app-management/create-pws', icon: Layers },
+  ],
+  'analytics': [
+    { label: 'Track & Trace', path: '/analytics', icon: Layers },
+    { label: 'Farm to Fork', path: '/analytics/farm-to-fork', icon: GitBranch },
+  ],
+  'inventory': [
+    { label: 'Inventory', path: '/inventory/dashboard', icon: Package },
+  ],
 };
+
+const NO_SIDEBAR_TABS = [];
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -46,20 +47,22 @@ export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Determine active tab based on current path
   const getActiveTab = () => {
     const path = location.pathname;
-    if (path.startsWith('/inventory') || path === '/upload' || path === '/invoices') return 'inventory';
-    if (path.startsWith('/tracking')) return 'track-trace';
+    if (path.startsWith('/settings')) return 'settings';
+    if (path.startsWith('/inventory')) return 'inventory';
+    if (path.startsWith('/dashboard-overview') || path === '/upload' || path === '/invoices') return 'dashboard';
     if (path.startsWith('/purchase')) return 'purchase';
     if (path.startsWith('/quality')) return 'quality';
     if (path.startsWith('/app-management') || path === '/users') return 'app-management';
-    return 'inventory'; // Default fallback
+    if (path.startsWith('/analytics') || path.startsWith('/tracking')) return 'analytics';
+    if (path.startsWith('/admin')) return 'admin';
+    return 'inventory';
   };
 
   const [activeTab, setActiveTab] = useState(getActiveTab());
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Keep active tab in sync with location if navigated from somewhere else
   useEffect(() => {
     setActiveTab(getActiveTab());
   }, [location.pathname]);
@@ -69,117 +72,175 @@ export default function AppLayout() {
     if (path) navigate(path);
   };
 
+  const handleSearch = (e) => {
+    if (e.key === 'Enter') {
+      if (searchQuery.trim()) {
+        navigate(`/query?q=${encodeURIComponent(searchQuery.trim())}`);
+      } else {
+        navigate('/query');
+      }
+    }
+  };
+
   const activeSidebarOptions = SIDEBAR_OPTIONS[activeTab] || [];
+  const showSidebar = !NO_SIDEBAR_TABS.includes(activeTab);
 
   return (
     <ErrorBoundary>
-    <div className="flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans selection:bg-primary-100 selection:text-primary-900">
-      {/* Top Header */}
-      <div className="flex items-center justify-between pt-5 px-8 pb-4 shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <Link to="/dashboard" className="text-2xl font-bold tracking-tight hover:text-primary-600 transition-colors flex items-center gap-2">
-          <Zap size={24} className="text-primary-600" /> <span className="text-primary-900">INVOICE_AI</span>
-        </Link>
-        
-        <div className="flex items-center gap-8 text-sm font-semibold text-gray-600 dark:text-gray-400">
-          <Link to="/query" className="hover:text-primary-600 transition-colors">Ask AI</Link>
-          <Link to="/help" className="hover:text-primary-600 transition-colors">Help & Support</Link>
-          <Link to="/settings" className="hover:text-primary-600 transition-colors">Settings</Link>
-        </div>
+      <div className="flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans selection:bg-primary-100 selection:text-primary-900">
 
-        <div className="flex items-center gap-4">
-          <a 
-            href={`${window.location.protocol}//${window.location.hostname}:5050`} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            title="Open pgAdmin"
-            className="text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            <Database size={20} />
-          </a>
-          <button onClick={toggleTheme} className="text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 mr-2">
-            {isDark ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-          
-          {user ? (
-            <>
-              <span className="text-sm font-semibold text-primary-700 bg-primary-50 dark:bg-primary-900/30 px-3 py-1 rounded-full border border-primary-100 dark:border-primary-900/50">
-                {user.username}
+        {/* ── Header ── */}
+        <header className="flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shrink-0 z-20">
+          <Link to="/dashboard" className="flex items-center gap-3 shrink-0">
+            <svg width="42" height="32" viewBox="0 0 46 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0" y="0" width="22" height="22" rx="4" fill="#2563EB" />
+              <rect x="12" y="14" width="22" height="22" rx="4" fill="#0D9488" />
+              <rect x="23.3" y="0" width="22" height="22" rx="4" fill="#3B82F6" />
+            </svg>
+            <div className="flex flex-col justify-center">
+              <span className="text-xl font-extrabold text-[#0B1B3D] dark:text-white leading-none">
+                AIQ Platform
               </span>
-              <button 
-                onClick={logout}
-                className="text-sm font-bold text-red-500 hover:text-red-600 transition-colors"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <Link to="/login" className="text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors">Login</Link>
-          )}
-        </div>
-      </div>
+              <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-300 mt-1">
+                Integrated with Inventory Management
+              </span>
+            </div>
+          </Link>
 
-      {/* Lower Row / Main Tabs */}
-      <div className="flex items-end bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shrink-0 px-8 pt-2 gap-8 shadow-sm relative z-20">
-        {MAIN_TABS.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => handleTabClick(tab.id, tab.path)}
-              className={clsx(
-                "pb-3 text-sm font-bold transition-colors border-b-2",
-                isActive 
-                  ? "text-primary-600 border-primary-600" 
-                  : "text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-800 dark:text-gray-200 hover:border-gray-300"
-              )}
-            >
-              {tab.label}
+          {/* Search Bar */}
+          <div className="hidden md:flex flex-1 max-w-xl mx-8 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input 
+              type="text" 
+              placeholder="Search projects, batches, invoices, quality notes..." 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
+              className="w-full bg-gray-100 dark:bg-gray-800 border-transparent focus:bg-white dark:focus:bg-gray-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 text-sm rounded-full py-2.5 pl-10 pr-4 transition-all"
+            />
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <Link to="/query" className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 font-semibold text-sm hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors">
+              <Sparkles size={16} /> Ask AI
+            </Link>
+            
+            <button className="flex items-center gap-1.5 px-3 py-1.5 text-gray-800 dark:text-gray-300 font-bold text-sm hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
+              <HelpCircle size={18} /> Help & Support
             </button>
-          )
-        })}
-      </div>
+            
+            <Link to="/settings" className="flex items-center gap-1.5 px-3 py-1.5 text-gray-800 dark:text-gray-300 font-bold text-sm hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
+              <SettingsIcon size={18} /> Settings
+            </Link>
 
-      {/* Main Content Area: Sidebar + Outlet */}
-      <div className={clsx("flex flex-1 overflow-hidden relative z-10", settings.sidebarLayout === 'right' ? 'flex-row-reverse' : '')}>
-        {/* Sidebar */}
-        {activeTab !== 'inventory' && (
-          <aside className="w-56 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shrink-0 overflow-y-auto flex flex-col py-4 shadow-sm z-10">
-            {activeSidebarOptions.map((opt) => (
-              <NavLink
-                key={opt.path}
-                to={opt.path}
-                className={({ isActive }) => clsx(
-                  "px-8 py-3 transition-colors whitespace-nowrap text-sm font-semibold flex items-center justify-between",
-                  isActive ? "text-primary-600 bg-primary-50 dark:bg-primary-900/30/50 border-r-2 border-r-primary-600" : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-900 hover:text-gray-900 dark:text-gray-100"
+            <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
+
+            <button onClick={toggleTheme} className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+
+            {user ? (
+              <div className="flex items-center gap-3 ml-2 pl-2 border-l border-gray-200 dark:border-gray-700">
+                <div className="flex flex-col items-end">
+                  <span className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">{user.username}</span>
+                  <span className="text-xs font-medium text-gray-600 dark:text-gray-300">{user.role || 'User'}</span>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                  {user.username.charAt(0).toUpperCase()}
+                </div>
+              </div>
+            ) : (
+              <Link to="/login" className="text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors ml-4">Login</Link>
+            )}
+          </div>
+        </header>
+
+        {/* ── Tab Bar ── */}
+        <nav className="flex items-center bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shrink-0 px-6 py-2 gap-2 shadow-sm relative z-10 overflow-x-auto">
+          {MAIN_TABS.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabClick(tab.id, tab.path)}
+                className={clsx(
+                  "flex items-center gap-2 px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200 whitespace-nowrap",
+                  isActive
+                    ? "bg-primary-600 text-white shadow-sm"
+                    : "text-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
                 )}
               >
-                {opt.label}
-              </NavLink>
-            ))}
-          </aside>
-        )}
+                {tab.icon && <tab.icon size={16} />}
+                {tab.label}
+              </button>
+            )
+          })}
+        </nav>
 
-        {/* Dynamic Page Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 relative z-0">
-          <div className="p-8">
-            <Outlet />
-          </div>
-        </main>
+        {/* ── Main Layout Area ── */}
+        <div className={clsx("flex flex-1 overflow-hidden relative z-0", settings.sidebarLayout === 'right' ? 'flex-row-reverse' : '')}>
+          {showSidebar && (
+            <aside className="w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shrink-0 overflow-y-auto flex flex-col py-6 z-10">
+              <div className="px-6 mb-4">
+                <p className="text-xs font-extrabold text-gray-800 dark:text-gray-200 uppercase tracking-wider">Navigation</p>
+              </div>
+              <div className="flex flex-col gap-1 px-3">
+                {activeSidebarOptions.map((opt) => (
+                  <NavLink
+                    key={opt.path}
+                    to={opt.path}
+                    end={opt.path === '/analytics'}
+                    className={({ isActive }) => clsx(
+                      "px-4 py-2.5 rounded-lg transition-all duration-200 whitespace-nowrap text-sm font-semibold flex items-center justify-between group",
+                      isActive 
+                        ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400" 
+                        : "text-gray-800 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 hover:shadow-sm"
+                    )}
+                  >
+                    <span className="flex items-center gap-3">
+                      {opt.icon && <opt.icon size={18} className={clsx("transition-colors", "text-current")} />}
+                      {opt.label}
+                    </span>
+                  </NavLink>
+                ))}
+              </div>
+            </aside>
+          )}
+
+          <main className="flex-1 overflow-y-auto bg-gray-100/50 dark:bg-gray-950 relative z-0 flex flex-col">
+            <div className="flex-1 p-8">
+              <Outlet />
+            </div>
+
+            {/* ── Footer ── */}
+            <footer className="shrink-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 px-8 py-4 flex flex-col sm:flex-row items-center justify-between text-xs font-medium text-gray-700 dark:text-gray-300">
+              <div>
+                © 2026 AIQ Platform. All rights reserved.
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="capitalize">{MAIN_TABS.find(t => t.id === activeTab)?.label || activeTab.replace('-', ' ')}</span>
+                <ChevronRight size={12} />
+                <span>Dashboard</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-500 font-medium">
+                  <ShieldCheck size={14} /> Data is secure and encrypted
+                </span>
+                <span>Last updated: {new Date().toLocaleString()}</span>
+              </div>
+            </footer>
+          </main>
+        </div>
+
+        <NotesDrawer />
+        <button
+          onClick={toggleDrawer}
+          className="fixed bottom-16 right-8 p-4 bg-primary-600 hover:bg-primary-700 text-white rounded-full shadow-lg shadow-primary-500/30 flex items-center justify-center z-40 transition-transform hover:scale-105 active:scale-95"
+          title="Open Discussions"
+        >
+          <MessageSquare size={24} />
+        </button>
       </div>
-      
-      {/* Global Notes Drawer & Bubble */}
-      <NotesDrawer />
-      <button
-        onClick={toggleDrawer}
-        className="fixed bottom-6 right-6 p-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-xl shadow-indigo-500/30 flex items-center justify-center z-40 transition-transform hover:scale-105 active:scale-95"
-        title="Open Discussions"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        </svg>
-      </button>
-
-    </div>
     </ErrorBoundary>
   );
 }
