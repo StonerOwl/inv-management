@@ -12,6 +12,7 @@ import { Zap, Moon, Sun, Database, Layers, GitBranch, Home, Package, Search, Spa
 const MAIN_TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard-overview' },
   { id: 'inventory', label: 'Inventory', icon: Package, path: '/inventory/dashboard' },
+  { id: 'quality', label: 'Quality Management', icon: ShieldCheck, path: '/quality' },
   { id: 'app-management', label: 'Projects', icon: Folder, path: '/users' },
   { id: 'analytics', label: 'Analytics', icon: GitBranch, path: '/analytics' },
 ];
@@ -110,9 +111,9 @@ export default function AppLayout() {
           {/* Search Bar */}
           <div className="hidden md:flex flex-1 max-w-xl mx-8 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search projects, batches, invoices, quality notes..." 
+            <input
+              type="text"
+              placeholder="Search projects, batches, invoices, quality notes..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               onKeyDown={handleSearch}
@@ -124,11 +125,11 @@ export default function AppLayout() {
             <Link to="/query" className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 font-semibold text-sm hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors">
               <Sparkles size={16} /> Ask AI
             </Link>
-            
+
             <button className="flex items-center gap-1.5 px-3 py-1.5 text-gray-800 dark:text-gray-300 font-bold text-sm hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
               <HelpCircle size={18} /> Help & Support
             </button>
-            
+
             <Link to="/settings" className="flex items-center gap-1.5 px-3 py-1.5 text-gray-800 dark:text-gray-300 font-bold text-sm hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
               <SettingsIcon size={18} /> Settings
             </Link>
@@ -192,13 +193,13 @@ export default function AppLayout() {
                     end={opt.path === '/analytics'}
                     className={({ isActive }) => clsx(
                       "px-4 py-2.5 rounded-lg transition-all duration-200 whitespace-nowrap text-sm font-semibold flex items-center justify-between group",
-                      isActive 
-                        ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400" 
+                      isActive
+                        ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400"
                         : "text-gray-800 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 hover:shadow-sm"
                     )}
                   >
                     <span className="flex items-center gap-3">
-                      {opt.icon && <opt.icon size={18} className={clsx("transition-colors", "text-current")} />}
+                      {opt.icon && <opt.icon size={18} className="text-current" />}
                       {opt.label}
                     </span>
                   </NavLink>
