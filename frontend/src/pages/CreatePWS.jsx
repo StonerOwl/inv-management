@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FolderPlus, GitCommit, GitBranch, XCircle, CheckCircle, ChevronRight, Plus, Settings2, Trash2 } from 'lucide-react';
+import { FolderPlus, GitCommit, GitBranch, XCircle, CheckCircle, ChevronRight, Plus, Settings2, Trash2, Pencil } from 'lucide-react';
 import clsx from 'clsx';
 import QRCode from 'react-qr-code';
 import { getPWSItems, createPWSItem, updatePWSItem, deletePWSItem, getPWSAssignments, createPWSAssignment, deletePWSAssignment } from '../api/client';
@@ -10,12 +10,12 @@ export default function CreatePWS() {
   const [activeModal, setActiveModal] = useState(null);
   const [name, setName] = useState('');
   const [product, setProduct] = useState('');
-  const [workOrder, setWorkOrder] = useState('');
   const [category, setCategory] = useState('');
   const [startDate, setStartDate] = useState('');
   const [targetDate, setTargetDate] = useState('');
   const [batchId, setBatchId] = useState('');
   const [createdItems, setCreatedItems] = useState([]);
+  const [editingItem, setEditingItem] = useState(null);
 
   // Management State
   const [selectedProjectId, setSelectedProjectId] = useState(null);
@@ -79,15 +79,38 @@ export default function CreatePWS() {
   }, [fetchData]);
 
   const handleOpenModal = (type) => {
+    setEditingItem(null);
     setActiveModal(type);
     setName('');
+    setProduct('');
+    setCategory('');
+    setStartDate('');
+    setTargetDate('');
+    setBatchId('');
+  };
+
+  const handleEditItem = (item, e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    setEditingItem(item);
+    setActiveModal(item.type);
+    setName(item.name || '');
+    if (item.type === 'project') {
+      setProduct(item.product || '');
+      setCategory(item.category || '');
+      setStartDate(item.start_date || '');
+      setTargetDate(item.target_date || '');
+      setBatchId(item.batch_id || '');
+    }
   };
 
   const handleCloseModal = () => {
     setActiveModal(null);
+    setEditingItem(null);
     setName('');
     setProduct('');
-    setWorkOrder('');
     setCategory('');
     setStartDate('');
     setTargetDate('');
@@ -98,27 +121,31 @@ export default function CreatePWS() {
     e.preventDefault();
     if (!name.trim()) return;
 
-    const newItem = {
-      id: `pws_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    const itemData = {
       type: activeModal,
       name: name.trim(),
     };
 
     if (activeModal === 'project') {
-      newItem.product = product;
-      newItem.work_order = workOrder;
-      newItem.category = category;
-      newItem.start_date = startDate;
-      newItem.target_date = targetDate;
-      newItem.batch_id = batchId;
+      itemData.product = product;
+      itemData.category = category;
+      itemData.start_date = startDate;
+      itemData.target_date = targetDate;
+      itemData.batch_id = batchId;
     }
 
     try {
-      const { data } = await createPWSItem(newItem);
-      setCreatedItems((prev) => [data, ...prev]);
+      if (editingItem) {
+        const { data } = await updatePWSItem(editingItem.id, itemData);
+        setCreatedItems((prev) => prev.map(item => item.id === editingItem.id ? data : item));
+      } else {
+        itemData.id = `pws_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+        const { data } = await createPWSItem(itemData);
+        setCreatedItems((prev) => [data, ...prev]);
+      }
       handleCloseModal();
     } catch (err) {
-      console.error('Failed to create item:', err);
+      console.error('Failed to save item:', err);
     }
   };
 
@@ -131,6 +158,21 @@ export default function CreatePWS() {
     } catch (err) {
       console.error('Failed to delete project:', err);
       alert('Failed to delete project. Please check the console.');
+    }
+  };
+
+  const handleDeleteItem = async (itemId, e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    if (!window.confirm("Are you sure you want to delete this item? This action cannot be undone.")) return;
+    try {
+      await deletePWSItem(itemId);
+      setCreatedItems(prev => prev.filter(item => item.id !== itemId));
+    } catch (err) {
+      console.error('Failed to delete item:', err);
+      alert('Failed to delete item. Please check the console.');
     }
   };
   const assignWorkflow = async (projectId) => {
@@ -215,13 +257,29 @@ export default function CreatePWS() {
             key={item.id}
             targetType={item.type}
             targetId={item.id}
-            className={clsx("flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700", idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900')}
+            className={clsx("flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 group/item", idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900')}
           >
             <div className="flex items-center gap-4">
               <div className="text-primary-600">{getIcon(item.type, 20)}</div>
               <div className="text-sm font-bold truncate max-w-[100px]" title={item.name}>{item.name}</div>
             </div>
-            <CheckCircle size={14} className="text-emerald-500 shrink-0" />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => handleEditItem(item, e)}
+                className="opacity-0 group-hover/item:opacity-100 text-blue-500 hover:text-blue-700 transition-opacity p-1"
+                title={`Edit ${typeLabel}`}
+              >
+                <Pencil size={14} />
+              </button>
+              <button
+                onClick={(e) => handleDeleteItem(item.id, e)}
+                className="opacity-0 group-hover/item:opacity-100 text-red-500 hover:text-red-700 transition-opacity p-1"
+                title={`Delete ${typeLabel}`}
+              >
+                <Trash2 size={14} />
+              </button>
+              <CheckCircle size={14} className="text-emerald-500 shrink-0" />
+            </div>
           </NoteTarget>
         ))
       )}
@@ -313,10 +371,17 @@ export default function CreatePWS() {
                   </summary>
 
                   <div className="p-6 bg-gray-50/50 dark:bg-gray-900/20">
-                    {(p.product || p.work_order || p.category || p.start_date || p.target_date) && (
+                    {(p.product || projectWorkflows[p.id]?.length > 0 || p.category || p.start_date || p.target_date) && (
                       <div className="mb-6 bg-white dark:bg-gray-800/80 p-5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex flex-wrap gap-x-10 gap-y-4 text-sm">
                         {p.product && <div><span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Product</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.product}</span></div>}
-                        {p.work_order && <div><span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Work Order</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.work_order}</span></div>}
+                        {projectWorkflows[p.id]?.length > 0 && (
+                          <div>
+                            <span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Work Order / Workflow</span>
+                            <span className="font-semibold text-gray-900 dark:text-gray-100">
+                              {projectWorkflows[p.id].map(wId => workflows.find(w => w.id === wId)?.name).filter(Boolean).join(', ')}
+                            </span>
+                          </div>
+                        )}
                         {p.category && <div><span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Category</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.category}</span></div>}
                         {p.start_date && <div><span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Start Date</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.start_date}</span></div>}
                         {p.target_date && <div><span className="text-gray-700 dark:text-gray-300 text-[10px] block mb-1 uppercase font-bold tracking-wider">Target Date</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.target_date}</span></div>}
@@ -496,7 +561,7 @@ export default function CreatePWS() {
                                 <div className="text-gray-700 dark:text-gray-300">Project ID</div><div className="font-bold text-primary-600 dark:text-primary-400">{p.project_code}</div>
                                 <div className="text-gray-700 dark:text-gray-300">Batch ID</div><div className="font-bold text-primary-600 dark:text-primary-400">{p.batch_id}</div>
                                 <div className="text-gray-700 dark:text-gray-300">Product</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.product}</div>
-                                <div className="text-gray-700 dark:text-gray-300">Work Order</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.work_order}</div>
+                                <div className="text-gray-700 dark:text-gray-300">Work Order / Workflow</div><div className="font-semibold text-gray-900 dark:text-gray-100">{projectWorkflows[p.id]?.length > 0 ? projectWorkflows[p.id].map(wId => workflows.find(w => w.id === wId)?.name).filter(Boolean).join(', ') : 'Not Assigned'}</div>
                                 <div className="text-gray-700 dark:text-gray-300">Category</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.category}</div>
                                 <div className="text-gray-700 dark:text-gray-300">Start Date</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.start_date}</div>
                                 <div className="text-gray-700 dark:text-gray-300">Target Date</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.target_date}</div>
@@ -695,7 +760,7 @@ export default function CreatePWS() {
             <div className="p-8">
               <div className="flex items-center gap-4 mb-6 text-primary-600 dark:text-primary-400">
                 {getIcon(activeModal, 32)}
-                <h2 className="text-2xl font-black tracking-tighter uppercase">New {activeModal}</h2>
+                <h2 className="text-2xl font-black tracking-tighter uppercase">{editingItem ? 'Edit' : 'New'} {activeModal}</h2>
               </div>
               <form onSubmit={handleCreate}>
                 <div className="mb-8">
@@ -715,10 +780,6 @@ export default function CreatePWS() {
                     <div>
                       <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Product</label>
                       <input type="text" value={product} onChange={e => setProduct(e.target.value)} className="aiq-input" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Work Order</label>
-                      <input type="text" value={workOrder} onChange={e => setWorkOrder(e.target.value)} className="aiq-input" />
                     </div>
                     <div>
                       <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Category</label>
@@ -743,7 +804,7 @@ export default function CreatePWS() {
                     CANCEL
                   </button>
                   <button type="submit" disabled={!name.trim()} className="aiq-btn-primary">
-                    CREATE
+                    {editingItem ? 'SAVE CHANGES' : 'CREATE'}
                   </button>
                 </div>
               </form>

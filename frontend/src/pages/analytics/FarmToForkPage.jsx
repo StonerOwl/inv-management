@@ -54,7 +54,7 @@ export default function FarmToForkPage() {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         )
     }
@@ -65,7 +65,7 @@ export default function FarmToForkPage() {
             <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-800 px-6 pt-6 pb-0 sticky top-0 z-20 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
                     <div>
-                        <p className="text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-500 mb-1">Analytics Dashboard</p>
+                        <p className="text-xs font-bold uppercase tracking-widest text-primary-600 dark:text-primary-500 mb-1">Analytics Dashboard</p>
                         <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">Farm to Fork</h1>
                     </div>
 
@@ -93,7 +93,7 @@ export default function FarmToForkPage() {
                             key={tab.id}
                             onClick={() => handleTabClick(tab.id)}
                             className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-all duration-150 focus:outline-none ${activeTab === tab.id
-                                    ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400 dark:border-emerald-400'
+                                    ? 'border-primary-600 text-primary-600 dark:text-primary-400 dark:border-primary-400'
                                     : 'border-transparent text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
                                 }`}
                         >
@@ -107,13 +107,13 @@ export default function FarmToForkPage() {
                 <EmptyState message="Create projects in the project management flow to view Farm to Fork analytics." />
             ) : fetchingDetails || !flowData ? (
                 <div className="flex justify-center items-center h-40">
-                    <div className="w-6 h-6 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-6 h-6 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
                 </div>
             ) : (
                 <div className="flex flex-col gap-10 pb-16">
 
                     <section ref={flowRef} className="scroll-mt-24 px-6 pt-8">
-                        <SectionHeader color="bg-emerald-600" label="Farm to Form Flow Summary" />
+                        <SectionHeader color="bg-primary-600" label="Farm to Form Flow Summary" />
                         <FarmFlowSummary stages={flowData.stages} />
                     </section>
 
@@ -205,8 +205,8 @@ function StageBreakdownTable({ stages }) {
     return (
         <div className="aiq-card overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-900/30 border border-primary-100 dark:border-primary-800 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 0v10m0-10a2 2 0 012 2h2a2 2 0 012-2V7" />
                     </svg>
                 </div>
@@ -232,7 +232,7 @@ function StageBreakdownTable({ stages }) {
                         {stages.map((stage, idx) => (
                             <tr key={stage.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-100">
                                 <td className="px-6 py-4">
-                                    <span className="w-6 h-6 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white text-[10px] font-black flex items-center justify-center">
+                                    <span className="w-6 h-6 rounded-full bg-primary-600 dark:bg-primary-500 text-white text-[10px] font-black flex items-center justify-center">
                                         {idx + 1}
                                     </span>
                                 </td>
@@ -244,7 +244,7 @@ function StageBreakdownTable({ stages }) {
                                 <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{stage.stateCount}</td>
                                 <td className="px-6 py-4">
                                     <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${stage.completed
-                                            ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800'
+                                            ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 border border-primary-100 dark:border-primary-800'
                                             : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-transparent'
                                         }`}>
                                         {stage.completed ? 'Complete' : 'In Progress'}

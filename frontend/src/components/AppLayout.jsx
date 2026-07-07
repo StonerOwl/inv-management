@@ -46,6 +46,7 @@ export default function AppLayout() {
 
   const getActiveTab = () => {
     const path = location.pathname;
+    if (path.startsWith('/settings')) return 'settings';
     if (path.startsWith('/inventory')) return 'inventory';
     if (path.startsWith('/dashboard-overview') || path === '/upload' || path === '/invoices') return 'dashboard';
     if (path.startsWith('/purchase')) return 'purchase';

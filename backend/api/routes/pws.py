@@ -75,14 +75,35 @@ def create_pws_item(item: PWSItemCreate, db: Session = Depends(get_db)):
     return db_item.to_dict()
 
 class PWSItemUpdate(BaseModel):
-    project_code: str
+    name: Optional[str] = None
+    product: Optional[str] = None
+    category: Optional[str] = None
+    start_date: Optional[str] = None
+    target_date: Optional[str] = None
+    batch_id: Optional[str] = None
+    project_code: Optional[str] = None
 
 @router.put("/items/{item_id}", response_model=Dict[str, Any])
 def update_pws_item(item_id: str, update: PWSItemUpdate, db: Session = Depends(get_db)):
     item = db.query(PWSItem).filter_by(id=item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
-    item.project_code = update.project_code
+    
+    if update.name is not None:
+        item.name = update.name
+    if update.product is not None:
+        item.product = update.product
+    if update.category is not None:
+        item.category = update.category
+    if update.start_date is not None:
+        item.start_date = update.start_date
+    if update.target_date is not None:
+        item.target_date = update.target_date
+    if update.batch_id is not None:
+        item.batch_id = update.batch_id
+    if update.project_code is not None:
+        item.project_code = update.project_code
+        
     db.commit()
     db.refresh(item)
     return item.to_dict()
