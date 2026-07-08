@@ -140,6 +140,10 @@ export default function AppLayout() {
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
+            <a href="http://localhost:5050" target="_blank" rel="noopener noreferrer" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800" title="Database (pgAdmin)">
+              <Database size={20} />
+            </a>
+
             {user ? (
               <div className="flex items-center gap-3 ml-2 pl-2 border-l border-gray-200 dark:border-gray-700">
                 <div className="flex flex-col items-end">
