@@ -66,7 +66,7 @@ function handlePrintQr(qr) {
   win.document.close()
 }
 
-export default function QualityNoteForm({ onSave, projectOptions = [] }) {
+export default function QualityNoteForm({ onSave, projectOptions = [], pwsItems = [], pwsAssignments = [] }) {
   const [note, setNote] = useState(emptyNote)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -76,6 +76,50 @@ export default function QualityNoteForm({ onSave, projectOptions = [] }) {
   const [qrLoading, setQrLoading] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [verifyResult, setVerifyResult] = useState(null)
+
+  // Derived options from PWS hierarchy
+  const projects = pwsItems.filter(p => p.type === 'project');
+  
+  // Try to find the exact project by project_code or name
+  const selectedProject = projects.find(p => p.project_code === note.project_id) || projects.find(p => p.name === note.project_name);
+  
+  // Workflows assigned to this project
+  const projectWorkflowIds = pwsAssignments.filter(a => a.parent_id === selectedProject?.id).map(a => a.child_id);
+  
+  // Stages assigned to those workflows
+  const stageIds = pwsAssignments.filter(a => projectWorkflowIds.includes(a.parent_id)).map(a => a.child_id);
+  const availableStages = pwsItems.filter(p => p.type === 'stage' && stageIds.includes(p.id));
+
+  // Find the selected stage object to filter processes
+  const selectedStageObj = availableStages.find(s => s.name === note.workflow_stage);
+  
+  // Processes assigned to the selected stage
+  const processIds = selectedStageObj ? pwsAssignments.filter(a => a.parent_id === selectedStageObj.id).map(a => a.child_id) : [];
+  const availableProcesses = pwsItems.filter(p => p.type === 'process' && processIds.includes(p.id));
+
+  const handleProjectSelect = (e) => {
+    const projId = e.target.value;
+    const proj = projects.find(p => p.id === projId);
+    if (proj) {
+      setNote(n => ({
+        ...n,
+        project_name: proj.name,
+        project_id: proj.project_code || proj.id,
+        batch_id: proj.batch_id || '',
+        workflow_stage: '',
+        process: ''
+      }));
+    } else {
+      setNote(n => ({
+        ...n,
+        project_name: '',
+        project_id: '',
+        batch_id: '',
+        workflow_stage: '',
+        process: ''
+      }));
+    }
+  };
 
   const update = (field) => (e) => setNote((n) => ({ ...n, [field]: e.target.value }))
 
@@ -157,16 +201,14 @@ export default function QualityNoteForm({ onSave, projectOptions = [] }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Project Name">
-          <input
-            list="qm-project-options"
+          <select
             className={inputCls}
-            placeholder="e.g. Coconut Oil"
-            value={note.project_name}
-            onChange={update('project_name')}
-          />
-          <datalist id="qm-project-options">
-            {projectOptions.map((p) => <option key={p} value={p} />)}
-          </datalist>
+            value={selectedProject?.id || ''}
+            onChange={handleProjectSelect}
+          >
+            <option value="">Select a project...</option>
+            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
         </Field>
 
         <Field
@@ -182,31 +224,33 @@ export default function QualityNoteForm({ onSave, projectOptions = [] }) {
           }
         >
           <input
-            className={clsx(inputCls, 'font-mono')}
-            placeholder="Auto-filled by Scan, or type it"
+            className={clsx(inputCls, 'font-mono bg-gray-50 dark:bg-gray-900')}
+            placeholder="Auto-filled by selection"
             value={note.project_id}
-            onChange={update('project_id')}
+            readOnly
           />
         </Field>
 
         <Field label="Batch ID">
           <input
-            className={clsx(inputCls, 'font-mono')}
-            placeholder="e.g. PRSJ-2026-001-0001, or tap Scan"
+            className={clsx(inputCls, 'font-mono bg-gray-50 dark:bg-gray-900')}
+            placeholder="Auto-filled by selection"
             value={note.batch_id}
-            onChange={update('batch_id')}
+            readOnly
           />
         </Field>
 
         <Field label="Workflow Stage">
           <select className={inputCls} value={note.workflow_stage} onChange={update('workflow_stage')}>
-            {WORKFLOW_STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
+            <option value="">Select a stage...</option>
+            {availableStages.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
           </select>
         </Field>
 
         <Field label="Process">
           <select className={inputCls} value={note.process} onChange={update('process')}>
-            {PROCESSES.map((p) => <option key={p} value={p}>{p}</option>)}
+            <option value="">Select a process...</option>
+            {availableProcesses.map((p) => <option key={p.id} value={p.name}>{p.name}</option>)}
           </select>
         </Field>
 
@@ -222,26 +266,28 @@ export default function QualityNoteForm({ onSave, projectOptions = [] }) {
           </select>
         </Field>
 
+        <div className="sm:col-span-2">
         <Field label="Severity">
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             {SEVERITIES.map((s) => (
               <button
                 type="button"
                 key={s}
                 onClick={() => setNote((n) => ({ ...n, severity: s }))}
                 className={clsx(
-                  'flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-bold border transition-colors',
+                  'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold border transition-colors',
                   note.severity === s
                     ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
                     : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300'
                 )}
               >
-                <span className={clsx('w-2 h-2 rounded-full', SEVERITY_DOT[s])} />
+                <span className={clsx('w-2 h-2 rounded-full flex-shrink-0', SEVERITY_DOT[s])} />
                 {s}
               </button>
             ))}
           </div>
         </Field>
+        </div>
       </div>
 
       <div className="mt-4">

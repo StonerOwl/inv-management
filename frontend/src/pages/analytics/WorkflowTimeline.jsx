@@ -37,26 +37,28 @@ export default function WorkflowTimeline({ data }) {
         <div className="p-10 text-center text-sm text-gray-700 dark:text-gray-300">No stages defined for this project.</div>
       ) : (
         <div className="px-6 py-8 overflow-x-auto">
-          <div className="relative flex items-start min-w-max">
+          <div className="relative flex items-start w-full min-w-max">
+            {/* Connecting line that goes through all nodes */}
+            <div className="absolute top-[1.65rem] h-px bg-black dark:bg-white z-0" style={{ left: `${100 / (2 * stageNodes.length)}%`, right: `${100 / (2 * stageNodes.length)}%` }}></div>
             {stageNodes.map((stage, idx) => {
               const isLast = idx === stageNodes.length - 1
               const isExpanded = expandedStage === stage.id
 
               return (
-                <div key={stage.id} className="relative flex items-start">
-                  <div className="flex flex-col items-center">
+                <div key={stage.id} className="relative flex items-start flex-1">
+                  <div className="flex flex-col items-center w-full">
                     <button
                       onClick={() => toggleStage(stage.id)}
-                      className="group relative flex flex-col items-center focus:outline-none w-40"
+                      className="group relative flex flex-col items-center focus:outline-none w-full max-w-[160px]"
                     >
                       <div className={`
-                        w-14 h-14 rounded-full border-2 flex items-center justify-center shadow-sm
+                        relative z-10 w-14 h-14 rounded-full border-2 flex items-center justify-center shadow-sm
                         transition-all duration-200 group-hover:scale-105
                         ${stage.isActive
                           ? 'border-primary-500 bg-primary-600 text-white ring-4 ring-primary-100 dark:ring-primary-900'
                           : stage.progress === 100
                             ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
-                            : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 group-hover:border-primary-400'
+                            : 'border-black dark:border-white bg-white dark:bg-gray-800 text-black dark:text-white group-hover:border-primary-400'
                         }
                       `}>
                         {stage.progress === 100 ? (
@@ -132,26 +134,27 @@ export default function WorkflowTimeline({ data }) {
                     )}
                   </div>
 
-                  {!isLast && (
-                    <div className="flex items-center mx-1 self-start mt-7">
-                      <div className="w-10 h-0.5 bg-gray-200 dark:bg-gray-700 relative">
-                        <div className="h-full bg-primary-400 transition-all duration-700" style={{ width: `${stage.progress}%` }} />
-                      </div>
-                      <svg className="w-3 h-3 text-gray-300 dark:text-gray-600 flex-shrink-0 -ml-0.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
+
                 </div>
               )
             })}
           </div>
 
-          <div className="mt-8 pt-5 border-t border-gray-100 dark:border-gray-800 flex flex-wrap gap-5 text-xs text-gray-700 dark:text-gray-300">
-            <LegendItem color="bg-primary-600" label="Active stage" />
-            <LegendItem color="bg-emerald-500" label="Completed" />
-            <LegendItem color="bg-gray-300 dark:bg-gray-600" label="Not started" />
-            <LegendItem color="bg-violet-200 dark:bg-violet-900" label="Process" />
+          <div className="mt-8 pt-5 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center flex-wrap gap-5 text-xs text-gray-700 dark:text-gray-300">
+            <div className="flex flex-wrap gap-5">
+              <LegendItem color="bg-primary-600" label="Active stage" />
+              <LegendItem color="bg-emerald-500" label="Completed" />
+              <LegendItem color="bg-gray-300 dark:bg-gray-600" label="Not started" />
+              <LegendItem color="bg-violet-200 dark:bg-violet-900" label="Process" />
+            </div>
+            <div>
+              <select className="aiq-input text-xs py-2 px-3 min-w-[160px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg shadow-sm font-semibold cursor-pointer">
+                <option value="none">Default View</option>
+                <option value="quality">Quality Notes</option>
+                <option value="thermal">Thermal Image</option>
+                <option value="logs">Process Logs</option>
+              </select>
+            </div>
           </div>
         </div>
       )}

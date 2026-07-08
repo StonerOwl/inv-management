@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { FolderPlus, GitCommit, GitBranch, XCircle, CheckCircle, ChevronRight, Plus, Settings2, Trash2, Pencil } from 'lucide-react';
 import clsx from 'clsx';
 import QRCode from 'react-qr-code';
@@ -6,7 +7,8 @@ import { getPWSItems, createPWSItem, updatePWSItem, deletePWSItem, getPWSAssignm
 import NoteTarget from '../components/NoteTarget';
 
 export default function CreatePWS() {
-  const [viewMode, setViewMode] = useState('tree'); // 'tree', 'create', 'manage'
+  const location = useLocation();
+  const [viewMode, setViewMode] = useState(location.state?.viewMode || 'tree');
   const [activeModal, setActiveModal] = useState(null);
   const [name, setName] = useState('');
   const [product, setProduct] = useState('');
@@ -18,7 +20,7 @@ export default function CreatePWS() {
   const [editingItem, setEditingItem] = useState(null);
 
   // Management State
-  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [selectedProjectId, setSelectedProjectId] = useState(location.state?.selectedProjectId || null);
   const [projectWorkflows, setProjectWorkflows] = useState({}); // { projectId: [workflowId, ...] }
   const [workflowStages, setWorkflowStages] = useState({}); // { workflowId: [stageId, ...] }
   const [stageProcesses, setStageProcesses] = useState({}); // { stageId: [processId, ...] }
@@ -259,7 +261,7 @@ export default function CreatePWS() {
             targetId={item.id}
             className={clsx("flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 group/item", idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900')}
           >
-            <div className="flex items-center gap-4">
+            <div className="w-full overflow-x-auto pb-4">
               <div className="text-primary-600">{getIcon(item.type, 20)}</div>
               <div className="text-sm font-bold truncate max-w-[100px]" title={item.name}>{item.name}</div>
             </div>
@@ -362,11 +364,7 @@ export default function CreatePWS() {
                           ID: {p.project_code}
                         </span>
                       )}
-                      {p.batch_id && (
-                        <span className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-3 py-1 border border-gray-200 dark:border-gray-700">
-                          BATCH: {p.batch_id}
-                        </span>
-                      )}
+                      
                     </div>
                   </summary>
 
@@ -396,7 +394,7 @@ export default function CreatePWS() {
                             <summary className="py-2 font-bold text-lg text-gray-800 dark:text-gray-200 flex items-center gap-3 cursor-pointer outline-none select-none hover:text-primary-600 transition-colors list-none [&::-webkit-details-marker]:hidden relative">
                               <div className="absolute -left-[18px] top-1/2 w-4 h-0.5 bg-gray-200 dark:bg-gray-700"></div>
                               <ChevronRight size={18} className="group-open/wf:rotate-90 transition-transform text-gray-400" />
-                              <GitBranch size={18} className="text-gray-500" /> {wf.name}
+                              <GitBranch size={18} className="text-gray-500" /> {wf.name} {wf.batch_id && <span className="ml-3 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-2 py-0.5 text-xs rounded border border-gray-200 dark:border-gray-700 font-mono">BATCH: {wf.batch_id}</span>}
                             </summary>
 
                             <div className="pl-8">
@@ -537,53 +535,64 @@ export default function CreatePWS() {
                 </div>
               ) : (
                 <div className="flex flex-col h-full">
-                  <div className="mb-8 border-b border-gray-100 dark:border-gray-800 pb-6 flex justify-between items-start">
+                  <div className="mb-8 border-b border-gray-100 dark:border-gray-800 pb-6 flex flex-col gap-6">
                     <div>
                       <h2 className="text-3xl font-black tracking-tighter text-primary-600 flex items-center gap-3">
-                        <FolderPlus size={28} />
-                        {projects.find(p => p.id === selectedProjectId)?.name}
+                        <FolderPlus size={28} className="shrink-0" />
+                        <span>{projects.find(p => p.id === selectedProjectId)?.name}</span>
                       </h2>
                       <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold tracking-normal mt-2">
                         Hierarchy Management
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="w-full overflow-x-auto pb-4">
                       {(() => {
                         const p = projects.find(proj => proj.id === selectedProjectId);
                         if (!p || !p.project_code) return null;
                         return (
-                          <div className="flex gap-6">
+                          <div className="flex flex-col xl:flex-row gap-6 w-full">
                             <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 min-w-[300px]">
-                              <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">Project Batch Details</h4>
+                              <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">Project Details</h4>
                               <div className="grid grid-cols-[100px_1fr] gap-y-2 text-xs">
                                 <div className="text-gray-700 dark:text-gray-300">Project Name</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.name}</div>
                                 <div className="text-gray-700 dark:text-gray-300">Project ID</div><div className="font-bold text-primary-600 dark:text-primary-400">{p.project_code}</div>
-                                <div className="text-gray-700 dark:text-gray-300">Batch ID</div><div className="font-bold text-primary-600 dark:text-primary-400">{p.batch_id}</div>
+                                
                                 <div className="text-gray-700 dark:text-gray-300">Product</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.product}</div>
                                 <div className="text-gray-700 dark:text-gray-300">Work Order / Workflow</div><div className="font-semibold text-gray-900 dark:text-gray-100">{projectWorkflows[p.id]?.length > 0 ? projectWorkflows[p.id].map(wId => workflows.find(w => w.id === wId)?.name).filter(Boolean).join(', ') : 'Not Assigned'}</div>
                                 <div className="text-gray-700 dark:text-gray-300">Category</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.category}</div>
                                 <div className="text-gray-700 dark:text-gray-300">Start Date</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.start_date}</div>
                                 <div className="text-gray-700 dark:text-gray-300">Target Date</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.target_date}</div>
                               </div>
-                            </div>
-                            <div className="flex flex-col gap-4">
-                              <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <div className="text-xs text-gray-700 dark:text-gray-300 mb-1">Project ID</div>
-                                <div className="text-xl font-black text-primary-600 dark:text-primary-400 mb-2">{p.project_code}</div>
-                                <QRCode value={p.project_code} size={64} className="bg-white p-1 rounded" />
-                              </div>
-                              <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <div className="text-xs text-gray-700 dark:text-gray-300 mb-1">Batch ID</div>
-                                <div className="text-xl font-black text-primary-600 dark:text-primary-400 mb-2">{p.batch_id}</div>
-                                <QRCode value={p.batch_id} size={64} className="bg-white p-1 rounded" />
-                              </div>
                               <button
                                 onClick={() => handleDeleteProject(p.id)}
-                                className="mt-auto px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800 font-bold text-sm transition-colors flex items-center justify-center gap-2 rounded-lg"
+                                className="mt-6 w-full px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800 font-bold text-sm transition-colors flex items-center justify-center gap-2 rounded-lg"
                               >
                                 <Trash2 size={16} /> Delete Project
                               </button>
+                            </div>
+                            <div className="flex flex-wrap gap-4">
+                              <div className="flex flex-col gap-4">
+                                <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 h-[180px] w-[160px] shrink-0">
+                                  <div className="text-xs text-gray-700 dark:text-gray-300 mb-1">Project ID</div>
+                                  <div className="text-sm font-black text-primary-600 dark:text-primary-400 mb-2 truncate" title={p.project_code}>{p.project_code}</div>
+                                  <QRCode value={p.project_code} size={80} className="bg-white p-1 rounded" />
+                                </div>
+                              </div>
+                              
+                              <div className="flex gap-4 overflow-x-auto pb-2">
+                                {(projectWorkflows[p.id] || []).map(wId => {
+                                  const wf = workflows.find(w => w.id === wId);
+                                  if (!wf || !wf.batch_id) return null;
+                                  return (
+                                    <div key={wf.id} className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 h-[180px] w-[160px] shrink-0">
+                                      <div className="text-xs text-gray-700 dark:text-gray-300 mb-1 truncate" title={`Batch ID (${wf.name})`}>Batch ID ({wf.name})</div>
+                                      <div className="text-sm font-black text-primary-600 dark:text-primary-400 mb-2 truncate" title={wf.batch_id}>{wf.batch_id}</div>
+                                      <QRCode value={wf.batch_id} size={80} className="bg-white p-1 rounded" />
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </div>
                         );
@@ -633,7 +642,7 @@ export default function CreatePWS() {
                               <div className="flex justify-between items-start mb-4 pb-4 border-b border-gray-100 dark:border-gray-800">
                                 <div className="flex items-center gap-3 text-gray-900 dark:text-gray-100">
                                   <div className="p-2 bg-[#222] text-primary-600"><GitBranch size={16} /></div>
-                                  <span className="font-bold text-lg">{wf.name}</span>
+                                  <span className="font-bold text-lg">{wf.name}</span> {wf.batch_id && <span className="ml-3 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-0.5 text-xs rounded border border-gray-200 dark:border-gray-600 font-mono tracking-wider">BATCH: {wf.batch_id}</span>}
                                 </div>
                                 <button onClick={() => removeAssignment(selectedProjectId, wId, setProjectWorkflows)} className="text-red-500 hover:text-red-400 p-2">
                                   <Trash2 size={16} />
@@ -793,10 +802,7 @@ export default function CreatePWS() {
                       <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Target Date</label>
                       <input type="date" value={targetDate} onChange={e => setTargetDate(e.target.value)} className="aiq-input" />
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Batch ID</label>
-                      <input type="text" value={batchId} onChange={e => setBatchId(e.target.value)} className="aiq-input" />
-                    </div>
+
                   </div>
                 )}
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800 mt-4">

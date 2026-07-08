@@ -13,6 +13,8 @@ import {
   listQualityNotes,
   getQualitySummary,
   uploadQualityEvidence,
+  getPWSItems,
+  getPWSAssignments,
 } from '../api/client'
 
 const SEVERITY_STYLE = {
@@ -71,15 +73,24 @@ export default function QualityManagement() {
   const [approving, setApproving] = useState(null)
   const [evidence, setEvidence] = useState({})
   const [dropzoneKey, setDropzoneKey] = useState(0) // bump to clear EvidenceDropzone after a save
+  const [pwsItems, setPwsItems] = useState([])
+  const [pwsAssignments, setPwsAssignments] = useState([])
 
   useEffect(() => {
     let cancelled = false
     async function load() {
       try {
-        const [notesRes, summaryRes] = await Promise.all([listQualityNotes(), getQualitySummary()])
+        const [notesRes, summaryRes, itemsRes, assignsRes] = await Promise.all([
+          listQualityNotes(), 
+          getQualitySummary(),
+          getPWSItems().catch(() => ({ data: [] })),
+          getPWSAssignments().catch(() => ({ data: [] }))
+        ])
         if (cancelled) return
         setNotes(notesRes.data.map((n) => ({ ...n, note_id: toNoteId(n.id) })))
         setSummary(summaryRes.data)
+        setPwsItems(itemsRes.data || [])
+        setPwsAssignments(assignsRes.data || [])
         setLive(true)
       } catch (err) {
         console.warn('Quality API not reachable yet, showing sample data', err)
@@ -192,11 +203,11 @@ export default function QualityManagement() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 mb-8">
+        <div className="xl:col-span-2">
+          <QualityNoteForm onSave={handleSave} projectOptions={projectOptions} pwsItems={pwsItems} pwsAssignments={pwsAssignments} />
+        </div>
         <div className="xl:col-span-3">
           <EvidenceDropzone key={dropzoneKey} onChange={setEvidence} />
-        </div>
-        <div className="xl:col-span-2">
-          <QualityNoteForm onSave={handleSave} projectOptions={projectOptions} />
         </div>
       </div>
 
