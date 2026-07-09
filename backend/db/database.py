@@ -64,6 +64,28 @@ def init_db() -> None:
     except Exception:
         # Expected if column already exists
         pass
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS inventory_items (
+                    id SERIAL PRIMARY KEY,
+                    item_name VARCHAR(1000) NOT NULL,
+                    quantity FLOAT DEFAULT 1.0,
+                    unit_price FLOAT DEFAULT 0.0,
+                    total_amount FLOAT DEFAULT 0.0,
+                    hsn_code VARCHAR(255),
+                    invoice_id INTEGER NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+                    invoice_number VARCHAR(200),
+                    source_file_name VARCHAR(500),
+                    notes TEXT,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    updated_at TIMESTAMP DEFAULT NOW()
+                )
+            """))
+            conn.commit()
+            logger.info("Ensured inventory_items table exists")
+    except Exception:
+        pass
 
 
 def seed_default_admin() -> None:

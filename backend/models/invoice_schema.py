@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 class LineItem(BaseModel):
     name: str
+    is_physical_product: bool = Field(default=True, description="True if a tangible physical product/good. False for fees, taxes, shipping, discounts, or terms.")
     hsn_code: Optional[str] = None
     unit_price: float = 0.0
     quantity: float = 1.0

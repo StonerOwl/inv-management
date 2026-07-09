@@ -418,3 +418,43 @@ class NoteAttachment(Base):
             "file_path": self.file_path,
             "file_type": self.file_type
         }
+
+
+class InventoryItem(Base):
+    """
+    Represents an item added to inventory from a parsed invoice.
+    Created automatically when an invoice is registered to a project.
+    Each row corresponds to a line item extracted from the invoice PDF via Ollama.
+    """
+    __tablename__ = "inventory_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    item_name = Column(String(1000), nullable=False)
+    quantity = Column(Float, default=1.0)
+    unit_price = Column(Float, default=0.0)
+    total_amount = Column(Float, default=0.0)
+    hsn_code = Column(String(255), nullable=True)
+    invoice_id = Column(Integer, ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False, index=True)
+    invoice_number = Column(String(200), nullable=True)   # denormalized for fast display
+    source_file_name = Column(String(500), nullable=True)  # which PDF it came from
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    invoice = relationship("Invoice")
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "item_name": self.item_name,
+            "quantity": self.quantity,
+            "unit_price": self.unit_price,
+            "total_amount": self.total_amount,
+            "hsn_code": self.hsn_code,
+            "invoice_id": self.invoice_id,
+            "invoice_number": self.invoice_number,
+            "source_file_name": self.source_file_name,
+            "notes": self.notes,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }

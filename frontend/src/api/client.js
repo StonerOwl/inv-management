@@ -142,8 +142,16 @@ export const deletePWSItem = (id) => api.delete(`/pws/items/${id}`)
 export const getPWSAssignments = () => api.get('/pws/assignments')
 export const createPWSAssignment = (data) => api.post('/pws/assignments', data)
 export const deletePWSAssignment = (parentId, childId) => api.delete(`/pws/assignments/${parentId}/${childId}`)
-export const assignInvoiceToProject = (projectId, invoiceId) => api.post('/pws/invoice-project', { project_id: projectId, invoice_id: invoiceId })
+export const assignInvoiceToProject = (projectId, invoiceId, selectedLineItemIds = null) => api.post('/pws/invoice-project', { project_id: projectId, invoice_id: invoiceId, ...(selectedLineItemIds ? { selected_line_item_ids: selectedLineItemIds } : {}) })
 export const getProjectAnalytics = (projectId) => api.get(`/pws/projects/${projectId}/analytics`)
+
+export const getInvoiceAssignments = () => api.get('/pws/invoice-project/all')
+
+// ── Inventory Items ───────────────────────────────────────────────────────────
+export const listInventoryItems = (params) => api.get('/inventory/items', { params })
+export const getInventoryItem = (id) => api.get(`/inventory/items/${id}`)
+export const updateInventoryItem = (id, data) => api.put(`/inventory/items/${id}`, data)
+export const deleteInventoryItem = (id) => api.delete(`/inventory/items/${id}`)
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 export const getDashboardData = () => api.get('/dashboard')

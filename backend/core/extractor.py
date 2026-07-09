@@ -23,7 +23,7 @@ CRITICAL RULES:
 5. GSTIN is exactly 15 alphanumeric characters (e.g., 29AABCT1332L1ZD).
 6. PAN is exactly 10 alphanumeric characters (e.g., AABCT1332L).
 7. CIN starts with U or L and is 21 characters.
-8. Line items: Include ONLY physical products/goods. EXCLUDE shipping charges, marketplace fees, handling fees, service charges, platform fees.
+8. Line items: Include all rows from the table. Do not filter.
 9. For each line item, carefully read the table columns. Map Description→name, HSN/SAC→hsn_code, Unit Price→unit_price, Qty→quantity, Net Amount→net_amount, Tax Rate→tax_rate (number only, e.g. 18 not 18%), Tax Type→tax_type (IGST/CGST/SGST), Tax Amount→tax_amount, Total Amount→total_amount.
 """
 

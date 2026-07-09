@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from api.dependencies import get_db
-from db.models import PWSItem, PWSAssignment, Invoice, InvoiceProjectAssignment
+from db.models import PWSItem, PWSAssignment, Invoice, InvoiceProjectAssignment, InventoryItem, LineItem
 
 router = APIRouter(prefix="/pws", tags=["PWS Management"])
 
@@ -29,12 +29,18 @@ class PWSAssignmentCreate(BaseModel):
 class InvoiceProjectAssignmentCreate(BaseModel):
     invoice_id: int
     project_id: str
+    selected_line_item_ids: Optional[List[int]] = None
 
 
 @router.get("/items", response_model=List[Dict[str, Any]])
 def get_pws_items(db: Session = Depends(get_db)):
     items = db.query(PWSItem).all()
     return [item.to_dict() for item in items]
+
+@router.get("/invoice-project/all")
+def get_all_invoice_assignments(db: Session = Depends(get_db)):
+    assignments = db.query(InvoiceProjectAssignment).all()
+    return [{"invoice_id": a.invoice_id, "project_id": a.project_id} for a in assignments]
 
 @router.post("/items", response_model=Dict[str, Any])
 def create_pws_item(item: PWSItemCreate, db: Session = Depends(get_db)):
@@ -132,6 +138,33 @@ def assign_invoice_to_project(assign: InvoiceProjectAssignmentCreate, db: Sessio
 
     assignment = InvoiceProjectAssignment(invoice_id=assign.invoice_id, project_id=assign.project_id)
     db.add(assignment)
+
+    # ── Auto-create inventory items from the invoice's parsed line items ──
+    # Only create if no inventory items exist yet for this invoice (idempotent)
+    existing_inventory = db.query(InventoryItem).filter_by(invoice_id=invoice.id).count()
+    if existing_inventory == 0:
+        if assign.selected_line_item_ids is not None:
+            line_items = db.query(LineItem).filter(
+                LineItem.invoice_id == invoice.id,
+                LineItem.id.in_(assign.selected_line_item_ids)
+            ).all()
+        else:
+            line_items = db.query(LineItem).filter_by(invoice_id=invoice.id).all()
+            
+        for li in line_items:
+                
+            inv_item = InventoryItem(
+                item_name=li.name,
+                quantity=li.quantity or 1.0,
+                unit_price=li.unit_price or 0.0,
+                total_amount=li.total_amount or 0.0,
+                hsn_code=li.hsn_code,
+                invoice_id=invoice.id,
+                invoice_number=invoice.invoice_number,
+                source_file_name=invoice.file_name,
+            )
+            db.add(inv_item)
+
     try:
         db.commit()
         db.refresh(assignment)
