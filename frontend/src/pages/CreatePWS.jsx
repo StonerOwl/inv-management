@@ -651,6 +651,23 @@ export default function CreatePWS() {
 
                                 <div className="text-gray-700 dark:text-gray-300">Product</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.product}</div>
                                 <div className="text-gray-700 dark:text-gray-300">Work Order / Workflow</div><div className="font-semibold text-gray-900 dark:text-gray-100">{projectWorkflows[p.id]?.length > 0 ? projectWorkflows[p.id].map(wId => workflows.find(w => w.id === wId)?.name).filter(Boolean).join(', ') : 'Not Assigned'}</div>
+                                {projectWorkflows[p.id]?.some(wId => workflows.find(w => w.id === wId)?.batch_id) && (
+                                  <>
+                                    <div className="text-gray-700 dark:text-gray-300 self-start pt-0.5">Batch ID</div>
+                                    <div className="flex flex-col gap-1">
+                                      {projectWorkflows[p.id].map(wId => {
+                                        const wf = workflows.find(w => w.id === wId);
+                                        if (!wf?.batch_id) return null;
+                                        return (
+                                          <div key={wId} className="flex items-center gap-2">
+                                            <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">{wf.batch_id}</span>
+                                            <span className="text-[10px] text-gray-400 dark:text-gray-500">({wf.name})</span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </>
+                                )}
                                 <div className="text-gray-700 dark:text-gray-300">Category</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.category}</div>
                                 <div className="text-gray-700 dark:text-gray-300">Start Date</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.start_date}</div>
                                 <div className="text-gray-700 dark:text-gray-300">Target Date</div><div className="font-semibold text-gray-900 dark:text-gray-100">{p.target_date}</div>
