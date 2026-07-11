@@ -92,7 +92,6 @@ export default function AppLayout() {
     }
   };
 
-  // Determine if Ask AI or Settings are "active" for header button highlighting
   const isQueryActive = activeTab === 'query';
   const isSettingsActive = activeTab === 'settings';
 
@@ -104,7 +103,7 @@ export default function AppLayout() {
       <div className="flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans selection:bg-primary-100 selection:text-primary-900">
 
         {/* ── Header ── */}
-        <header className="flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shrink-0 z-20">
+        <header className="flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shrink-0">
           <Link to="/dashboard" className="flex items-center gap-3 shrink-0">
             <svg width="42" height="32" viewBox="0 0 46 36" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="0" y="0" width="22" height="22" rx="4" fill="#2563EB" />
@@ -121,7 +120,6 @@ export default function AppLayout() {
             </div>
           </Link>
 
-          {/* Search Bar */}
           <div className="hidden md:flex flex-1 max-w-xl mx-8 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input
@@ -135,7 +133,6 @@ export default function AppLayout() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            {/* Ask AI — active state indicator */}
             <Link
               to="/query"
               onClick={() => setActiveTab('query')}
@@ -153,7 +150,6 @@ export default function AppLayout() {
               <HelpCircle size={18} /> Help & Support
             </button>
 
-            {/* Settings — active state indicator */}
             <Link
               to="/settings"
               onClick={() => setActiveTab('settings')}
@@ -194,7 +190,7 @@ export default function AppLayout() {
         </header>
 
         {/* ── Tab Bar ── */}
-        <nav className="flex items-center bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shrink-0 px-6 py-2 gap-2 shadow-sm relative z-10 overflow-x-auto">
+        <nav className="flex items-center bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shrink-0 px-6 py-2 gap-2 shadow-sm relative overflow-x-auto">
           {MAIN_TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -216,7 +212,7 @@ export default function AppLayout() {
         </nav>
 
         {/* ── Main Layout Area ── */}
-        <div className={clsx("flex flex-1 overflow-hidden relative z-0", settings.sidebarLayout === 'right' ? 'flex-row-reverse' : '')}>
+        <div className={clsx("flex flex-1 overflow-hidden relative", settings.sidebarLayout === 'right' ? 'flex-row-reverse' : '')}>
           {showSidebar && (
             <aside className="w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shrink-0 overflow-y-auto flex flex-col py-6 z-10">
               <div className="px-6 mb-4">
@@ -245,16 +241,14 @@ export default function AppLayout() {
             </aside>
           )}
 
-          <main className="flex-1 overflow-y-auto bg-gray-100/50 dark:bg-gray-950 relative z-0 flex flex-col">
+          <main className="flex-1 overflow-y-auto bg-gray-100/50 dark:bg-gray-950 relative flex flex-col">
             <div className="flex-1 p-8">
               <Outlet />
             </div>
 
             {/* ── Footer ── */}
             <footer className="shrink-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 px-8 py-4 flex flex-col sm:flex-row items-center justify-between text-xs font-medium text-gray-700 dark:text-gray-300">
-              <div>
-                © 2026 AIQ Platform. All rights reserved.
-              </div>
+              <div>© 2026 AIQ Platform. All rights reserved.</div>
               <div className="flex items-center gap-2">
                 <span className="capitalize">{MAIN_TABS.find(t => t.id === activeTab)?.label || activeTab.replace('-', ' ')}</span>
                 <ChevronRight size={12} />

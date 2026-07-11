@@ -16,11 +16,10 @@ export default function IntegrateDevices() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Modal & Camera State
   const [showModal, setShowModal] = useState(false);
   const [newDevice, setNewDevice] = useState({ name: '', category: 'Sensor Arrays', subtype: '', interface: 'Wi-Fi', linked_process: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [pairingMode, setPairingMode] = useState('manual'); // 'manual', 'camera', 'qr'
+  const [pairingMode, setPairingMode] = useState('manual');
   const [qrSessionId, setQrSessionId] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
   const [editingDevice, setEditingDevice] = useState(null);
@@ -46,9 +45,7 @@ export default function IntegrateDevices() {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -62,9 +59,7 @@ export default function IntegrateDevices() {
       navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
           streamRef.current = stream;
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-          }
+          if (videoRef.current) videoRef.current.srcObject = stream;
         })
         .catch(err => {
           console.error("Camera error", err);
@@ -75,7 +70,6 @@ export default function IntegrateDevices() {
     }
   }, [pairingMode]);
 
-  // Polling for QR Code Pairing
   useEffect(() => {
     let interval;
     if (showModal && pairingMode === 'qr' && qrSessionId) {
@@ -85,7 +79,6 @@ export default function IntegrateDevices() {
           const res = await getDevices();
           const found = res.data.find(d => d.name.includes(`Mobile Cam ${shortId}`));
           if (found) {
-            // Found it! Mobile device paired successfully.
             await fetchData();
             handleModalClose();
             alert('Mobile device paired successfully!');
@@ -182,10 +175,37 @@ export default function IntegrateDevices() {
     return true;
   });
 
+  const ModalForm = ({ title, subtitle, icon, onSubmit, onClose, children, submitLabel }) => (
+    <div
+      className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] overflow-y-auto"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="min-h-full flex items-center justify-center p-4 py-8">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg relative">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 z-10 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full transition-colors"
+          >
+            <X size={18} />
+          </button>
+          <div className="p-6">
+            <h2 className="text-xl font-bold text-[#1a2b4b] mb-1 flex items-center gap-2 pr-8">
+              {icon} {title}
+            </h2>
+            <p className="text-xs text-slate-500 mb-6">{subtitle}</p>
+            <form onSubmit={onSubmit} className="space-y-4">
+              {children}
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-6 font-sans">
 
-      {/* Header - Simplified */}
+      {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-extrabold text-[#1a2b4b]">Integrate Devices</h1>
         <p className="text-sm text-slate-500 mt-1">Connect, configure, calibrate, monitor and govern sensing, imaging, spectral, X-ray and analytical instruments across AIQ workflows.</p>
@@ -193,43 +213,11 @@ export default function IntegrateDevices() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <StatCard
-          icon={<MonitorSmartphone size={24} className="text-white" />}
-          iconBg="bg-blue-600"
-          title="Total Devices"
-          value={stats.top_cards.total_devices}
-          sub={<span className="text-green-600 font-bold">{stats.top_cards.total_devices_trend}</span>}
-        />
-        <StatCard
-          icon={<Wifi size={24} className="text-white" />}
-          iconBg="bg-emerald-500"
-          title="Online"
-          value={stats.top_cards.online}
-          sub={`${stats.top_cards.online_percentage}% of total`}
-        />
-        <StatCard
-          icon={<Settings size={24} className="text-white" />}
-          iconBg="bg-orange-400"
-          title="Pending Setup"
-          value={stats.top_cards.pending_setup}
-          sub={`${stats.top_cards.pending_percentage}% of total`}
-          chartData={null} stroke="#f97316"
-        />
-        <StatCard
-          icon={<AlertTriangle size={24} className="text-white" />}
-          iconBg="bg-purple-600"
-          title="Calibration Due"
-          value={stats.top_cards.calibration_due}
-          sub={`${stats.top_cards.calibration_percentage}% of total`}
-          chartData={null} stroke="#9333ea"
-        />
-        <StatCard
-          icon={<AlertTriangle size={24} className="text-white" />}
-          iconBg="bg-red-500"
-          title="Data Sync Alerts"
-          value={stats.top_cards.data_sync_alerts}
-          sub={<span className="text-blue-600 hover:underline cursor-pointer">View all alerts →</span>}
-        />
+        <StatCard icon={<MonitorSmartphone size={24} className="text-white" />} iconBg="bg-blue-600" title="Total Devices" value={stats.top_cards.total_devices} sub={<span className="text-green-600 font-bold">{stats.top_cards.total_devices_trend}</span>} />
+        <StatCard icon={<Wifi size={24} className="text-white" />} iconBg="bg-emerald-500" title="Online" value={stats.top_cards.online} sub={`${stats.top_cards.online_percentage}% of total`} />
+        <StatCard icon={<Settings size={24} className="text-white" />} iconBg="bg-orange-400" title="Pending Setup" value={stats.top_cards.pending_setup} sub={`${stats.top_cards.pending_percentage}% of total`} stroke="#f97316" />
+        <StatCard icon={<AlertTriangle size={24} className="text-white" />} iconBg="bg-purple-600" title="Calibration Due" value={stats.top_cards.calibration_due} sub={`${stats.top_cards.calibration_percentage}% of total`} stroke="#9333ea" />
+        <StatCard icon={<AlertTriangle size={24} className="text-white" />} iconBg="bg-red-500" title="Data Sync Alerts" value={stats.top_cards.data_sync_alerts} sub={<span className="text-blue-600 hover:underline cursor-pointer">View all alerts →</span>} />
       </div>
 
       {/* Category Tabs */}
@@ -293,8 +281,8 @@ export default function IntegrateDevices() {
         </div>
       </div>
 
+      {/* Main Table */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-8">
-        {/* Main Table */}
         <div className="xl:col-span-4 bg-white p-4 rounded-lg shadow-sm border border-slate-200 min-h-[400px] flex flex-col">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-2">
             <h2 className="text-lg font-bold text-[#1a2b4b]">Connected Devices at Process Level</h2>
@@ -356,7 +344,8 @@ export default function IntegrateDevices() {
                 {filteredDevices.map((d, i) => (
                   <tr key={i} className="hover:bg-slate-50">
                     <td className="px-1 py-2 lg:px-2 font-semibold text-slate-800 flex items-center gap-1.5 truncate">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></div> <span className="truncate">{d.name}</span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></div>
+                      <span className="truncate">{d.name}</span>
                     </td>
                     <td className="px-1 py-2 lg:px-2 truncate">{d.category}</td>
                     <td className="px-1 py-2 lg:px-2 flex items-center gap-1 truncate">
@@ -366,20 +355,18 @@ export default function IntegrateDevices() {
                       {d.interface}
                     </td>
                     <td className="px-1 py-2 lg:px-2">
-                      <span className="flex items-center gap-1 text-green-600 font-semibold"><div className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0"></div> {d.status}</span>
+                      <span className="flex items-center gap-1 text-green-600 font-semibold">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0"></div> {d.status}
+                      </span>
                     </td>
                     <td className="px-1 py-2 lg:px-2 text-slate-800 truncate">{d.linked_process}</td>
                     <td className="px-1 py-2 lg:px-2 text-blue-600 font-medium truncate">{d.quality_notes_count > 0 ? `${d.quality_notes_count} notes` : 'N/A'}</td>
                     <td className="px-1 py-2 lg:px-2 text-slate-500 truncate">{d.last_sync_mins_ago} min ago</td>
                     <td className="px-1 py-2 lg:px-2 text-green-600 truncate">{d.calibration_due_days ? `Due in ${d.calibration_due_days} days` : 'N/A'}</td>
                     <td className="px-1 py-2 lg:px-2 text-slate-400 text-center relative">
-                      <button
-                        onClick={() => setOpenMenuId(openMenuId === i ? null : i)}
-                        className="hover:text-slate-700 p-1 rounded-full hover:bg-slate-100 transition-colors"
-                      >
+                      <button onClick={() => setOpenMenuId(openMenuId === i ? null : i)} className="hover:text-slate-700 p-1 rounded-full hover:bg-slate-100 transition-colors">
                         <MoreHorizontal size={16} className="mx-auto" />
                       </button>
-
                       {openMenuId === i && (
                         <div className="absolute right-8 top-8 w-32 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-20 text-left overflow-hidden">
                           <button onClick={() => { setEditingDevice(d); setOpenMenuId(null); }} className="w-full px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 text-left font-medium transition-colors">Edit Device</button>
@@ -391,9 +378,7 @@ export default function IntegrateDevices() {
                   </tr>
                 ))}
                 {filteredDevices.length === 0 && (
-                  <tr>
-                    <td colSpan="9" className="px-2 py-8 text-center text-slate-400 text-sm">No devices found.</td>
-                  </tr>
+                  <tr><td colSpan="9" className="px-2 py-8 text-center text-slate-400 text-sm">No devices found.</td></tr>
                 )}
               </tbody>
             </table>
@@ -401,8 +386,8 @@ export default function IntegrateDevices() {
         </div>
       </div>
 
+      {/* Monitoring & Health + Alerts */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-8">
-        {/* Monitoring & Health */}
         <div className="xl:col-span-3 bg-white p-4 rounded-lg shadow-sm border border-slate-200">
           <h2 className="text-lg font-bold text-[#1a2b4b] mb-4">Monitoring & Instrument Health</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-4 border border-slate-100 rounded-lg p-4 bg-slate-50/30">
@@ -412,7 +397,6 @@ export default function IntegrateDevices() {
             <MetricBlock title="Humidity" value={`${stats.monitoring.humidity.value}%`} label={stats.monitoring.humidity.label} labelColor="text-blue-500" />
             <MetricBlock title="Power/Battery" value={`${stats.monitoring.power_battery.value}%`} label={stats.monitoring.power_battery.label} labelColor="text-green-600" />
             <MetricBlock title="Uptime" value={`${stats.monitoring.uptime.value}%`} label={stats.monitoring.uptime.label} labelColor="text-slate-500" />
-
             <div className="flex flex-col items-center justify-center border border-slate-100 rounded bg-white p-2 text-center w-full min-w-0">
               <span className="text-xs font-semibold text-slate-500">Calibration Status</span>
               <span className="text-lg font-bold text-slate-800">{stats.monitoring.calibration_status.due} / {stats.monitoring.calibration_status.total}</span>
@@ -427,7 +411,6 @@ export default function IntegrateDevices() {
                 </ResponsiveContainer>
               </div>
             </div>
-
             <div className="flex flex-col items-center justify-center border border-slate-100 rounded bg-white p-2 text-center w-full min-w-0">
               <span className="text-xs font-semibold text-slate-500">Data Throughput</span>
               <span className="text-lg font-bold text-slate-800">{stats.monitoring.data_throughput.value} {stats.monitoring.data_throughput.unit}</span>
@@ -443,7 +426,6 @@ export default function IntegrateDevices() {
           </div>
         </div>
 
-        {/* Alerts & Events */}
         <div className="xl:col-span-1 bg-white p-4 rounded-lg shadow-sm border border-slate-200">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-[#1a2b4b]">Alerts & Events</h2>
@@ -469,7 +451,7 @@ export default function IntegrateDevices() {
         </div>
       </div>
 
-      {/* Bottom Flow - Layout Fixed */}
+      {/* Process-Aware Data Flow */}
       <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm border border-slate-200">
         <h2 className="text-lg font-bold text-[#1a2b4b] mb-4">Process-Aware Data Flow</h2>
         <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-4 overflow-x-auto scrollbar-hide">
@@ -487,220 +469,222 @@ export default function IntegrateDevices() {
         </div>
       </div>
 
-      {/* Add Device Modal */}
+      {/* ── Add Device Modal ── */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto overflow-x-hidden relative">
-            <button onClick={handleModalClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 z-10 bg-slate-100 p-1 rounded-full">
-              <X size={20} />
-            </button>
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-[#1a2b4b] mb-1 flex items-center gap-2"><Plus size={20} className="text-blue-600" /> Add Device to Process</h2>
-              <p className="text-xs text-slate-500 mb-6">Register a new instrument or connect via live stream.</p>
+        <div
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] overflow-y-auto"
+          onClick={(e) => { if (e.target === e.currentTarget) handleModalClose(); }}
+        >
+          <div className="min-h-full flex items-center justify-center p-4 py-10">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg relative">
+              <button onClick={handleModalClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 z-10 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full transition-colors">
+                <X size={18} />
+              </button>
+              <div className="p-6">
+                <h2 className="text-xl font-bold text-[#1a2b4b] mb-1 flex items-center gap-2 pr-8">
+                  <Plus size={20} className="text-blue-600" /> Add Device to Process
+                </h2>
+                <p className="text-xs text-slate-500 mb-6">Register a new instrument or connect via live stream.</p>
 
-              <form onSubmit={handleAddDevice} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Device Name</label>
-                  <input type="text" required value={newDevice.name} onChange={e => setNewDevice({ ...newDevice, name: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="e.g. VisionCam Array-03" />
-                </div>
+                <form onSubmit={handleAddDevice} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Device Name</label>
+                    <input type="text" value={newDevice.name} onChange={e => setNewDevice({ ...newDevice, name: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="e.g. VisionCam Array-03" />
+                  </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
-                    <select value={newDevice.category} onChange={e => setNewDevice({ ...newDevice, category: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white">
-                      <option>Sensor Arrays</option>
-                      <option>Cameras / Camera Arrays</option>
-                      <option>Spectral</option>
-                      <option>Ultrasonic / Acoustics</option>
-                      <option>X-Ray</option>
-                      <option>Analytical Instruments</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Subtype</label>
-                    <input type="text" value={newDevice.subtype} onChange={e => setNewDevice({ ...newDevice, subtype: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="e.g. Visual, Thermal..." />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Interface</label>
-                    <select value={newDevice.interface} onChange={e => setNewDevice({ ...newDevice, interface: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white">
-                      <option>Wi-Fi</option>
-                      <option>Ethernet</option>
-                      <option>BLE</option>
-                      <option>USB</option>
-                      <option>REST API</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Linked Process</label>
-                    <input type="text" value={newDevice.linked_process} onChange={e => setNewDevice({ ...newDevice, linked_process: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="e.g. Visual Inspection" />
-                  </div>
-                </div>
-
-                {/* Connection Integration */}
-                <div className="mt-6 border-t border-slate-200 pt-6">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
-                    <label className="block text-xs font-semibold text-slate-700">Live Device Pairing (Optional)</label>
-                    <div className="flex items-center gap-3">
-                      <button type="button" onClick={() => setPairingMode(pairingMode === 'camera' ? 'manual' : 'camera')} className="text-xs font-bold text-blue-600 flex items-center gap-1 hover:underline">
-                        <Video size={14} /> {pairingMode === 'camera' ? 'Stop Camera' : 'Use Webcam'}
-                      </button>
-                      <button type="button" onClick={() => pairingMode === 'qr' ? setPairingMode('manual') : openQrMode()} className="text-xs font-bold text-purple-600 flex items-center gap-1 hover:underline">
-                        <Smartphone size={14} /> {pairingMode === 'qr' ? 'Cancel QR' : 'Pair via QR'}
-                      </button>
-                      <button type="button" onClick={() => setPairingMode(pairingMode === 'api' ? 'manual' : 'api')} className="text-xs font-bold text-green-600 flex items-center gap-1 hover:underline">
-                        <Key size={14} /> {pairingMode === 'api' ? 'Cancel API' : 'Generate API Key'}
-                      </button>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+                      <select value={newDevice.category} onChange={e => setNewDevice({ ...newDevice, category: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white">
+                        <option>Sensor Arrays</option>
+                        <option>Cameras / Camera Arrays</option>
+                        <option>Spectral</option>
+                        <option>Ultrasonic / Acoustics</option>
+                        <option>X-Ray</option>
+                        <option>Analytical Instruments</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Subtype</label>
+                      <input type="text" value={newDevice.subtype} onChange={e => setNewDevice({ ...newDevice, subtype: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="e.g. Visual, Thermal..." />
                     </div>
                   </div>
 
-                  {pairingMode === 'camera' && (
-                    <div className="w-full aspect-video bg-black rounded-lg overflow-hidden relative border border-slate-300">
-                      <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover"></video>
-                      <div className="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 bg-white rounded-full"></div> LIVE
-                      </div>
-                      <div className="absolute inset-0 border-2 border-dashed border-white/30 m-4 rounded pointer-events-none"></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Interface</label>
+                      <select value={newDevice.interface} onChange={e => setNewDevice({ ...newDevice, interface: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white">
+                        <option>Wi-Fi</option>
+                        <option>Ethernet</option>
+                        <option>BLE</option>
+                        <option>USB</option>
+                        <option>REST API</option>
+                      </select>
                     </div>
-                  )}
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Linked Process</label>
+                      <input type="text" value={newDevice.linked_process} onChange={e => setNewDevice({ ...newDevice, linked_process: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="e.g. Visual Inspection" />
+                    </div>
+                  </div>
 
-                  {pairingMode === 'qr' && (
-                    <div className="w-full bg-slate-50 border border-slate-200 rounded-lg p-6 flex flex-col items-center justify-center text-center">
-                      <div className="bg-white p-3 rounded-xl shadow-sm mb-4 border border-slate-200">
-                        <QRCode
-                          value={`${window.location.origin}/mobile-pair?session=${qrSessionId}`}
-                          size={160}
-                          level="M"
-                        />
-                      </div>
-                      <h3 className="font-bold text-slate-800 text-sm mb-1">Scan with your mobile phone</h3>
-                      <p className="text-xs text-slate-500 max-w-[250px] mb-4">Point your phone's camera at this QR code to instantly pair it as an edge vision device.</p>
-
-                      <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 animate-pulse mb-6">
-                        <Activity size={14} /> Waiting for connection...
-                      </div>
-
-                      <div className="border-t border-slate-200 pt-4 w-full text-center">
-                        <p className="text-[10px] text-slate-400 mb-2">Local Development Mode</p>
-                        <a
-                          href={`/mobile-pair?session=${qrSessionId}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-2 text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-semibold transition-colors"
-                        >
-                          <MonitorSmartphone size={14} /> Simulate on this computer
-                        </a>
+                  {/* Live Device Pairing */}
+                  <div className="border-t border-slate-200 pt-5">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
+                      <label className="block text-xs font-semibold text-slate-700">Live Device Pairing (Optional)</label>
+                      <div className="flex items-center gap-3">
+                        <button type="button" onClick={() => setPairingMode(pairingMode === 'camera' ? 'manual' : 'camera')} className="text-xs font-bold text-blue-600 flex items-center gap-1 hover:underline">
+                          <Video size={14} /> {pairingMode === 'camera' ? 'Stop Camera' : 'Use Webcam'}
+                        </button>
+                        <button type="button" onClick={() => pairingMode === 'qr' ? setPairingMode('manual') : openQrMode()} className="text-xs font-bold text-purple-600 flex items-center gap-1 hover:underline">
+                          <Smartphone size={14} /> {pairingMode === 'qr' ? 'Cancel QR' : 'Pair via QR'}
+                        </button>
+                        <button type="button" onClick={() => setPairingMode(pairingMode === 'api' ? 'manual' : 'api')} className="text-xs font-bold text-green-600 flex items-center gap-1 hover:underline">
+                          <Key size={14} /> {pairingMode === 'api' ? 'Cancel API' : 'Generate API Key'}
+                        </button>
                       </div>
                     </div>
-                  )}
 
-                  {pairingMode === 'api' && (
-                    <div className="w-full bg-slate-50 border border-slate-200 rounded-lg p-4">
-                      <h3 className="font-bold text-slate-800 text-sm mb-1 flex items-center gap-2"><Key size={16} className="text-green-600" /> Headless API Integration</h3>
-                      <p className="text-xs text-slate-500 mb-4">Use these credentials to push data from PLCs, X-Ray machines, or analytical instruments directly into the AIQ pipeline.</p>
-
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Endpoint URL</label>
-                          <div className="flex">
-                            <input readOnly value="https://api.aiq.app/v1/devices/ingest" className="w-full bg-slate-200 border-y border-l border-slate-300 rounded-l px-3 py-1.5 text-xs text-slate-600 font-mono outline-none" />
-                            <button type="button" className="bg-slate-300 hover:bg-slate-400 px-3 border border-slate-300 rounded-r transition-colors"><Copy size={12} className="text-slate-600" /></button>
-                          </div>
+                    {pairingMode === 'camera' && (
+                      <div className="w-full aspect-video bg-black rounded-lg overflow-hidden relative border border-slate-300">
+                        <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover"></video>
+                        <div className="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div> LIVE
                         </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Authorization Token</label>
-                          <div className="flex">
-                            <input readOnly value={`sk_test_${Math.random().toString(36).substring(2, 15)}`} className="w-full bg-slate-200 border-y border-l border-slate-300 rounded-l px-3 py-1.5 text-xs text-slate-600 font-mono outline-none" />
-                            <button type="button" className="bg-slate-300 hover:bg-slate-400 px-3 border border-slate-300 rounded-r transition-colors"><Copy size={12} className="text-slate-600" /></button>
+                        <div className="absolute inset-0 border-2 border-dashed border-white/30 m-4 rounded pointer-events-none"></div>
+                      </div>
+                    )}
+
+                    {pairingMode === 'qr' && (
+                      <div className="w-full bg-slate-50 border border-slate-200 rounded-lg p-6 flex flex-col items-center justify-center text-center">
+                        <div className="bg-white p-3 rounded-xl shadow-sm mb-4 border border-slate-200">
+                          <QRCode value={`${window.location.origin}/mobile-pair?session=${qrSessionId}`} size={160} level="M" />
+                        </div>
+                        <h3 className="font-bold text-slate-800 text-sm mb-1">Scan with your mobile phone</h3>
+                        <p className="text-xs text-slate-500 max-w-[250px] mb-4">Point your phone's camera at this QR code to instantly pair it as an edge vision device.</p>
+                        <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 animate-pulse mb-6">
+                          <Activity size={14} /> Waiting for connection...
+                        </div>
+                        <div className="border-t border-slate-200 pt-4 w-full text-center">
+                          <p className="text-[10px] text-slate-400 mb-2">Local Development Mode</p>
+                          <a href={`/mobile-pair?session=${qrSessionId}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-semibold transition-colors">
+                            <MonitorSmartphone size={14} /> Simulate on this computer
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
+                    {pairingMode === 'api' && (
+                      <div className="w-full bg-slate-50 border border-slate-200 rounded-lg p-4">
+                        <h3 className="font-bold text-slate-800 text-sm mb-1 flex items-center gap-2"><Key size={16} className="text-green-600" /> Headless API Integration</h3>
+                        <p className="text-xs text-slate-500 mb-4">Use these credentials to push data from PLCs, X-Ray machines, or analytical instruments directly into the AIQ pipeline.</p>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Endpoint URL</label>
+                            <div className="flex">
+                              <input readOnly value="https://api.aiq.app/v1/devices/ingest" className="w-full bg-slate-200 border-y border-l border-slate-300 rounded-l px-3 py-1.5 text-xs text-slate-600 font-mono outline-none" />
+                              <button type="button" className="bg-slate-300 hover:bg-slate-400 px-3 border border-slate-300 rounded-r transition-colors"><Copy size={12} className="text-slate-600" /></button>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Authorization Token</label>
+                            <div className="flex">
+                              <input readOnly value={`sk_test_${Math.random().toString(36).substring(2, 15)}`} className="w-full bg-slate-200 border-y border-l border-slate-300 rounded-l px-3 py-1.5 text-xs text-slate-600 font-mono outline-none" />
+                              <button type="button" className="bg-slate-300 hover:bg-slate-400 px-3 border border-slate-300 rounded-r transition-colors"><Copy size={12} className="text-slate-600" /></button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {pairingMode === 'manual' && (
-                    <div className="w-full h-24 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 text-xs flex-col gap-1 cursor-pointer hover:bg-slate-100 hover:border-blue-300 transition-colors" onClick={openQrMode}>
-                      <Settings size={24} />
-                      <span>Select an integration method above to pair</span>
-                    </div>
-                  )}
-                </div>
+                    {pairingMode === 'manual' && (
+                      <div className="w-full h-24 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 text-xs flex-col gap-1 cursor-pointer hover:bg-slate-100 hover:border-blue-300 transition-colors" onClick={openQrMode}>
+                        <Settings size={24} />
+                        <span>Select an integration method above to pair</span>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="mt-8 flex gap-3">
-                  <button type="button" onClick={handleModalClose} className="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors">Cancel</button>
-                  <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                    {isSubmitting ? <Activity size={16} className="animate-spin" /> : <LinkIcon size={16} />}
-                    {isSubmitting ? 'Connecting...' : 'Connect Device'}
-                  </button>
-                </div>
-              </form>
+                  <div className="flex gap-3 pt-2">
+                    <button type="button" onClick={handleModalClose} className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors">Cancel</button>
+                    <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                      {isSubmitting ? <Activity size={16} className="animate-spin" /> : <LinkIcon size={16} />}
+                      {isSubmitting ? 'Connecting...' : 'Connect Device'}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Edit Device Modal */}
+      {/* ── Edit Device Modal ── */}
       {editingDevice && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto overflow-x-hidden relative">
-            <button onClick={() => setEditingDevice(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 z-10 bg-slate-100 p-1 rounded-full">
-              <X size={20} />
-            </button>
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-[#1a2b4b] mb-1 flex items-center gap-2"><Settings size={20} className="text-blue-600" /> Edit Device</h2>
-              <p className="text-xs text-slate-500 mb-6">Update configuration for {editingDevice.name}.</p>
+        <div
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] overflow-y-auto"
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingDevice(null); }}
+        >
+          <div className="min-h-full flex items-center justify-center p-4 py-10">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg relative">
+              <button onClick={() => setEditingDevice(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 z-10 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full transition-colors">
+                <X size={18} />
+              </button>
+              <div className="p-6">
+                <h2 className="text-xl font-bold text-[#1a2b4b] mb-1 flex items-center gap-2 pr-8">
+                  <Settings size={20} className="text-blue-600" /> Edit Device
+                </h2>
+                <p className="text-xs text-slate-500 mb-6">Update configuration for {editingDevice.name}.</p>
 
-              <form onSubmit={handleEditDeviceSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Device Name</label>
-                  <input type="text" required value={editingDevice.name} onChange={e => setEditingDevice({ ...editingDevice, name: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="e.g. VisionCam Array-03" />
-                </div>
+                <form onSubmit={handleEditDeviceSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Device Name</label>
+                    <input type="text" required value={editingDevice.name} onChange={e => setEditingDevice({ ...editingDevice, name: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="e.g. VisionCam Array-03" />
+                  </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
-                    <select value={editingDevice.category} onChange={e => setEditingDevice({ ...editingDevice, category: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white">
-                      <option>Sensor Arrays</option>
-                      <option>Cameras / Camera Arrays</option>
-                      <option>Spectral</option>
-                      <option>Ultrasonic / Acoustics</option>
-                      <option>X-Ray</option>
-                      <option>Analytical Instruments</option>
-                    </select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+                      <select value={editingDevice.category} onChange={e => setEditingDevice({ ...editingDevice, category: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white">
+                        <option>Sensor Arrays</option>
+                        <option>Cameras / Camera Arrays</option>
+                        <option>Spectral</option>
+                        <option>Ultrasonic / Acoustics</option>
+                        <option>X-Ray</option>
+                        <option>Analytical Instruments</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Subtype</label>
+                      <input type="text" value={editingDevice.subtype} onChange={e => setEditingDevice({ ...editingDevice, subtype: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="e.g. Visual, Thermal..." />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Subtype</label>
-                    <input type="text" value={editingDevice.subtype} onChange={e => setEditingDevice({ ...editingDevice, subtype: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="e.g. Visual, Thermal..." />
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Interface</label>
-                    <select value={editingDevice.interface} onChange={e => setEditingDevice({ ...editingDevice, interface: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white">
-                      <option>Wi-Fi</option>
-                      <option>Ethernet</option>
-                      <option>BLE</option>
-                      <option>USB</option>
-                      <option>REST API</option>
-                    </select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Interface</label>
+                      <select value={editingDevice.interface} onChange={e => setEditingDevice({ ...editingDevice, interface: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white">
+                        <option>Wi-Fi</option>
+                        <option>Ethernet</option>
+                        <option>BLE</option>
+                        <option>USB</option>
+                        <option>REST API</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Linked Process</label>
+                      <input type="text" value={editingDevice.linked_process} onChange={e => setEditingDevice({ ...editingDevice, linked_process: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="e.g. Visual Inspection" />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Linked Process</label>
-                    <input type="text" value={editingDevice.linked_process} onChange={e => setEditingDevice({ ...editingDevice, linked_process: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="e.g. Visual Inspection" />
-                  </div>
-                </div>
 
-                <div className="mt-8 flex gap-3">
-                  <button type="button" onClick={() => setEditingDevice(null)} className="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors">Cancel</button>
-                  <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                    {isSubmitting ? <Activity size={16} className="animate-spin" /> : <CheckCircle size={16} />}
-                    {isSubmitting ? 'Saving...' : 'Save Changes'}
-                  </button>
-                </div>
-              </form>
+                  <div className="flex gap-3 pt-2">
+                    <button type="button" onClick={() => setEditingDevice(null)} className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors">Cancel</button>
+                    <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                      {isSubmitting ? <Activity size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                      {isSubmitting ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </div>
@@ -709,7 +693,7 @@ export default function IntegrateDevices() {
   );
 }
 
-// Subcomponents
+// ── Subcomponents ──────────────────────────────────────────────────────────────
 
 function StatCard({ icon, iconBg, title, value, sub, chartData, stroke }) {
   return (
@@ -721,9 +705,7 @@ function StatCard({ icon, iconBg, title, value, sub, chartData, stroke }) {
         <div>
           <p className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-wide">{title}</p>
           <p className="text-xl lg:text-2xl font-extrabold text-slate-800 leading-none lg:leading-tight">{value}</p>
-          <div className="text-[10px] lg:text-xs text-slate-500 flex items-center gap-1 mt-0.5 whitespace-nowrap">
-            {sub}
-          </div>
+          <div className="text-[10px] lg:text-xs text-slate-500 flex items-center gap-1 mt-0.5 whitespace-nowrap">{sub}</div>
         </div>
       </div>
       {chartData && (
@@ -793,9 +775,7 @@ function MetricBlock({ title, value, label, labelColor }) {
 function FlowBlock({ icon, title, desc }) {
   return (
     <div className="flex items-center gap-2 bg-white px-3 py-2 rounded border border-blue-100 shadow-sm flex-1 min-w-[150px]">
-      <div className="p-1.5 bg-blue-50 rounded-lg shrink-0 border border-blue-100">
-        {icon}
-      </div>
+      <div className="p-1.5 bg-blue-50 rounded-lg shrink-0 border border-blue-100">{icon}</div>
       <div>
         <p className="text-[11px] font-bold text-[#1a2b4b]">{title}</p>
         <p className="text-[9px] text-slate-500 leading-tight line-clamp-1">{desc}</p>
