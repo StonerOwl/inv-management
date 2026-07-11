@@ -13,6 +13,7 @@ from sqlalchemy import or_
 from db.database import get_db
 from db.repository import InvoiceRepository
 from api.dependencies import get_current_admin
+from db.models import InvoiceProjectAssignment, PWSItem
 from pydantic import BaseModel
 import uuid
 
@@ -41,6 +42,35 @@ def list_invoices(
     invoices, total = repo.list_invoices(
         skip=skip, limit=limit, status=status, search=search
     )
+
+    # Batch-fetch all project assignments for this page of invoices (avoids N+1).
+    invoice_ids = [inv.id for inv in invoices]
+    assignments = (
+        db.query(InvoiceProjectAssignment)
+        .filter(InvoiceProjectAssignment.invoice_id.in_(invoice_ids))
+        .all()
+    ) if invoice_ids else []
+
+    # Fetch the PWSItem rows needed for project_code + name
+    project_ids_needed = list({a.project_id for a in assignments})
+    pws_items = (
+        db.query(PWSItem)
+        .filter(PWSItem.id.in_(project_ids_needed))
+        .all()
+    ) if project_ids_needed else []
+    pws_map = {p.id: p for p in pws_items}
+
+    # Group assignments by invoice_id
+    from collections import defaultdict
+    assign_by_invoice = defaultdict(list)
+    for a in assignments:
+        pws = pws_map.get(a.project_id)
+        assign_by_invoice[a.invoice_id].append({
+            "project_id": a.project_id,
+            "project_code": pws.project_code if pws else None,
+            "project_name": pws.name if pws else None,
+        })
+
     return {
         "total": total,
         "skip": skip,
@@ -50,6 +80,7 @@ def list_invoices(
                 **inv.to_dict(),
                 "line_items": [li.to_dict() for li in inv.line_items],
                 "taxes": [t.to_dict() for t in inv.taxes],
+                "project_assignments": assign_by_invoice[inv.id],
             }
             for inv in invoices
         ],
@@ -324,4 +355,3 @@ def delete_invoice(invoice_id: int, db: Session = Depends(get_db)):
     if not ok:
         raise HTTPException(status_code=404, detail="Invoice not found")
     return {"message": "Deleted"}
-

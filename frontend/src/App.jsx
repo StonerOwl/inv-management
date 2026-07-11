@@ -23,6 +23,9 @@ import PlaceholderPage from './pages/PlaceholderPage'
 import RegisterInventory from './pages/RegisterInventory'
 import SearchInventory from './pages/SearchInventory'
 import CreatePWS from './pages/CreatePWS'
+import ManageWorkflow from './pages/ManageWorkflow'
+import IntegrateDevices from './pages/IntegrateDevices'
+import MobilePairing from './pages/MobilePairing'
 import Settings from './pages/Settings'
 import QualityManagement from './pages/QualityManagement'
 import { AuthProvider } from './context/AuthContext'
@@ -43,7 +46,7 @@ export default function App() {
               <BrowserRouter>
                 <Routes>
                   <Route path="/login" element={<Login />} />
-
+                  <Route path="/mobile-pair" element={<MobilePairing />} />
                   <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                     <Route path="/" element={<Navigate to="/dashboard-overview" replace />} />
                     <Route path="/dashboard" element={<Dashboard />} />
@@ -68,6 +71,8 @@ export default function App() {
                     <Route path="/users" element={<ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute>} />
                     <Route path="/admin/create-pws" element={<ProtectedRoute requiredRole="admin"><CreatePWS /></ProtectedRoute>} />
                     <Route path="/app-management/create-pws" element={<ProtectedRoute requiredRole="admin"><CreatePWS /></ProtectedRoute>} />
+                    <Route path="/app-management/manage-workflow" element={<ProtectedRoute requiredRole="admin"><ManageWorkflow /></ProtectedRoute>} />
+                    <Route path="/app-management/integrate-devices" element={<ProtectedRoute requiredRole="admin"><IntegrateDevices /></ProtectedRoute>} />
 
                     <Route path="/invoices/:id" element={<InvoiceDetail />} />
 
@@ -75,6 +80,8 @@ export default function App() {
                     <Route path="/analytics/farm-to-fork" element={<FarmToForkPage />} />
 
                     <Route path="/quality" element={<QualityManagement />} />
+
+                    <Route path="/ai-overview" element={<PlaceholderPage title="AI Overview" />} />
 
                     <Route path="/preview-bg" element={<BackgroundPreview />} />
                     <Route path="/modify" element={<ProtectedRoute requireUpload={true}><Modify /></ProtectedRoute>} />

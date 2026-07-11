@@ -11,7 +11,7 @@ from sqlalchemy import desc, or_
 from pydantic import BaseModel
 
 from db.database import get_db
-from db.models import InventoryItem
+from db.models import InventoryItem, InvoiceProjectAssignment, PWSItem
 
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
 
@@ -48,11 +48,42 @@ def list_inventory_items(
     total = q.count()
     items = q.order_by(desc(InventoryItem.created_at)).offset(skip).limit(limit).all()
 
+    # Batch-fetch project assignments for these invoice IDs (2 queries, no N+1)
+    invoice_ids = list({item.invoice_id for item in items})
+    assignments = (
+        db.query(InvoiceProjectAssignment)
+        .filter(InvoiceProjectAssignment.invoice_id.in_(invoice_ids))
+        .all()
+    ) if invoice_ids else []
+
+    project_ids_needed = list({a.project_id for a in assignments})
+    pws_items = (
+        db.query(PWSItem)
+        .filter(PWSItem.id.in_(project_ids_needed))
+        .all()
+    ) if project_ids_needed else []
+    pws_map = {p.id: p for p in pws_items}
+
+    from collections import defaultdict
+    projects_by_invoice = defaultdict(list)
+    for a in assignments:
+        pws = pws_map.get(a.project_id)
+        projects_by_invoice[a.invoice_id].append({
+            "project_id": a.project_id,
+            "project_code": pws.project_code if pws else None,
+            "project_name": pws.name if pws else None,
+        })
+
+    def item_with_project(item):
+        d = item.to_dict()
+        d["project_assignments"] = projects_by_invoice[item.invoice_id]
+        return d
+
     return {
         "total": total,
         "skip": skip,
         "limit": limit,
-        "items": [item.to_dict() for item in items],
+        "items": [item_with_project(item) for item in items],
     }
 
 

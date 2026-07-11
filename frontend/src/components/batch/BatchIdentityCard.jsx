@@ -1,25 +1,7 @@
 import { useRef } from 'react'
-import QRCode from 'react-qr-code'
 import Barcode from 'react-barcode'
-import { Printer, ScanLine } from 'lucide-react'
+import { Printer } from 'lucide-react'
 
-/**
- * "Project Batch Details" panel — drop this straight into the Projects
- * detail page (see AIQ_UI_Presentation_v1.pdf, "Projects Tab UI" screen).
- * It's self-contained: no routing, no shared-file edits required to use it.
- *
- * Usage inside the Project detail page:
- *   <BatchIdentityCard
- *     projectName={project.project_name}      // "Coconut Oil"
- *     projectId={project.project_id}          // "PRSJ-2026-001-B001"
- *     batchId={project.batch_id}               // "PBSJ-2026-001"
- *   />
- *
- * onScanNavigate is optional -- pass it if you want the printed QR's
- * "scan to view details" promise to actually go somewhere once a mobile
- * scan opens this same URL (e.g. via a query param); it's not required
- * for the card to render or print correctly.
- */
 export default function BatchIdentityCard({
   projectName,
   projectId,
@@ -95,24 +77,20 @@ export default function BatchIdentityCard({
           </div>
         </div>
 
-        {/* QR + Barcode, printable region */}
+        {/* Barcodes — printable region */}
         <div ref={printRef} className="print-grid flex gap-6">
           <div className="print-col flex flex-col items-center bg-white rounded-lg p-3">
-            <p className="print-label text-[10px] font-bold uppercase tracking-wide text-gray-500">
-              QR Code (Project Batch)
+            <p className="print-label text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-2">
+              Project ID
             </p>
-            <QRCode value={qrPayload} size={92} />
-            <p className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-gray-500">
-              <ScanLine size={10} /> Scan to view details
-            </p>
+            <Barcode value={projectId || 'N/A'} format="CODE128" height={56} width={1.4} fontSize={11} margin={4} />
           </div>
 
           <div className="print-col flex flex-col items-center bg-white rounded-lg p-3">
-            <p className="print-label text-[10px] font-bold uppercase tracking-wide text-gray-500">
-              Barcode (Batch ID)
+            <p className="print-label text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-2">
+              Batch ID
             </p>
-            <Barcode value={batchId} format="CODE128" height={44} width={1.5} fontSize={0} margin={4} displayValue={false} />
-            <p className="print-code mt-2 font-mono text-xs font-bold text-gray-900">{batchId}</p>
+            <Barcode value={batchId || 'N/A'} format="CODE128" height={56} width={1.4} fontSize={11} margin={4} />
           </div>
         </div>
       </div>

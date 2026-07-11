@@ -536,8 +536,8 @@ export default function InventoryDashboard() {
                           <button
                             onClick={() => openRegisterPopup(item)}
                             className={`ml-3 py-1.5 px-3.5 text-xs h-auto rounded font-semibold transition-colors ${isRegistered
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                                : 'aiq-btn-primary'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                              : 'aiq-btn-primary'
                               }`}
                           >
                             {isRegistered ? 'Registered ✓' : 'Register'}
@@ -547,7 +547,7 @@ export default function InventoryDashboard() {
 
                       {isExpanded && (
                         <tr>
-                          <td colSpan={7} className="bg-gray-50 dark:bg-gray-900/50 p-6 border-b border-gray-200 dark:border-gray-800">
+                          <td colSpan={8} className="bg-gray-50 dark:bg-gray-900/50 p-6 border-b border-gray-200 dark:border-gray-800">
                             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 shadow-sm w-full">
                               <h3 className="text-[15px] font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                                 <FileText size={18} className="text-primary-600 dark:text-primary-400" />
@@ -670,22 +670,33 @@ export default function InventoryDashboard() {
                 <Loader2 className="animate-spin text-primary-600 dark:text-primary-400" size={32} />
               </div>
             )}
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse table-fixed">
+              <colgroup>
+                <col className="w-[18%]" />
+                <col className="w-[16%]" />
+                <col className="w-[9%]" />
+                <col className="w-[5%]" />
+                <col className="w-[10%]" />
+                <col className="w-[17%]" />
+                <col className="w-[15%]" />
+                <col className="w-[10%]" />
+              </colgroup>
               <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold tracking-wider uppercase">
                 <tr>
-                  <th className="py-4 px-6">Item Name</th>
-                  <th className="py-4 px-6">Invoice Source</th>
-                  <th className="py-4 px-6">Upload Date</th>
-                  <th className="py-4 px-6">Qty</th>
-                  <th className="py-4 px-6">Amount</th>
-                  <th className="py-4 px-6">Notes</th>
-                  <th className="py-4 px-6 text-right">Actions</th>
+                  <th className="py-4 px-3">Item Name</th>
+                  <th className="py-4 px-3">Invoice Source</th>
+                  <th className="py-4 px-3">Upload Date</th>
+                  <th className="py-4 px-3">Qty</th>
+                  <th className="py-4 px-3">Amount</th>
+                  <th className="py-4 px-3">Project ID</th>
+                  <th className="py-4 px-3">Notes</th>
+                  <th className="py-4 px-3">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800 text-sm font-medium text-gray-800 dark:text-gray-200">
                 {inventoryItems.length === 0 && !inventoryLoading ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-12">
+                    <td colSpan={8} className="text-center py-12">
                       <div className="flex flex-col items-center gap-3">
                         <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                           <Package size={24} className="text-gray-400" />
@@ -703,7 +714,7 @@ export default function InventoryDashboard() {
                     return (
                       <React.Fragment key={item.id}>
                         <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
-                          <td className="py-4 px-6 max-w-[250px]">
+                          <td className="py-4 px-3">
                             <div className="flex items-center gap-2">
                               <div className="w-7 h-7 rounded-md bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 flex items-center justify-center flex-shrink-0">
                                 <Package size={14} />
@@ -711,26 +722,37 @@ export default function InventoryDashboard() {
                               <span className="font-semibold truncate" title={item.item_name}>{item.item_name}</span>
                             </div>
                           </td>
-                          <td className="py-4 px-6 text-gray-700 dark:text-gray-300">
+                          <td className="py-4 px-3 text-gray-700 dark:text-gray-300">
                             <div className="flex flex-col">
-                              <span className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate max-w-[180px]" title={item.source_file_name}>{item.source_file_name || '—'}</span>
+                              <span className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate" title={item.source_file_name}>{item.source_file_name || '—'}</span>
                               {item.invoice_number && <span className="text-[11px] text-gray-500 dark:text-gray-400">#{item.invoice_number}</span>}
                             </div>
                           </td>
-                          <td className="py-4 px-6 text-gray-700 dark:text-gray-300">
+                          <td className="py-4 px-3 text-gray-700 dark:text-gray-300">
                             {item.created_at ? new Date(item.created_at).toLocaleDateString() : '—'}
                           </td>
-                          <td className="py-4 px-6 text-gray-800 dark:text-gray-200 font-semibold">{item.quantity || 0}</td>
-                          <td className="py-4 px-6 text-gray-800 dark:text-gray-200 font-semibold">
+                          <td className="py-4 px-3 text-gray-800 dark:text-gray-200 font-semibold">{item.quantity || 0}</td>
+                          <td className="py-4 px-3 text-gray-800 dark:text-gray-200 font-semibold">
                             {item.total_amount ? `₹${Number(item.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '—'}
                           </td>
-                          <td className="py-4 px-6 max-w-[180px]">
+                          <td className="py-4 px-3">
+                            {item.project_assignments?.length > 0 ? (
+                              <div className="flex flex-col gap-1">
+                                {item.project_assignments.map((a, i) => (
+                                  <span key={i} className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 font-mono whitespace-nowrap">
+                                    {a.project_code || a.project_id}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : <span className="text-xs text-gray-400 italic">—</span>}
+                          </td>
+                          <td className="py-4 px-3">
                             {item.notes
                               ? <span className="text-xs text-gray-600 dark:text-gray-400 truncate block" title={item.notes}>{item.notes}</span>
                               : <span className="text-xs text-gray-400 italic">No notes</span>
                             }
                           </td>
-                          <td className="py-4 px-6 flex items-center justify-end gap-3 text-gray-400">
+                          <td className="py-4 px-3 flex items-center justify-start gap-3 text-gray-400">
                             <button onClick={() => handleInventoryToggleExpand(item)} className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors" title="View / Edit">
                               <Eye size={18} strokeWidth={1.5} />
                             </button>

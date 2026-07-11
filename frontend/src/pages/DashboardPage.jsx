@@ -26,7 +26,7 @@ const STATUS_BADGE = {
 
 function StatusBadge({ status }) {
     return (
-        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${STATUS_BADGE[status] || 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'}`}>
+        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide whitespace-nowrap inline-block ${STATUS_BADGE[status] || 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'}`}>
             {status}
         </span>
     )
@@ -301,7 +301,7 @@ export default function DashboardPage() {
                                                 <td className="table-cell font-semibold text-gray-900 dark:text-gray-100">{row.total_qty || 0}</td>
                                                 <td className="table-cell font-semibold text-gray-900 dark:text-gray-100">{Math.floor((row.total_qty || 0) * 0.6)}</td>
                                                 <td className="table-cell font-semibold text-gray-900 dark:text-gray-100">{Math.floor((row.total_qty || 0) * 0.4)}</td>
-                                                <td className="table-cell"><StatusBadge status={row.status} /></td>
+                                                <td className="table-cell whitespace-nowrap"><StatusBadge status={row.status} /></td>
                                                 <td className="table-cell text-gray-700 dark:text-gray-300 text-xs whitespace-nowrap">
                                                     {row.updated_on !== 'N/A' && !isNaN(new Date(row.updated_on).getTime()) ? new Date(row.updated_on).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : row.updated_on}
                                                 </td>

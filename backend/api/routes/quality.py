@@ -170,6 +170,9 @@ async def upload_quality_evidence(
     visual_image: List[UploadFile] = File(default=[]),
     nir_image: List[UploadFile] = File(default=[]),
     thermal_image: List[UploadFile] = File(default=[]),
+    xray_image: List[UploadFile] = File(default=[]),
+    spectral_image: List[UploadFile] = File(default=[]),
+    ultrasonic_image: List[UploadFile] = File(default=[]),
     qa_report: List[UploadFile] = File(default=[]),
     manual_verification: List[UploadFile] = File(default=[]),
     db: Session = Depends(get_db),
@@ -184,6 +187,9 @@ async def upload_quality_evidence(
         ("visual_image", visual_image),
         ("nir_image", nir_image),
         ("thermal_image", thermal_image),
+        ("xray_image", xray_image),
+        ("spectral_image", spectral_image),
+        ("ultrasonic_image", ultrasonic_image),
         ("qa_report", qa_report),
         ("manual_verification", manual_verification),
     ]:
@@ -245,7 +251,7 @@ def get_evidence_summary(
         "total_evidence_files": db.query(QualityAttachment).count(),
         "qa_reports": count("qa_report"),
         "manual_verifications": count("manual_verification"),
-        "note_files": count("visual_image") + count("nir_image") + count("thermal_image"),
+        "note_files": count("visual_image") + count("nir_image") + count("thermal_image") + count("xray_image") + count("spectral_image") + count("ultrasonic_image"),
     }
 
 

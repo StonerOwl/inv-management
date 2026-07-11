@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from api.dependencies import get_db
-from db.models import PWSItem, PWSAssignment, Invoice, InvoiceProjectAssignment, InventoryItem, LineItem
+from db.models import PWSItem, PWSAssignment, Invoice, InvoiceProjectAssignment, InventoryItem, LineItem, StageItemLink
 
 router = APIRouter(prefix="/pws", tags=["PWS Management"])
 
@@ -197,15 +197,41 @@ def get_project_analytics(project_id: str, db: Session = Depends(get_db)):
             process_ids = [a.child_id for a in process_assignments if a.child_id]
             processes = db.query(PWSItem).filter(PWSItem.id.in_(process_ids), PWSItem.type == "process").all()
 
+            # Linked inventory items for this stage
+            stage_links = db.query(StageItemLink).filter_by(stage_id=stage.id).all()
+            stage_inv_items = []
+            stage_cost = 0.0
+            for link in stage_links:
+                inv = db.query(InventoryItem).filter_by(id=link.inventory_item_id).first()
+                if inv:
+                    stage_cost += inv.total_amount or 0.0
+                    stage_inv_items.append({
+                        "id": inv.id,
+                        "item_name": inv.item_name,
+                        "quantity": inv.quantity,
+                        "unit_price": inv.unit_price,
+                        "total_amount": inv.total_amount,
+                        "hsn_code": inv.hsn_code,
+                        "invoice_number": inv.invoice_number,
+                        "quantity_allocated": link.quantity_allocated,
+                    })
+
             stage_details.append({
                 "id": stage.id,
                 "name": stage.name,
-                "processes": [{"id": p.id, "name": p.name} for p in processes],
+                "processes": [{
+                    "id": p.id,
+                    "name": p.name,
+                    "allowed_image_types": (lambda raw: __import__('json').loads(raw) if raw else [])(p.allowed_image_types),
+                } for p in processes],
+                "inventory_items": stage_inv_items,
+                "stage_cost": round(stage_cost, 2),
             })
 
         workflow_details.append({
             "id": workflow.id,
             "name": workflow.name,
+            "batch_id": workflow.batch_id,
             "stages": stage_details,
         })
 
@@ -241,10 +267,34 @@ def get_project_analytics(project_id: str, db: Session = Depends(get_db)):
             "current_stage": first_stage_name,
         })
 
+    # Fetch all inventory items linked to this project's invoices
+    inventory_items = (
+        db.query(InventoryItem)
+        .filter(InventoryItem.invoice_id.in_(invoice_ids))
+        .order_by(InventoryItem.created_at.desc())
+        .all()
+    ) if invoice_ids else []
+
+    inventory_summaries = [
+        {
+            "id": item.id,
+            "item_name": item.item_name,
+            "quantity": item.quantity,
+            "unit_price": item.unit_price,
+            "total_amount": item.total_amount,
+            "hsn_code": item.hsn_code,
+            "invoice_number": item.invoice_number,
+            "source_file_name": item.source_file_name,
+            "notes": item.notes,
+        }
+        for item in inventory_items
+    ]
+
     return {
         "project": project.to_dict(),
         "workflows": workflow_details,
         "invoices": invoice_summaries,
+        "inventory_items": inventory_summaries,
     }
 
 

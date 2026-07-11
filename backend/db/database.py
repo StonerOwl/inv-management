@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 
 import config
-from db.models import Base, Category, User
+from db.models import Base, Category, User, Device
 
 logger = logging.getLogger(__name__)
 

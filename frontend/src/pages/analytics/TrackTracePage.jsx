@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FolderPlus, Search, Filter, RefreshCw, Activity, ChevronRight } from 'lucide-react'
+import { FolderPlus, Search, Filter, RefreshCw, Activity, ChevronRight, Package, Hash, DollarSign } from 'lucide-react'
 import { getPWSItems, getProjectAnalytics } from '../../api/client'
 import WorkflowTimeline from './WorkflowTimeline'
 import AnalyticsCards from './AnalyticsCards'
@@ -57,6 +57,7 @@ export default function TrackTracePage() {
 
   const timelineData = projectAnalytics
     ? {
+      project: projectAnalytics.project || {},
       category: projectAnalytics.project?.name || selectedProject?.name,
       invoice: {
         invoice_id: projectAnalytics.invoices?.[0]?.id || null,
@@ -80,6 +81,7 @@ export default function TrackTracePage() {
       ),
       current_workflow: projectAnalytics.workflows?.[0]?.name || 'Not started',
       invoices: projectAnalytics.invoices || [],
+      inventoryItems: projectAnalytics.inventory_items || [],
     }
     : null
 
@@ -125,8 +127,8 @@ export default function TrackTracePage() {
               key={tab.id}
               onClick={() => handleTabClick(tab.id)}
               className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-all duration-150 focus:outline-none ${activeTab === tab.id
-                  ? 'border-primary-600 text-primary-600 dark:text-primary-400 dark:border-primary-400'
-                  : 'border-transparent text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+                ? 'border-primary-600 text-primary-600 dark:text-primary-400 dark:border-primary-400'
+                : 'border-transparent text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
             >
               {tab.label}
@@ -206,44 +208,91 @@ export default function TrackTracePage() {
 
           <section className="px-6">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-1 h-6 bg-gray-400 dark:bg-gray-600 rounded-full"></div>
-              <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Linked Invoices</h2>
+              <div className="w-1 h-6 bg-primary-500 rounded-full"></div>
+              <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Linked Inventory</h2>
               <span className="ml-1 text-xs font-semibold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 px-2.5 py-0.5 rounded-full border border-primary-200 dark:border-primary-800">
-                {timelineData.invoices.length}
+                {timelineData.inventoryItems.length} item{timelineData.inventoryItems.length !== 1 ? 's' : ''}
               </span>
             </div>
 
-            {timelineData.invoices.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 p-10 text-center text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900/50">
-                No invoices have been mapped to this project yet.
+            {timelineData.inventoryItems.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 p-10 text-center bg-gray-50 dark:bg-gray-900/50">
+                <Package size={28} className="mx-auto mb-3 text-gray-300 dark:text-gray-600" />
+                <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">No inventory linked to this project yet.</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Inventory is created automatically when invoices are registered to this project.</p>
               </div>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {timelineData.invoices.map(invoice => (
-                  <div key={invoice.id} className="aiq-card p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-bold text-gray-900 dark:text-gray-100 text-sm">{invoice.invoice_number}</p>
-                        <p className="text-xs text-gray-700 dark:text-gray-300 mt-0.5">{invoice.file_name}</p>
-                      </div>
-                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 uppercase tracking-wide">
-                        {invoice.status || 'pending'}
-                      </span>
-                    </div>
-                    {invoice.description && (
-                      <p className="text-xs text-gray-700 dark:text-gray-300 mt-3 leading-relaxed">{invoice.description}</p>
-                    )}
-                    <div className="mt-4">
-                      <div className="flex justify-between text-xs text-gray-400 mb-1">
-                        <span>Stage: <span className="font-semibold text-gray-800 dark:text-gray-200">{invoice.current_stage || 'Not started'}</span></span>
-                        <span className="font-semibold text-gray-800 dark:text-gray-200">{invoice.progress || 0}%</span>
-                      </div>
-                      <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary-500 rounded-full" style={{ width: `${invoice.progress || 0}%` }} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="aiq-card overflow-hidden">
+                {/* Summary bar */}
+                <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40 flex flex-wrap gap-6 text-xs">
+                  <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                    <Package size={12} className="text-primary-500" />
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">{timelineData.inventoryItems.length}</span> line items
+                  </span>
+                  <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                    <Hash size={12} className="text-primary-500" />
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      {[...new Set(timelineData.inventoryItems.map(i => i.invoice_number).filter(Boolean))].length}
+                    </span> invoice{[...new Set(timelineData.inventoryItems.map(i => i.invoice_number).filter(Boolean))].length !== 1 ? 's' : ''}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 ml-auto">
+                    <DollarSign size={12} className="text-primary-500" />
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      {timelineData.inventoryItems.reduce((sum, i) => sum + (i.total_amount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span> total
+                  </span>
+                </div>
+
+                {/* Table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-100 dark:border-gray-800">
+                        <th className="table-head pl-5">Item Name</th>
+                        <th className="table-head text-right">Qty</th>
+                        <th className="table-head text-right">Unit Price</th>
+                        <th className="table-head text-right">Total</th>
+                        <th className="table-head">HSN Code</th>
+                        <th className="table-head">Invoice</th>
+                        <th className="table-head pr-5">Source File</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {timelineData.inventoryItems.map((item, idx) => (
+                        <tr key={item.id} className={`table-row ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-gray-900/20'}`}>
+                          <td className="table-cell pl-5 font-semibold max-w-[220px]">
+                            <div className="flex items-center gap-2">
+                              <Package size={13} className="text-primary-400 dark:text-primary-500 shrink-0" />
+                              <span className="truncate" title={item.item_name}>{item.item_name}</span>
+                            </div>
+                          </td>
+                          <td className="table-cell text-right tabular-nums">{item.quantity ?? '—'}</td>
+                          <td className="table-cell text-right tabular-nums text-gray-600 dark:text-gray-400">
+                            {item.unit_price != null ? item.unit_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}
+                          </td>
+                          <td className="table-cell text-right tabular-nums font-semibold">
+                            {item.total_amount != null ? item.total_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}
+                          </td>
+                          <td className="table-cell">
+                            {item.hsn_code
+                              ? <span className="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">{item.hsn_code}</span>
+                              : <span className="text-gray-400">—</span>
+                            }
+                          </td>
+                          <td className="table-cell">
+                            {item.invoice_number
+                              ? <span className="font-mono text-xs text-primary-600 dark:text-primary-400">{item.invoice_number}</span>
+                              : <span className="text-gray-400">—</span>
+                            }
+                          </td>
+                          <td className="table-cell pr-5 text-gray-500 dark:text-gray-400 max-w-[160px]">
+                            <span className="truncate block text-xs" title={item.source_file_name}>{item.source_file_name || '—'}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </section>
@@ -336,9 +385,9 @@ function ProjectsOverview({ projects }) {
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Search projects..." 
+            <input
+              type="text"
+              placeholder="Search projects..."
               className="aiq-input pl-9 pr-4 py-2 min-w-[250px]"
             />
           </div>

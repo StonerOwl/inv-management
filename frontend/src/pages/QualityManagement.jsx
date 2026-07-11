@@ -73,6 +73,7 @@ export default function QualityManagement() {
   const [approving, setApproving] = useState(null)
   const [evidence, setEvidence] = useState({})
   const [dropzoneKey, setDropzoneKey] = useState(0) // bump to clear EvidenceDropzone after a save
+  const [allowedEvidenceTypes, setAllowedEvidenceTypes] = useState([])
   const [pwsItems, setPwsItems] = useState([])
   const [pwsAssignments, setPwsAssignments] = useState([])
 
@@ -81,7 +82,7 @@ export default function QualityManagement() {
     async function load() {
       try {
         const [notesRes, summaryRes, itemsRes, assignsRes] = await Promise.all([
-          listQualityNotes(), 
+          listQualityNotes(),
           getQualitySummary(),
           getPWSItems().catch(() => ({ data: [] })),
           getPWSAssignments().catch(() => ({ data: [] }))
@@ -204,10 +205,10 @@ export default function QualityManagement() {
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 mb-8">
         <div className="xl:col-span-2">
-          <QualityNoteForm onSave={handleSave} projectOptions={projectOptions} pwsItems={pwsItems} pwsAssignments={pwsAssignments} />
+          <QualityNoteForm onSave={handleSave} projectOptions={projectOptions} pwsItems={pwsItems} pwsAssignments={pwsAssignments} onAllowedTypesChange={setAllowedEvidenceTypes} />
         </div>
         <div className="xl:col-span-3">
-          <EvidenceDropzone key={dropzoneKey} onChange={setEvidence} />
+          <EvidenceDropzone key={dropzoneKey} onChange={setEvidence} allowedTypes={allowedEvidenceTypes} />
         </div>
       </div>
 

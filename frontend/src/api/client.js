@@ -147,6 +147,12 @@ export const getProjectAnalytics = (projectId) => api.get(`/pws/projects/${proje
 
 export const getInvoiceAssignments = () => api.get('/pws/invoice-project/all')
 
+// Stage ↔ Inventory Item Linking
+export const getProjectInventory = (projectId) => api.get(`/pws/projects/${projectId}/inventory`)
+export const getStageItemLinks = (stageId) => api.get(`/pws/stage-items/${stageId}`)
+export const createStageItemLink = (data) => api.post('/pws/stage-items', data)
+export const deleteStageItemLink = (linkId) => api.delete(`/pws/stage-items/${linkId}`)
+
 // ── Inventory Items ───────────────────────────────────────────────────────────
 export const listInventoryItems = (params) => api.get('/inventory/items', { params })
 export const getInventoryItem = (id) => api.get(`/inventory/items/${id}`)
@@ -160,6 +166,13 @@ export const createQualityNote = (data) => api.post('/quality/notes', data)
 export const listQualityNotes = (params) => api.get('/quality/notes', { params })
 export const approveQualityNote = (id) => api.put(`/quality/notes/${id}/approve`)
 export const getQualitySummary = () => api.get('/quality/summary')
+
+export const getDevices = () => api.get('/devices/')
+export const createDevice = (data) => api.post('/devices/', data)
+export const updateDevice = (id, data) => api.put(`/devices/${id}`, data)
+export const deleteDevice = (id) => api.delete(`/devices/${id}`)
+export const addDeviceNote = (id) => api.post(`/devices/${id}/notes`)
+export const getDeviceStats = () => api.get('/devices/stats')
 
 export const uploadQualityEvidence = (noteId, evidenceByCategory) => {
   const formData = new FormData()

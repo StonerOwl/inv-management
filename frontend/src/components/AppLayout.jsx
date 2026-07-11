@@ -7,14 +7,15 @@ import { useNotes } from '../context/NotesContext';
 import NotesDrawer from './NotesDrawer';
 import { ErrorBoundary } from './ErrorBoundary';
 import clsx from 'clsx';
-import { Zap, Moon, Sun, Database, Layers, GitBranch, Home, Package, Search, Sparkles, HelpCircle, Settings as SettingsIcon, MessageSquare, ChevronRight, ShieldCheck, Folder } from 'lucide-react';
+import { Zap, Moon, Sun, Database, Layers, GitBranch, Home, Package, Search, Sparkles, HelpCircle, Settings as SettingsIcon, MessageSquare, ChevronRight, ShieldCheck, Folder, Smartphone } from 'lucide-react';
 
 const MAIN_TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard-overview' },
   { id: 'inventory', label: 'Inventory', icon: Package, path: '/inventory/dashboard' },
+  { id: 'app-management', label: 'Projects', icon: Folder, path: '/app-management/create-pws' },
   { id: 'quality', label: 'Quality Management', icon: ShieldCheck, path: '/quality' },
-  { id: 'app-management', label: 'Projects', icon: Folder, path: '/users' },
   { id: 'analytics', label: 'Analytics', icon: GitBranch, path: '/analytics' },
+  { id: 'ai-overview', label: 'AI Studio', icon: Sparkles, path: '/ai-overview' },
 ];
 
 const SIDEBAR_OPTIONS = {
@@ -26,8 +27,9 @@ const SIDEBAR_OPTIONS = {
     { label: 'Dashboard', path: '/quality' },
   ],
   'app-management': [
-    { label: 'User', path: '/users', icon: Package },
-    { label: 'Create P/W/S', path: '/app-management/create-pws', icon: Layers },
+    { label: 'Manage Project', path: '/app-management/create-pws', icon: Layers },
+    { label: 'Manage Workflow', path: '/app-management/manage-workflow', icon: GitBranch },
+    { label: 'Integrate Devices', path: '/app-management/integrate-devices', icon: Smartphone },
   ],
   'analytics': [
     { label: 'Track & Trace', path: '/analytics', icon: Layers },
@@ -36,6 +38,11 @@ const SIDEBAR_OPTIONS = {
   'inventory': [
     { label: 'Inventory', path: '/inventory/dashboard', icon: Package },
   ],
+  'settings': [
+    { label: 'Preferences', path: '/settings', icon: SettingsIcon },
+    { label: 'Users', path: '/users', icon: Package },
+  ],
+  'query': [],
 };
 
 const NO_SIDEBAR_TABS = [];
@@ -50,15 +57,17 @@ export default function AppLayout() {
 
   const getActiveTab = () => {
     const path = location.pathname;
-    if (path.startsWith('/settings')) return 'settings';
+    if (path.startsWith('/settings') || path === '/users') return 'settings';
+    if (path.startsWith('/query')) return 'query';
     if (path.startsWith('/inventory')) return 'inventory';
     if (path.startsWith('/dashboard-overview') || path === '/upload' || path === '/invoices') return 'dashboard';
     if (path.startsWith('/purchase')) return 'purchase';
     if (path.startsWith('/quality')) return 'quality';
-    if (path.startsWith('/app-management') || path === '/users') return 'app-management';
+    if (path.startsWith('/app-management') || path.startsWith('/admin/create-pws')) return 'app-management';
     if (path.startsWith('/analytics') || path.startsWith('/tracking')) return 'analytics';
+    if (path.startsWith('/ai-overview')) return 'ai-overview';
     if (path.startsWith('/admin')) return 'admin';
-    return 'inventory';
+    return 'dashboard';
   };
 
   const [activeTab, setActiveTab] = useState(getActiveTab());
@@ -82,6 +91,10 @@ export default function AppLayout() {
       }
     }
   };
+
+  // Determine if Ask AI or Settings are "active" for header button highlighting
+  const isQueryActive = activeTab === 'query';
+  const isSettingsActive = activeTab === 'settings';
 
   const activeSidebarOptions = SIDEBAR_OPTIONS[activeTab] || [];
   const showSidebar = !NO_SIDEBAR_TABS.includes(activeTab);
@@ -122,7 +135,17 @@ export default function AppLayout() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <Link to="/query" className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 font-semibold text-sm hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors">
+            {/* Ask AI — active state indicator */}
+            <Link
+              to="/query"
+              onClick={() => setActiveTab('query')}
+              className={clsx(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-sm transition-colors",
+                isQueryActive
+                  ? "bg-purple-600 text-white shadow-sm"
+                  : "bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/50"
+              )}
+            >
               <Sparkles size={16} /> Ask AI
             </Link>
 
@@ -130,7 +153,17 @@ export default function AppLayout() {
               <HelpCircle size={18} /> Help & Support
             </button>
 
-            <Link to="/settings" className="flex items-center gap-1.5 px-3 py-1.5 text-gray-800 dark:text-gray-300 font-bold text-sm hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
+            {/* Settings — active state indicator */}
+            <Link
+              to="/settings"
+              onClick={() => setActiveTab('settings')}
+              className={clsx(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-sm transition-colors",
+                isSettingsActive
+                  ? "bg-primary-600 text-white shadow-sm"
+                  : "text-gray-800 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+              )}
+            >
               <SettingsIcon size={18} /> Settings
             </Link>
 

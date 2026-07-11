@@ -69,7 +69,7 @@ export default function InvoiceList() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col">
-      
+
       <div className="max-w-7xl mx-auto w-full px-8 flex-1 pb-20 pt-10">
         <div className="mb-10 border-b border-gray-200 dark:border-gray-800 pb-6 flex items-end justify-between">
           <div>
@@ -128,7 +128,7 @@ export default function InvoiceList() {
             <table className="w-full text-left border-collapse">
               <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                 <tr>
-                  {['INVOICE #', 'DATE', 'PRODUCT', 'QTY', 'TOTAL', 'PO #', 'ITEM CODE', 'ITEM CATEGORY', 'CONF.', 'STATUS'].map(h => (
+                  {['INVOICE #', 'DATE', 'PRODUCT', 'QTY', 'TOTAL', 'PO #', 'ITEM CODE', 'ITEM CATEGORY', 'PROJECT ID', 'CONF.', 'STATUS'].map(h => (
                     <th key={h} className="py-3.5 px-4 text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -136,7 +136,7 @@ export default function InvoiceList() {
               <tbody>
                 {invoices.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="text-center py-20 text-gray-800 dark:text-gray-200 font-bold tracking-normal">
+                    <td colSpan={11} className="text-center py-20 text-gray-800 dark:text-gray-200 font-bold tracking-normal">
                       <FileText size={48} className="mx-auto mb-4 opacity-20" />
                       NO INVOICES FOUND.
                     </td>
@@ -165,6 +165,17 @@ export default function InvoiceList() {
                           <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold tracking-wide rounded-full border bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-800">
                             {inv.linked_po.category}
                           </span>
+                        ) : '—'}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        {inv.project_assignments?.length > 0 ? (
+                          <div className="flex flex-col gap-1">
+                            {inv.project_assignments.map((a, i) => (
+                              <span key={i} className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold tracking-wide rounded-full border bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 font-mono whitespace-nowrap">
+                                {a.project_code || a.project_id}
+                              </span>
+                            ))}
+                          </div>
                         ) : '—'}
                       </td>
                       <td className="py-3.5 px-4"><ConfidenceDot score={inv.confidence_score} /></td>

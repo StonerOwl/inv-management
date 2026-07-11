@@ -21,8 +21,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, index=True, nullable=False)
     hashed_password = Column(String(200), nullable=False)
-    role = Column(String(20), default="user")  # "admin" or "user"
-    can_upload = Column(Boolean, default=False)  # User permission to upload
+    role = Column(String(20), default="user")
+    can_upload = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
 
@@ -41,58 +41,35 @@ class Invoice(Base):
     __tablename__ = "invoices"
 
     id = Column(Integer, primary_key=True, index=True)
-
-    # File metadata
     file_name = Column(String(500), nullable=False)
     file_path = Column(String(1000), nullable=False)
     file_hash = Column(String(64), unique=True, index=True, nullable=False)
     file_size_bytes = Column(Integer)
     page_count = Column(Integer)
-    source_type = Column(String(50))      # pdf_native | pdf_ocr | image_ocr | image_vision
+    source_type = Column(String(50))
     ocr_confidence = Column(Float)
-
-    # Platform & identification
     invoice_number = Column(String(200), index=True)
     invoice_date = Column(String(50))
     invoice_details = Column(String(200), nullable=True)
-
-    # Seller
     gst_registration_no = Column(String(50))
     pan_no = Column(String(50))
     cin_no = Column(String(50))
-
-    # Financials
     grand_total = Column(Float)
-    
-    # Custom Categories
     category = Column(String(50), nullable=True)
-    
-    # Tracking workflow override — when set, uses this category's workflows instead of PO category
     tracking_category_override = Column(String(100), nullable=True)
-
-    # Quality
     confidence_score = Column(Float, default=0.0)
     status = Column(String(50), default="processed", index=True)
-    # processed | needs_review | error
-
-    # Raw data (for debugging / re-processing)
     raw_text = Column(Text)
-    raw_json = Column(Text)               # Full JSON from LLM
-
-    # AI Search capabilities
+    raw_json = Column(Text)
     embedding = Column(Vector(768), nullable=True)
-
-    # Timestamps
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    # Relationships
     line_items = relationship("LineItem", back_populates="invoice", cascade="all, delete-orphan")
     taxes = relationship("TaxEntry", back_populates="invoice", cascade="all, delete-orphan")
     processing_logs = relationship("ProcessingLog", back_populates="invoice", cascade="all, delete-orphan")
 
     def to_dict(self) -> dict:
-        # Flatten line items into summary fields
         return {
             "id": self.id,
             "file_hash": self.file_hash,
@@ -118,7 +95,6 @@ class LineItem(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=False, index=True)
-
     name = Column(String(1000), nullable=False)
     hsn_code = Column(String(255))
     quantity = Column(Float, default=1.0)
@@ -151,8 +127,7 @@ class TaxEntry(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=False, index=True)
-
-    tax_type = Column(String(20))   # CGST | SGST | IGST | CESS
+    tax_type = Column(String(20))
     rate = Column(Float)
     amount = Column(Float)
 
@@ -169,8 +144,8 @@ class ProcessingLog(Base):
     invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=True, index=True)
     job_id = Column(String(100), index=True)
     file_name = Column(String(500))
-    stage = Column(String(50))      # load | ocr | extract | save
-    status = Column(String(20))     # ok | error | warning
+    stage = Column(String(50))
+    status = Column(String(20))
     message = Column(Text)
     duration_ms = Column(Integer)
     created_at = Column(DateTime, server_default=func.now())
@@ -184,7 +159,7 @@ class ProductCatalog(Base):
     id = Column(Integer, primary_key=True, index=True)
     item_name = Column(String(500), unique=True, nullable=False, index=True)
     item_code = Column(String(50), unique=True, nullable=False, index=True)
-    category = Column(String(100), nullable=False, default="Category 1")  # Category name string
+    category = Column(String(100), nullable=False, default="Category 1")
     workflow_id = Column(Integer, ForeignKey("workflows.id"), nullable=True, index=True)
     created_at = Column(DateTime, server_default=func.now())
 
@@ -207,7 +182,7 @@ class Category(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), unique=True, nullable=False, index=True)
-    color = Column(String(30), nullable=False, default="cyan")  # cyan | purple | orange | emerald | rose | amber
+    color = Column(String(30), nullable=False, default="cyan")
     created_at = Column(DateTime, server_default=func.now())
 
     workflows = relationship("Workflow", back_populates="category", cascade="all, delete-orphan", order_by="Workflow.order_index")
@@ -272,7 +247,6 @@ class WorkflowProcess(Base):
 
 
 class InvoiceProcessTracking(Base):
-    """Tracks which process steps an invoice has completed in its workflow."""
     __tablename__ = "invoice_process_tracking"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -306,19 +280,24 @@ class PWSItem(Base):
     __tablename__ = "pws_items"
 
     id = Column(String(50), primary_key=True, index=True)
-    type = Column(String(20), index=True, nullable=False) # 'project', 'workflow', 'stage', 'process'
+    type = Column(String(20), index=True, nullable=False)
     name = Column(String(200), nullable=False)
-    project_code = Column(String(50), nullable=True) # E.g., PRSJ-2026-001-B001 (Project ID)
-    batch_id = Column(String(50), nullable=True)     # E.g., PBSJ-2026-001
+    project_code = Column(String(50), nullable=True)
+    batch_id = Column(String(50), nullable=True)
     product = Column(String(200), nullable=True)
     work_order = Column(String(100), nullable=True)
     category = Column(String(100), nullable=True)
     start_date = Column(String(50), nullable=True)
     target_date = Column(String(50), nullable=True)
     location = Column(String(200), nullable=True)
+    allowed_image_types = Column(Text, nullable=True)  # JSON-encoded list e.g. '["Visual","NIR"]'
     created_at = Column(DateTime, server_default=func.now())
 
     def to_dict(self) -> dict:
+        try:
+            parsed_types = json.loads(self.allowed_image_types) if self.allowed_image_types else []
+        except Exception:
+            parsed_types = []
         return {
             "id": self.id,
             "type": self.type,
@@ -331,6 +310,7 @@ class PWSItem(Base):
             "start_date": self.start_date,
             "target_date": self.target_date,
             "location": self.location,
+            "allowed_image_types": parsed_types,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
@@ -347,6 +327,35 @@ class PWSAssignment(Base):
             "id": self.id,
             "parent_id": self.parent_id,
             "child_id": self.child_id,
+        }
+
+
+class StageItemLink(Base):
+    """Links a PWS stage to an inventory item for workflow management."""
+    __tablename__ = "stage_item_links"
+
+    id = Column(Integer, primary_key=True, index=True)
+    stage_id = Column(String(50), ForeignKey("pws_items.id", ondelete="CASCADE"), nullable=False, index=True)
+    inventory_item_id = Column(Integer, ForeignKey("inventory_items.id", ondelete="CASCADE"), nullable=False, index=True)
+    quantity_allocated = Column(Float, default=0.0, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("stage_id", "inventory_item_id", name="uq_stage_item_link"),
+    )
+
+    stage = relationship("PWSItem", foreign_keys=[stage_id])
+    inventory_item = relationship("InventoryItem")
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "stage_id": self.stage_id,
+            "inventory_item_id": self.inventory_item_id,
+            "quantity_allocated": self.quantity_allocated,
+            "notes": self.notes,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
 
@@ -376,11 +385,9 @@ class Note(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    target_type = Column(String(50), index=True, nullable=False)  # 'invoice', 'workflow', etc.
-    target_id = Column(String(50), index=True, nullable=False)    # allow strings (like workflow ids)
+    target_type = Column(String(50), index=True, nullable=False)
+    target_id = Column(String(50), index=True, nullable=False)
     content = Column(Text, nullable=False)
-    
-    # Search & AI capabilities
     embedding = Column(Vector(768), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
@@ -399,6 +406,7 @@ class Note(Base):
             "attachments": [a.to_dict() for a in self.attachments] if self.attachments else []
         }
 
+
 class NoteAttachment(Base):
     __tablename__ = "note_attachments"
 
@@ -406,8 +414,8 @@ class NoteAttachment(Base):
     note_id = Column(Integer, ForeignKey("notes.id", ondelete="CASCADE"), nullable=False)
     file_name = Column(String(500), nullable=False)
     file_path = Column(String(1000), nullable=False)
-    file_type = Column(String(100), nullable=True) # mime type
-    
+    file_type = Column(String(100), nullable=True)
+
     note = relationship("Note", back_populates="attachments")
 
     def to_dict(self) -> dict:
@@ -435,8 +443,8 @@ class InventoryItem(Base):
     total_amount = Column(Float, default=0.0)
     hsn_code = Column(String(255), nullable=True)
     invoice_id = Column(Integer, ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False, index=True)
-    invoice_number = Column(String(200), nullable=True)   # denormalized for fast display
-    source_file_name = Column(String(500), nullable=True)  # which PDF it came from
+    invoice_number = Column(String(200), nullable=True)
+    source_file_name = Column(String(500), nullable=True)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -457,4 +465,48 @@ class InventoryItem(Base):
             "notes": self.notes,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+class Device(Base):
+    __tablename__ = "devices"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(200), nullable=False)
+    category = Column(String(100), nullable=False)
+    subtype = Column(String(100), nullable=True)
+    interface = Column(String(100), nullable=True)
+    status = Column(String(50), nullable=False, default="Online")
+    linked_process = Column(String(200), nullable=True)
+    quality_notes_count = Column(Integer, default=0)
+    last_sync_mins_ago = Column(Integer, default=1)
+    calibration_due_days = Column(Integer, nullable=True)
+    signal_quality = Column(Float, nullable=True)
+    device_health = Column(Float, nullable=True)
+    temperature = Column(Float, nullable=True)
+    humidity = Column(Float, nullable=True)
+    power_battery = Column(Float, nullable=True)
+    uptime_percentage = Column(Float, nullable=True)
+    data_throughput_mbps = Column(Float, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "category": self.category,
+            "subtype": self.subtype,
+            "interface": self.interface,
+            "status": self.status,
+            "linked_process": self.linked_process,
+            "quality_notes_count": self.quality_notes_count,
+            "last_sync_mins_ago": self.last_sync_mins_ago,
+            "calibration_due_days": self.calibration_due_days,
+            "signal_quality": self.signal_quality,
+            "device_health": self.device_health,
+            "temperature": self.temperature,
+            "humidity": self.humidity,
+            "power_battery": self.power_battery,
+            "uptime_percentage": self.uptime_percentage,
+            "data_throughput_mbps": self.data_throughput_mbps,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }
