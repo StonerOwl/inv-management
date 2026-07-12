@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 export default function WorkflowTimeline({ data }) {
   const stageItems = useMemo(() => data?.stages || [], [data])
   const currentStage = data?.invoice?.current_stage || 'Not Started'
+  const currentWorkflowName = data?.current_workflow || null
   const [expandedStage, setExpandedStage] = useState(null)
 
   const stageNodes = useMemo(() => {
@@ -11,13 +12,21 @@ export default function WorkflowTimeline({ data }) {
       const completed = processes.filter(p => p.completed).length
       const total = processes.length
       const progress = total > 0 ? Math.round((completed / total) * 100) : (stage.completed ? 100 : 0)
-      const isActive = stage.name === currentStage
+      // Match on workflow AND stage name — matching name alone lights up
+      // every same-named stage across every workflow, not just the one
+      // that's actually current.
+      const isActive = stage.name === currentStage && stage.workflow_name === currentWorkflowName
+      // Scope the expand/collapse key to this specific workflow+stage pair —
+      // never the raw stage id alone, so two stages that happen to share a
+      // name (or, in older data, an id) never expand/collapse together.
+      const nodeKey = `${stage.workflow_id}::${stage.id}::${idx}`
 
-      return { ...stage, processes, completedCount: completed, total, progress, isActive }
+      return { ...stage, processes, completedCount: completed, total, progress, isActive, nodeKey }
     })
-  }, [stageItems, currentStage])
+  }, [stageItems, currentStage, currentWorkflowName])
 
   const toggleStage = (id) => setExpandedStage(prev => prev === id ? null : id)
+
 
   return (
     <div className="aiq-card overflow-hidden">
@@ -42,13 +51,13 @@ export default function WorkflowTimeline({ data }) {
             <div className="absolute top-[1.65rem] h-px bg-black dark:bg-white z-0" style={{ left: `${100 / (2 * stageNodes.length)}%`, right: `${100 / (2 * stageNodes.length)}%` }}></div>
             {stageNodes.map((stage, idx) => {
               const isLast = idx === stageNodes.length - 1
-              const isExpanded = expandedStage === stage.id
+              const isExpanded = expandedStage === stage.nodeKey
 
               return (
-                <div key={stage.id} className="relative flex items-start flex-1">
+                <div key={stage.nodeKey} className="relative flex items-start flex-1">
                   <div className="flex flex-col items-center w-full">
                     <button
-                      onClick={() => toggleStage(stage.id)}
+                      onClick={() => toggleStage(stage.nodeKey)}
                       className="group relative flex flex-col items-center focus:outline-none w-full max-w-[160px]"
                     >
                       <div className={`

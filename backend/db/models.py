@@ -291,6 +291,9 @@ class PWSItem(Base):
     target_date = Column(String(50), nullable=True)
     location = Column(String(200), nullable=True)
     allowed_image_types = Column(Text, nullable=True)  # JSON-encoded list e.g. '["Visual","NIR"]'
+    completed = Column(Boolean, default=False, nullable=False)
+    completed_at = Column(DateTime, nullable=True)
+    completed_by = Column(String(200), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
     def to_dict(self) -> dict:
@@ -311,6 +314,9 @@ class PWSItem(Base):
             "target_date": self.target_date,
             "location": self.location,
             "allowed_image_types": parsed_types,
+            "completed": self.completed,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_by": self.completed_by,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
@@ -476,7 +482,7 @@ class Device(Base):
     subtype = Column(String(100), nullable=True)
     interface = Column(String(100), nullable=True)
     status = Column(String(50), nullable=False, default="Online")
-    linked_process = Column(String(200), nullable=True)
+    linked_process = Column(Text, nullable=True)
     quality_notes_count = Column(Integer, default=0)
     last_sync_mins_ago = Column(Integer, default=1)
     calibration_due_days = Column(Integer, nullable=True)
@@ -509,4 +515,89 @@ class Device(Base):
             "uptime_percentage": self.uptime_percentage,
             "data_throughput_mbps": self.data_throughput_mbps,
             "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class ActivityLog(Base):
+    """
+    System-wide activity log — one row per meaningful action taken in the
+    app (device added, project/workflow/stage/process created, invoice
+    uploaded, inventory linked, stage completed, etc). Powers the
+    Monitoring > Logs and Monitoring > Alerts screens.
+    """
+    __tablename__ = "activity_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    timestamp = Column(DateTime, server_default=func.now(), index=True)
+    action = Column(String(100), nullable=False, index=True)     # e.g. "device_created"
+    category = Column(String(50), nullable=False, index=True)    # e.g. "device", "project", "invoice"
+    severity = Column(String(20), nullable=False, default="info", index=True)  # info | success | warning | error
+    entity_type = Column(String(50), nullable=True)
+    entity_id = Column(String(100), nullable=True)
+    entity_name = Column(String(500), nullable=True)
+    description = Column(Text, nullable=True)
+    username = Column(String(200), nullable=True)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+            "action": self.action,
+            "category": self.category,
+            "severity": self.severity,
+            "entity_type": self.entity_type,
+            "entity_id": self.entity_id,
+            "entity_name": self.entity_name,
+            "description": self.description,
+            "username": self.username,
+        }
+
+
+class NotificationRecipient(Base):
+    """An email address configured to receive notifications for chosen event types."""
+    __tablename__ = "notification_recipients"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(320), nullable=False)
+    label = Column(String(200), nullable=True)
+    active = Column(Boolean, default=True, nullable=False)
+    subscribed_events = Column(Text, nullable=True)  # JSON-encoded list of event-type keys
+    created_at = Column(DateTime, server_default=func.now())
+
+    def to_dict(self) -> dict:
+        try:
+            events = json.loads(self.subscribed_events) if self.subscribed_events else []
+        except Exception:
+            events = []
+        return {
+            "id": self.id,
+            "email": self.email,
+            "label": self.label,
+            "active": self.active,
+            "subscribed_events": events,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class NotificationLog(Base):
+    """History of notification emails the system attempted to send."""
+    __tablename__ = "notification_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sent_at = Column(DateTime, server_default=func.now(), index=True)
+    event_type = Column(String(100), nullable=False, index=True)
+    subject = Column(String(500), nullable=True)
+    recipient_email = Column(String(320), nullable=False)
+    status = Column(String(20), nullable=False, default="sent")  # sent | failed | skipped
+    error = Column(Text, nullable=True)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "sent_at": self.sent_at.isoformat() if self.sent_at else None,
+            "event_type": self.event_type,
+            "subject": self.subject,
+            "recipient_email": self.recipient_email,
+            "status": self.status,
+            "error": self.error,
         }

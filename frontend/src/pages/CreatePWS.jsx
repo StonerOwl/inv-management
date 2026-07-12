@@ -255,6 +255,10 @@ export default function CreatePWS() {
     }
   };
 
+  // Picking an "existing" stage from the dropdown reuses that same stage
+  // record under a new workflow — stages/processes are just labels, so the
+  // same underlying item can be linked (via PWSAssignment) to multiple
+  // parents without creating duplicate PWSItem rows.
   const assignStage = async (workflowId) => {
     const sToAssign = stageToAssign[workflowId];
     if (!sToAssign) return;
@@ -264,12 +268,15 @@ export default function CreatePWS() {
         ...prev,
         [workflowId]: [...(prev[workflowId] || []), sToAssign]
       }));
+
       setStageToAssign(prev => ({ ...prev, [workflowId]: '' }));
     } catch (err) {
       console.error('Failed to assign stage:', err);
     }
   };
 
+  // Same reasoning as assignStage: reusing an "existing" process under a
+  // different stage just links the existing record, no cloning.
   const assignProcess = async (stageId) => {
     const pToAssign = processToAssign[stageId];
     if (!pToAssign) return;

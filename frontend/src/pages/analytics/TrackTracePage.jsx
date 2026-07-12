@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FolderPlus, Search, Filter, RefreshCw, Activity, ChevronRight, Package, Hash, DollarSign } from 'lucide-react'
-import { getPWSItems, getProjectAnalytics } from '../../api/client'
+import { getPWSItems, getProjectAnalytics, getDevices } from '../../api/client'
 import WorkflowTimeline from './WorkflowTimeline'
 import AnalyticsCards from './AnalyticsCards'
 import StageProcessList from './StageProcessList'
@@ -18,6 +18,7 @@ export default function TrackTracePage() {
   const [selectedProject, setSelectedProject] = useState(null)
   const [projectAnalytics, setProjectAnalytics] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [devices, setDevices] = useState([])
   const [fetchingDetails, setFetchingDetails] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
 
@@ -26,11 +27,12 @@ export default function TrackTracePage() {
   const analyticsRef = useRef(null)
 
   useEffect(() => {
-    getPWSItems()
-      .then(res => {
-        const projectItems = (res.data || []).filter(item => item.type === 'project')
+    Promise.all([getPWSItems(), getDevices()])
+      .then(([pwsRes, devicesRes]) => {
+        const projectItems = (pwsRes.data || []).filter(item => item.type === 'project')
         setProjects(projectItems)
         if (projectItems.length > 0) setSelectedProject(projectItems[0])
+        setDevices(devicesRes.data || [])
       })
       .finally(() => setLoading(false))
   }, [])
@@ -202,7 +204,7 @@ export default function TrackTracePage() {
             <WorkflowTimeline data={timelineData} />
 
             <div className="mt-6">
-              <StageProcessList data={timelineData} />
+              <StageProcessList data={timelineData} devices={devices} />
             </div>
           </section>
 

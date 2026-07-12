@@ -192,4 +192,19 @@ export const uploadQualityEvidence = (noteId, evidenceByCategory) => {
 export const getQualityNoteQRCode = (noteId) => api.get(`/quality/notes/${noteId}/qrcode`)
 export const verifyQualityNoteQR = (payload) => api.post('/quality/notes/verify', { payload })
 
+// ── Monitoring ──────────────────────────────────────────────────────────────
+export const getLogs = (params) => api.get('/monitoring/logs', { params })
+export const getLogCategories = () => api.get('/monitoring/logs/categories')
+export const getAlerts = (params) => api.get('/monitoring/alerts', { params })
+
+export const getNotificationEventTypes = () => api.get('/monitoring/notifications/event-types')
+export const getNotificationRecipients = () => api.get('/monitoring/notifications/recipients')
+export const createNotificationRecipient = (data) => api.post('/monitoring/notifications/recipients', data)
+export const updateNotificationRecipient = (id, data) => api.put(`/monitoring/notifications/recipients/${id}`, data)
+export const deleteNotificationRecipient = (id) => api.delete(`/monitoring/notifications/recipients/${id}`)
+export const getNotificationHistory = (params) => api.get('/monitoring/notifications/history', { params })
+
+export const completeStage = (stageId, completedBy) => api.post(`/pws/stages/${stageId}/complete`, { completed_by: completedBy })
+export const reopenStage = (stageId) => api.post(`/pws/stages/${stageId}/reopen`)
+
 export default api

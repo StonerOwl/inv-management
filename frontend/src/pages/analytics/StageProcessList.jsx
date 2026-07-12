@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { GitBranch, GitCommit, Settings2, Package, DollarSign, Clock, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react'
+import { GitBranch, GitCommit, Settings2, Package, DollarSign, Clock, ChevronDown, ChevronRight, AlertCircle, Cpu, Wifi, Usb } from 'lucide-react'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 function fmt(n) {
@@ -27,8 +27,8 @@ function ElapsedBadge({ startDate }) {
   if (!e) return <span className="text-gray-400 text-[10px]">No start date</span>
   return (
     <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${e.future
-        ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
-        : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+      ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
+      : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
       }`}>
       <Clock size={9} />
       {e.label}
@@ -99,8 +99,35 @@ function StageInventoryTable({ items }) {
   )
 }
 
+// ── DeviceBadge: shows devices linked to a process ────────────────────────────
+function getDevicesForProcess(devices, processName) {
+  if (!processName || !devices?.length) return []
+  return devices.filter(d => {
+    if (!d.linked_process) return false
+    // linked_process is stored as "Proj → Workflow → Stage → ProcessName" segments joined by "; "
+    // for multi-links. Match on the last segment of any entry.
+    return d.linked_process.split('; ').some(entry => {
+      const parts = entry.split(' → ')
+      return parts[parts.length - 1]?.trim().toLowerCase() === processName.trim().toLowerCase()
+    })
+  })
+}
+
+function DeviceBadge({ device }) {
+  const iface = device.interface || ''
+  const Icon = iface === 'Wi-Fi' ? Wifi : iface === 'USB' ? Usb : Cpu
+  const isOnline = device.status === 'Online'
+  return (
+    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-md border bg-white dark:bg-gray-800 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 whitespace-nowrap" title={`${device.name} · ${device.interface} · ${device.status}`}>
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+      <Icon size={9} className="shrink-0" />
+      <span className="max-w-[80px] truncate">{device.name}</span>
+    </span>
+  )
+}
+
 // ── main component ────────────────────────────────────────────────────────────
-export default function StageProcessList({ data }) {
+export default function StageProcessList({ data, devices = [] }) {
   const workflows = data?.workflows || []
   const startDate = data?.project?.start_date || null
 
@@ -189,13 +216,17 @@ export default function StageProcessList({ data }) {
                         const procs = stage.processes || []
                         const invItems = stage.inventory_items || []
                         const stageCost = stage.stage_cost || 0
-                        const isStgOpen = !!openStage[stage.id]
+                        // Scope the key to this workflow+stage pair, never the
+                        // raw stage id alone — two stages sharing a name (or,
+                        // in older data, an id) must never expand together.
+                        const stageKey = `${wf.id}::${stage.id}::${sIdx}`
+                        const isStgOpen = !!openStage[stageKey]
 
                         return (
-                          <div key={stage.id}>
+                          <div key={stageKey}>
                             {/* Stage row */}
                             <button
-                              onClick={() => toggleStage(stage.id)}
+                              onClick={() => toggleStage(stageKey)}
                               className="w-full flex items-center gap-4 px-10 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left focus:outline-none"
                             >
                               <span className="w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800 text-primary-700 dark:text-primary-400 text-[10px] font-black flex items-center justify-center shrink-0">
@@ -251,24 +282,38 @@ export default function StageProcessList({ data }) {
                                       <Settings2 size={11} className="text-violet-500" />
                                       <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500">Processes</span>
                                     </div>
-                                    <div className="grid gap-1.5 sm:grid-cols-2">
-                                      {procs.map((proc, pIdx) => (
-                                        <div key={proc.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 border border-violet-100 dark:border-violet-800/30 rounded-lg px-3 py-2">
-                                          <div className="flex items-center gap-2">
-                                            <div className="w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-800 flex items-center justify-center shrink-0">
-                                              <span className="text-[9px] font-black text-violet-600 dark:text-violet-400">{pIdx + 1}</span>
+                                    <div className="flex flex-col gap-1.5">
+                                      {procs.map((proc, pIdx) => {
+                                        const linked = getDevicesForProcess(devices, proc.name)
+                                        return (
+                                          <div key={proc.id} className="bg-gray-50 dark:bg-gray-800 border border-violet-100 dark:border-violet-800/30 rounded-lg px-3 py-2">
+                                            {/* Process name row */}
+                                            <div className="flex items-center justify-between gap-2">
+                                              <div className="flex items-center gap-2 min-w-0">
+                                                <div className="w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-800 flex items-center justify-center shrink-0">
+                                                  <span className="text-[9px] font-black text-violet-600 dark:text-violet-400">{pIdx + 1}</span>
+                                                </div>
+                                                <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">{proc.name}</p>
+                                              </div>
+                                              {proc.allowed_image_types?.length > 0 && (
+                                                <div className="flex gap-1 flex-wrap justify-end shrink-0">
+                                                  {proc.allowed_image_types.map(t => (
+                                                    <span key={t} className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">{t}</span>
+                                                  ))}
+                                                </div>
+                                              )}
                                             </div>
-                                            <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">{proc.name}</p>
+                                            {/* ── Linked Devices — always shown ── */}
+                                            <div className="mt-1.5 pt-1.5 border-t border-violet-100 dark:border-violet-800/30 flex flex-wrap gap-1 items-center">
+                                              <span className="text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mr-0.5">Devices:</span>
+                                              {linked.length > 0
+                                                ? linked.map(d => <DeviceBadge key={d.id} device={d} />)
+                                                : <span className="text-[9px] text-gray-400 dark:text-gray-500 italic">No connected devices</span>
+                                              }
+                                            </div>
                                           </div>
-                                          {proc.allowed_image_types?.length > 0 && (
-                                            <div className="flex gap-1 flex-wrap justify-end">
-                                              {proc.allowed_image_types.map(t => (
-                                                <span key={t} className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">{t}</span>
-                                              ))}
-                                            </div>
-                                          )}
-                                        </div>
-                                      ))}
+                                        )
+                                      })}
                                     </div>
                                   </div>
                                 )}

@@ -2,13 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import {
     GitBranch, GitCommit, Settings2, Package, ChevronRight, ChevronDown,
     Plus, Trash2, XCircle, Link2, Unlink, AlertCircle, Loader2,
-    FolderOpen, Layers, BarChart2, Hash
+    FolderOpen, Layers, BarChart2, Hash, CheckCircle2
 } from 'lucide-react';
 import clsx from 'clsx';
+import { useAuth } from '../context/AuthContext';
 import {
     getPWSItems, getPWSAssignments,
     getProjectInventory, getStageItemLinks,
     createStageItemLink, deleteStageItemLink,
+    completeStage, reopenStage,
 } from '../api/client';
 
 // ─── small helpers ────────────────────────────────────────────────────────────
@@ -92,12 +94,14 @@ function InventoryPickerRow({ item, linked, onLink }) {
 }
 
 // ─── stage panel ─────────────────────────────────────────────────────────────
-function StagePanel({ stage, projectInventory, onLinkChange }) {
+function StagePanel({ stage, projectInventory, onLinkChange, onStageUpdated }) {
     const [links, setLinks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [expanded, setExpanded] = useState(false);
     const [search, setSearch] = useState('');
     const [linking, setLinking] = useState(false);
+    const [completing, setCompleting] = useState(false);
+    const { user } = useAuth();
 
     const linkedIds = new Set(links.map(l => l.inventory_item_id));
 
@@ -138,6 +142,20 @@ function StagePanel({ stage, projectInventory, onLinkChange }) {
         }
     };
 
+    const handleToggleComplete = async () => {
+        setCompleting(true);
+        try {
+            const { data } = stage.completed
+                ? await reopenStage(stage.id)
+                : await completeStage(stage.id, user?.username);
+            onStageUpdated?.(data);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setCompleting(false);
+        }
+    };
+
     const filtered = projectInventory.filter(item =>
         !search || item.item_name?.toLowerCase().includes(search.toLowerCase()) ||
         item.invoice_number?.toLowerCase().includes(search.toLowerCase()) ||
@@ -145,7 +163,10 @@ function StagePanel({ stage, projectInventory, onLinkChange }) {
     );
 
     return (
-        <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+        <div className={clsx(
+            'border rounded-xl overflow-hidden',
+            stage.completed ? 'border-emerald-300 dark:border-emerald-700' : 'border-gray-200 dark:border-gray-700'
+        )}>
             {/* Stage header */}
             <button
                 onClick={() => setExpanded(e => !e)}
@@ -157,8 +178,25 @@ function StagePanel({ stage, projectInventory, onLinkChange }) {
                     {links.length > 0 && (
                         <Badge color="blue">{links.length} item{links.length !== 1 ? 's' : ''} linked</Badge>
                     )}
+                    {stage.completed && <Badge color="green">Completed</Badge>}
                 </div>
-                {expanded ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
+                <div className="flex items-center gap-3">
+                    <span
+                        role="button"
+                        onClick={(e) => { e.stopPropagation(); handleToggleComplete(); }}
+                        className={clsx(
+                            'flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1.5 rounded-lg border transition-colors',
+                            completing && 'opacity-50 pointer-events-none',
+                            stage.completed
+                                ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                : 'bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700'
+                        )}
+                    >
+                        {completing ? <Loader2 size={11} className="animate-spin" /> : <CheckCircle2 size={11} />}
+                        {stage.completed ? 'Reopen' : 'Mark Complete'}
+                    </span>
+                    {expanded ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
+                </div>
             </button>
 
             {expanded && (
@@ -225,7 +263,7 @@ function StagePanel({ stage, projectInventory, onLinkChange }) {
 }
 
 // ─── workflow detail panel ────────────────────────────────────────────────────
-function WorkflowDetail({ workflow, stages, stageProcesses, processes, projectInventory }) {
+function WorkflowDetail({ workflow, stages, stageProcesses, processes, projectInventory, onStageUpdated }) {
     const [openProcesses, setOpenProcesses] = useState({});
     const wfStages = (stageProcesses._wfStages?.[workflow.id] || [])
         .map(sId => stages.find(s => s.id === sId))
@@ -259,6 +297,7 @@ function WorkflowDetail({ workflow, stages, stageProcesses, processes, projectIn
                                 stage={stage}
                                 projectInventory={projectInventory}
                                 onLinkChange={() => { }}
+                                onStageUpdated={onStageUpdated}
                             />
 
                             {/* Processes under stage (read-only display) */}
@@ -527,6 +566,9 @@ export default function ManageWorkflow() {
                                     stageProcesses={stageProcesses}
                                     processes={processes}
                                     projectInventory={projectInventory}
+                                    onStageUpdated={(updatedStage) => {
+                                        setStages(prev => prev.map(s => s.id === updatedStage.id ? updatedStage : s));
+                                    }}
                                 />
                             </div>
                         )}

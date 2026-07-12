@@ -60,3 +60,15 @@ SUPPORTED_IMAGE_EXTENSIONS: set[str] = {
 }
 SUPPORTED_PDF_EXTENSIONS: set[str] = {".pdf"}
 SUPPORTED_EXTENSIONS: set[str] = SUPPORTED_IMAGE_EXTENSIONS | SUPPORTED_PDF_EXTENSIONS
+
+# ─── Notifications (SMTP) ──────────────────────────────────────────────────────
+# Leave SMTP_HOST empty to disable outbound email — notification rows will
+# still be logged with status="skipped" so the Monitoring UI shows why nothing
+# was sent.
+SMTP_HOST: str = os.getenv("SMTP_HOST", "")
+SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
+SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+SMTP_USE_TLS: bool = os.getenv("SMTP_USE_TLS", "true").lower() != "false"
+SMTP_FROM_EMAIL: str = os.getenv("SMTP_FROM_EMAIL", SMTP_USERNAME or "noreply@aiq-platform.local")
+SMTP_FROM_NAME: str = os.getenv("SMTP_FROM_NAME", "AIQ Platform")

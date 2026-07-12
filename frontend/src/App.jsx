@@ -28,6 +28,7 @@ import IntegrateDevices from './pages/IntegrateDevices'
 import MobilePairing from './pages/MobilePairing'
 import Settings from './pages/Settings'
 import QualityManagement from './pages/QualityManagement'
+import { MonitoringLogs, MonitoringAlerts, MonitoringDevices, MonitoringNotifications } from './pages/Monitoring'
 import { AuthProvider } from './context/AuthContext'
 import { UploadProvider } from './context/UploadContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -35,6 +36,7 @@ import { SettingsProvider } from './context/SettingsContext'
 import { NotesProvider } from './context/NotesContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import AppLayout from './components/AppLayout'
+import DashboardInventory from './pages/DashboardInventory'
 
 export default function App() {
   return (
@@ -51,6 +53,7 @@ export default function App() {
                     <Route path="/" element={<Navigate to="/dashboard-overview" replace />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/dashboard-overview" element={<DashboardPage />} />
+                    <Route path="/dashboard/inventory" element={<DashboardInventory />} />
 
                     <Route path="/help" element={<PlaceholderPage title="Help & Support" />} />
                     <Route path="/settings" element={<Settings />} />
@@ -82,6 +85,12 @@ export default function App() {
                     <Route path="/quality" element={<QualityManagement />} />
 
                     <Route path="/ai-overview" element={<PlaceholderPage title="AI Overview" />} />
+
+                    <Route path="/monitoring" element={<Navigate to="/monitoring/logs" replace />} />
+                    <Route path="/monitoring/logs" element={<MonitoringLogs />} />
+                    <Route path="/monitoring/alerts" element={<MonitoringAlerts />} />
+                    <Route path="/monitoring/devices" element={<MonitoringDevices />} />
+                    <Route path="/monitoring/notifications" element={<MonitoringNotifications />} />
 
                     <Route path="/preview-bg" element={<BackgroundPreview />} />
                     <Route path="/modify" element={<ProtectedRoute requireUpload={true}><Modify /></ProtectedRoute>} />

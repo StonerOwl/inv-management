@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from api.dependencies import get_db
 from db.models import PWSItem, PWSAssignment, Invoice, InvoiceProjectAssignment, InventoryItem, LineItem, StageItemLink
+from core.activity_log import log_activity
 
 router = APIRouter(prefix="/pws", tags=["PWS Management"])
 
@@ -30,6 +31,13 @@ class InvoiceProjectAssignmentCreate(BaseModel):
     invoice_id: int
     project_id: str
     selected_line_item_ids: Optional[List[int]] = None
+
+
+class StageItemLinkCreate(BaseModel):
+    stage_id: str
+    inventory_item_id: int
+    quantity_allocated: Optional[float] = None
+    notes: Optional[str] = None
 
 
 @router.get("/items", response_model=List[Dict[str, Any]])
@@ -77,6 +85,25 @@ def create_pws_item(item: PWSItemCreate, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
+
+    action_by_type = {
+        "project": "project_created",
+        "workflow": "workflow_created",
+        "stage": "stage_created",
+        "process": "process_created",
+    }
+    action = action_by_type.get(item.type)
+    if action:
+        log_activity(
+            db,
+            action=action,
+            category="project" if item.type == "project" else "workflow",
+            severity="success",
+            entity_type=item.type,
+            entity_id=db_item.id,
+            entity_name=db_item.name,
+            description=f"{item.type.capitalize()} '{db_item.name}' was created.",
+        )
     return db_item.to_dict()
 
 class PWSItemUpdate(BaseModel):
@@ -172,6 +199,17 @@ def assign_invoice_to_project(assign: InvoiceProjectAssignmentCreate, db: Sessio
         db.rollback()
         raise HTTPException(status_code=400, detail=str(exc))
 
+    log_activity(
+        db,
+        action="invoice_linked_to_project",
+        category="invoice",
+        severity="success",
+        entity_type="invoice",
+        entity_id=invoice.id,
+        entity_name=invoice.invoice_number or invoice.file_name,
+        description=f"Invoice '{invoice.invoice_number or invoice.file_name}' was linked to project '{project.name}'.",
+    )
+
     return assignment.to_dict()
 
 
@@ -219,10 +257,12 @@ def get_project_analytics(project_id: str, db: Session = Depends(get_db)):
             stage_details.append({
                 "id": stage.id,
                 "name": stage.name,
+                "created_at": stage.created_at.isoformat() if stage.created_at else None,
                 "processes": [{
                     "id": p.id,
                     "name": p.name,
                     "allowed_image_types": (lambda raw: __import__('json').loads(raw) if raw else [])(p.allowed_image_types),
+                    "created_at": p.created_at.isoformat() if p.created_at else None,
                 } for p in processes],
                 "inventory_items": stage_inv_items,
                 "stage_cost": round(stage_cost, 2),
@@ -232,6 +272,7 @@ def get_project_analytics(project_id: str, db: Session = Depends(get_db)):
             "id": workflow.id,
             "name": workflow.name,
             "batch_id": workflow.batch_id,
+            "created_at": workflow.created_at.isoformat() if workflow.created_at else None,
             "stages": stage_details,
         })
 
@@ -296,6 +337,167 @@ def get_project_analytics(project_id: str, db: Session = Depends(get_db)):
         "invoices": invoice_summaries,
         "inventory_items": inventory_summaries,
     }
+
+
+@router.get("/projects/{project_id}/inventory")
+def get_project_inventory(project_id: str, db: Session = Depends(get_db)):
+    project = db.query(PWSItem).filter_by(id=project_id, type="project").first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    invoice_ids = [
+        a.invoice_id for a in
+        db.query(InvoiceProjectAssignment).filter_by(project_id=project_id).all()
+    ]
+    if not invoice_ids:
+        return []
+
+    items = (
+        db.query(InventoryItem)
+        .filter(InventoryItem.invoice_id.in_(invoice_ids))
+        .order_by(InventoryItem.created_at.desc())
+        .all()
+    )
+    return [item.to_dict() for item in items]
+
+
+def _stage_item_link_dict(link: StageItemLink, item: Optional[InventoryItem]) -> Dict[str, Any]:
+    data = link.to_dict()
+    if item:
+        data.update({
+            "item_name": item.item_name,
+            "quantity": item.quantity,
+            "unit_price": item.unit_price,
+            "total_amount": item.total_amount,
+            "hsn_code": item.hsn_code,
+            "invoice_number": item.invoice_number,
+        })
+    return data
+
+
+@router.get("/stage-items/{stage_id}")
+def get_stage_item_links(stage_id: str, db: Session = Depends(get_db)):
+    links = db.query(StageItemLink).filter_by(stage_id=stage_id).all()
+    item_ids = [l.inventory_item_id for l in links]
+    items_by_id = {}
+    if item_ids:
+        for item in db.query(InventoryItem).filter(InventoryItem.id.in_(item_ids)).all():
+            items_by_id[item.id] = item
+    return [_stage_item_link_dict(link, items_by_id.get(link.inventory_item_id)) for link in links]
+
+
+@router.post("/stage-items", response_model=Dict[str, Any])
+def create_stage_item_link(link_in: StageItemLinkCreate, db: Session = Depends(get_db)):
+    stage = db.query(PWSItem).filter_by(id=link_in.stage_id, type="stage").first()
+    if not stage:
+        raise HTTPException(status_code=404, detail="Stage not found")
+
+    item = db.query(InventoryItem).filter_by(id=link_in.inventory_item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Inventory item not found")
+
+    existing = db.query(StageItemLink).filter_by(
+        stage_id=link_in.stage_id, inventory_item_id=link_in.inventory_item_id
+    ).first()
+    if existing:
+        return _stage_item_link_dict(existing, item)
+
+    link = StageItemLink(
+        stage_id=link_in.stage_id,
+        inventory_item_id=link_in.inventory_item_id,
+        quantity_allocated=link_in.quantity_allocated,
+        notes=link_in.notes,
+    )
+    db.add(link)
+    try:
+        db.commit()
+        db.refresh(link)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+
+    log_activity(
+        db,
+        action="inventory_item_linked",
+        category="inventory",
+        severity="success",
+        entity_type="stage",
+        entity_id=stage.id,
+        entity_name=stage.name,
+        description=f"Inventory item '{item.item_name}' was linked to stage '{stage.name}'.",
+    )
+
+    return _stage_item_link_dict(link, item)
+
+
+@router.delete("/stage-items/{link_id}")
+def delete_stage_item_link(link_id: int, db: Session = Depends(get_db)):
+    link = db.query(StageItemLink).filter_by(id=link_id).first()
+    if not link:
+        raise HTTPException(status_code=404, detail="Link not found")
+
+    db.delete(link)
+    db.commit()
+    return {"status": "success"}
+
+
+class StageCompleteRequest(BaseModel):
+    completed_by: Optional[str] = None
+
+
+@router.post("/stages/{stage_id}/complete", response_model=Dict[str, Any])
+def complete_stage(stage_id: str, body: StageCompleteRequest, db: Session = Depends(get_db)):
+    stage = db.query(PWSItem).filter_by(id=stage_id, type="stage").first()
+    if not stage:
+        raise HTTPException(status_code=404, detail="Stage not found")
+
+    stage.completed = True
+    stage.completed_at = datetime.now()
+    stage.completed_by = body.completed_by
+    db.commit()
+    db.refresh(stage)
+
+    # Figure out which workflow this stage belongs to, and whether a "next"
+    # stage exists, purely for a friendlier notification message.
+    workflow_assignment = (
+        db.query(PWSAssignment)
+        .join(PWSItem, PWSItem.id == PWSAssignment.parent_id)
+        .filter(PWSAssignment.child_id == stage_id, PWSItem.type == "workflow")
+        .first()
+    )
+    workflow = db.query(PWSItem).filter_by(id=workflow_assignment.parent_id).first() if workflow_assignment else None
+    desc = f"Stage '{stage.name}' was marked complete"
+    if workflow:
+        desc += f" in workflow '{workflow.name}'"
+    desc += "."
+
+    log_activity(
+        db,
+        action="stage_completed",
+        category="workflow",
+        severity="success",
+        entity_type="stage",
+        entity_id=stage.id,
+        entity_name=stage.name,
+        description=desc,
+        username=body.completed_by,
+    )
+
+    return stage.to_dict()
+
+
+@router.post("/stages/{stage_id}/reopen", response_model=Dict[str, Any])
+def reopen_stage(stage_id: str, db: Session = Depends(get_db)):
+    stage = db.query(PWSItem).filter_by(id=stage_id, type="stage").first()
+    if not stage:
+        raise HTTPException(status_code=404, detail="Stage not found")
+
+    stage.completed = False
+    stage.completed_at = None
+    stage.completed_by = None
+    db.commit()
+    db.refresh(stage)
+    return stage.to_dict()
 
 
 @router.post("/assignments", response_model=Dict[str, Any])

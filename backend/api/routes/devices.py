@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 
 from db.database import get_db
 from db.models import Device
+from core.activity_log import log_activity
 
 class DeviceCreate(BaseModel):
     name: str
@@ -50,6 +51,16 @@ def create_device(device_in: DeviceCreate, db: Session = Depends(get_db)):
     db.add(new_device)
     db.commit()
     db.refresh(new_device)
+    log_activity(
+        db,
+        action="device_created",
+        category="device",
+        severity="success",
+        entity_type="device",
+        entity_id=new_device.id,
+        entity_name=new_device.name,
+        description=f"Device '{new_device.name}' ({new_device.category}) was added.",
+    )
     return new_device.to_dict()
 
 @router.put("/{device_id}")
@@ -66,6 +77,15 @@ def update_device(device_id: int, device_in: DeviceCreate, db: Session = Depends
     
     db.commit()
     db.refresh(device)
+    log_activity(
+        db,
+        action="device_updated",
+        category="device",
+        entity_type="device",
+        entity_id=device.id,
+        entity_name=device.name,
+        description=f"Device '{device.name}' was updated.",
+    )
     return device.to_dict()
 
 @router.delete("/{device_id}")
@@ -74,8 +94,19 @@ def delete_device(device_id: int, db: Session = Depends(get_db)):
     if not device:
         raise HTTPException(status_code=404, detail="Device not found")
     
+    device_name = device.name
     db.delete(device)
     db.commit()
+    log_activity(
+        db,
+        action="device_deleted",
+        category="device",
+        severity="warning",
+        entity_type="device",
+        entity_id=device_id,
+        entity_name=device_name,
+        description=f"Device '{device_name}' was removed.",
+    )
     return {"message": "Device deleted"}
 
 @router.post("/{device_id}/notes")
@@ -86,6 +117,15 @@ def add_device_note(device_id: int, db: Session = Depends(get_db)):
     
     device.quality_notes_count += 1
     db.commit()
+    log_activity(
+        db,
+        action="device_note_added",
+        category="device",
+        entity_type="device",
+        entity_id=device.id,
+        entity_name=device.name,
+        description=f"A note was added to '{device.name}' ({device.quality_notes_count} total).",
+    )
     return {"message": "Note added", "quality_notes_count": device.quality_notes_count}
 
 def _label_for(metric: str, value: float) -> str:
@@ -274,4 +314,3 @@ def get_device_stats(db: Session = Depends(get_db)):
         },
         "alerts": alerts
     }
-

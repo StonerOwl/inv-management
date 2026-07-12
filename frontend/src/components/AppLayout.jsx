@@ -7,7 +7,7 @@ import { useNotes } from '../context/NotesContext';
 import NotesDrawer from './NotesDrawer';
 import { ErrorBoundary } from './ErrorBoundary';
 import clsx from 'clsx';
-import { Zap, Moon, Sun, Database, Layers, GitBranch, Home, Package, Search, Sparkles, HelpCircle, Settings as SettingsIcon, MessageSquare, ChevronRight, ShieldCheck, Folder, Smartphone } from 'lucide-react';
+import { Zap, Moon, Sun, Database, Layers, GitBranch, Home, Package, Search, Sparkles, HelpCircle, Settings as SettingsIcon, MessageSquare, ChevronRight, ShieldCheck, Folder, Smartphone, ScrollText, AlertTriangle, Bell, MonitorSmartphone } from 'lucide-react';
 
 const MAIN_TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard-overview' },
@@ -16,12 +16,13 @@ const MAIN_TABS = [
   { id: 'quality', label: 'Quality Management', icon: ShieldCheck, path: '/quality' },
   { id: 'analytics', label: 'Analytics', icon: GitBranch, path: '/analytics' },
   { id: 'ai-overview', label: 'AI Studio', icon: Sparkles, path: '/ai-overview' },
+  { id: 'monitoring', label: 'Monitoring', icon: Bell, path: '/monitoring/logs' },
 ];
 
 const SIDEBAR_OPTIONS = {
   'dashboard': [
     { label: 'Dashboard', path: '/dashboard-overview', icon: Home },
-    { label: 'Inventory', path: '/inventory/dashboard', icon: Package },
+    { label: 'Inventory', path: '/dashboard/inventory', icon: Package },  // ← changed
   ],
   'quality': [
     { label: 'Dashboard', path: '/quality' },
@@ -43,6 +44,12 @@ const SIDEBAR_OPTIONS = {
     { label: 'Users', path: '/users', icon: Package },
   ],
   'query': [],
+  'monitoring': [
+    { label: 'Logs', path: '/monitoring/logs', icon: ScrollText },
+    { label: 'Alerts', path: '/monitoring/alerts', icon: AlertTriangle },
+    { label: 'Devices', path: '/monitoring/devices', icon: MonitorSmartphone },
+    { label: 'Notifications', path: '/monitoring/notifications', icon: Bell },
+  ],
 };
 
 const NO_SIDEBAR_TABS = [];
@@ -66,6 +73,7 @@ export default function AppLayout() {
     if (path.startsWith('/app-management') || path.startsWith('/admin/create-pws')) return 'app-management';
     if (path.startsWith('/analytics') || path.startsWith('/tracking')) return 'analytics';
     if (path.startsWith('/ai-overview')) return 'ai-overview';
+    if (path.startsWith('/monitoring')) return 'monitoring';
     if (path.startsWith('/admin')) return 'admin';
     return 'dashboard';
   };

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from db.models import Invoice, LineItem, TaxEntry, ProcessingLog
 from models.invoice_schema import InvoiceExtracted
 from core.document_loader import DocumentResult
+from core.activity_log import log_activity
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +90,16 @@ class InvoiceRepository:
             self.db.commit()
             self.db.refresh(invoice)
             logger.info(f"Saved invoice id={invoice.id} ({invoice.file_name})")
+            log_activity(
+                self.db,
+                action="invoice_uploaded",
+                category="invoice",
+                severity="success",
+                entity_type="invoice",
+                entity_id=invoice.id,
+                entity_name=invoice.invoice_number or invoice.file_name,
+                description=f"Invoice '{invoice.invoice_number or invoice.file_name}' was uploaded and parsed.",
+            )
             return invoice
         except IntegrityError:
             # Race condition: another concurrent request already inserted this hash.
