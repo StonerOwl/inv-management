@@ -65,6 +65,7 @@ export default function AppLayout() {
   const getActiveTab = () => {
     const path = location.pathname;
     if (path.startsWith('/settings') || path === '/users') return 'settings';
+    if (path.startsWith('/help')) return 'help';
     if (path.startsWith('/query')) return 'query';
     if (path.startsWith('/inventory')) return 'inventory';
     if (path.startsWith('/dashboard-overview') || path === '/upload' || path === '/invoices') return 'dashboard';
@@ -102,6 +103,7 @@ export default function AppLayout() {
 
   const isQueryActive = activeTab === 'query';
   const isSettingsActive = activeTab === 'settings';
+  const isHelpActive = activeTab === 'help';
 
   const activeSidebarOptions = SIDEBAR_OPTIONS[activeTab] || [];
   const showSidebar = !NO_SIDEBAR_TABS.includes(activeTab);
@@ -154,9 +156,18 @@ export default function AppLayout() {
               <Sparkles size={16} /> Ask AI
             </Link>
 
-            <button className="flex items-center gap-1.5 px-3 py-1.5 text-gray-800 dark:text-gray-300 font-bold text-sm hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
+            <Link
+              to="/help"
+              onClick={() => setActiveTab('help')}
+              className={clsx(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-sm transition-colors",
+                isHelpActive
+                  ? "bg-primary-600 text-white shadow-sm"
+                  : "text-gray-800 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+              )}
+            >
               <HelpCircle size={18} /> Help & Support
-            </button>
+            </Link>
 
             <Link
               to="/settings"

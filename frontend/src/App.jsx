@@ -27,6 +27,7 @@ import ManageWorkflow from './pages/ManageWorkflow'
 import IntegrateDevices from './pages/IntegrateDevices'
 import MobilePairing from './pages/MobilePairing'
 import Settings from './pages/Settings'
+import HelpSupport from './pages/HelpSupport'
 import QualityManagement from './pages/QualityManagement'
 import { MonitoringLogs, MonitoringAlerts, MonitoringDevices, MonitoringNotifications } from './pages/Monitoring'
 import { AuthProvider } from './context/AuthContext'
@@ -55,7 +56,7 @@ export default function App() {
                     <Route path="/dashboard-overview" element={<DashboardPage />} />
                     <Route path="/dashboard/inventory" element={<DashboardInventory />} />
 
-                    <Route path="/help" element={<PlaceholderPage title="Help & Support" />} />
+                    <Route path="/help" element={<HelpSupport />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/query" element={<NaturalQuery />} />
 
