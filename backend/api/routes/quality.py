@@ -10,6 +10,7 @@ import uuid
 
 import qrcode
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -17,7 +18,7 @@ import config
 from db.database import get_db
 from db.models import User
 from db.quality_models import QualityAttachment, QualityNote
-from api.dependencies import get_current_active_user
+from api.dependencies import get_current_active_user, get_current_admin
 
 router = APIRouter(prefix="/quality", tags=["quality"])
 QUALITY_UPLOAD_DIR = config.UPLOAD_DIR / "quality"
@@ -25,6 +26,7 @@ QUALITY_UPLOAD_DIR = config.UPLOAD_DIR / "quality"
 
 class QualityNoteCreate(BaseModel):
     project_name: str = Field(..., examples=["Coconut Oil"])
+    project_id: Optional[str] = None
     batch_id: str = Field(..., examples=["PRSJ-2026-001-0001"])
     workflow_stage: Optional[str] = None
     process: Optional[str] = None
@@ -38,6 +40,7 @@ class QualityNoteCreate(BaseModel):
 class QualityNoteOut(BaseModel):
     id: int
     project_name: str
+    project_id: Optional[str] = None
     batch_id: str
     workflow_stage: Optional[str] = None
     process: Optional[str] = None
@@ -119,6 +122,7 @@ def create_quality_note(
     note = QualityNote(
         user_id=current_user.id,
         project_name=payload.project_name,
+        project_id=payload.project_id,
         batch_id=payload.batch_id,
         workflow_stage=payload.workflow_stage,
         process=payload.process,
@@ -239,6 +243,47 @@ def approve_quality_note(
     return note.to_dict()
 
 
+@router.delete("/notes/{note_id}")
+def delete_quality_note(
+    note_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    note = db.query(QualityNote).filter(QualityNote.id == note_id).first()
+    if not note:
+        raise HTTPException(status_code=404, detail="Quality note not found")
+
+    note_dir = QUALITY_UPLOAD_DIR / str(note_id)
+    if note_dir.exists():
+        shutil.rmtree(note_dir, ignore_errors=True)
+
+    db.delete(note)
+    db.commit()
+    return {"status": "success", "deleted_id": note_id}
+
+
+@router.delete("/notes")
+def clear_all_quality_notes(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+):
+    """
+    Wipes every quality note (and its attachments/files) from the database.
+    Admin-only, since this is irreversible. Intended for clearing out test
+    data before going to production.
+    """
+    count = db.query(QualityNote).count()
+
+    if QUALITY_UPLOAD_DIR.exists():
+        shutil.rmtree(QUALITY_UPLOAD_DIR, ignore_errors=True)
+        QUALITY_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+    db.query(QualityAttachment).delete()
+    db.query(QualityNote).delete()
+    db.commit()
+    return {"status": "success", "deleted_count": count}
+
+
 @router.get("/summary", response_model=EvidenceSummaryOut)
 def get_evidence_summary(
     db: Session = Depends(get_db),
@@ -303,3 +348,44 @@ def verify_quality_note_qrcode(
         return {"valid": False, "note": None, "reason": "Signature mismatch — this code may be tampered or stale."}
 
     return {"valid": True, "note": note.to_dict(), "reason": None}
+
+
+@router.get("/attachments/{attachment_id}/file")
+def serve_attachment_file(
+    attachment_id: int,
+    db: Session = Depends(get_db),
+):
+    """Serve the raw file for a quality attachment by ID."""
+    attachment = db.query(QualityAttachment).filter(QualityAttachment.id == attachment_id).first()
+    if not attachment:
+        raise HTTPException(status_code=404, detail="Attachment not found")
+
+    stored = Path(attachment.file_path)
+
+    # Build candidate paths to find the file regardless of how the path was stored:
+    # 1. Exactly as stored (works when path is already correct absolute path)
+    # 2. Relative to UPLOAD_DIR (handles relative paths)
+    # 3. Re-rooted under UPLOAD_DIR using just the trailing parts after "uploads/"
+    #    (handles cases where the absolute path was built with a different base)
+    candidates = [stored]
+    if not stored.is_absolute():
+        candidates.append(config.UPLOAD_DIR / stored)
+    else:
+        # Try re-rooting: find "uploads/" or "quality/" segment and rebuild
+        parts = stored.parts
+        for i, part in enumerate(parts):
+            if part == "quality":
+                candidates.append(config.UPLOAD_DIR / Path(*parts[i:]))
+                break
+        candidates.append(config.UPLOAD_DIR / stored.name)
+
+    fp = next((p for p in candidates if p.exists()), None)
+    if fp is None:
+        raise HTTPException(status_code=404, detail=f"File not found on disk (tried: {[str(c) for c in candidates]})")
+
+    media_type = attachment.file_type or "application/octet-stream"
+    return FileResponse(
+        path=str(fp),
+        media_type=media_type,
+        filename=attachment.file_name or fp.name,
+    )

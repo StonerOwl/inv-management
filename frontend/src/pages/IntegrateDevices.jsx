@@ -331,17 +331,17 @@ export default function IntegrateDevices() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:flex flex-wrap md:flex-nowrap gap-2 md:gap-4 mb-4">
-            <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-xs md:text-sm flex-1 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 truncate">
+          <div className="flex flex-wrap gap-2 mb-4 items-center">
+            <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-xs bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 min-w-0 max-w-[150px]">
               <option value="All">All Categories</option>
               <option value="Sensor Arrays">Sensor Arrays</option>
               <option value="Cameras / Camera Arrays">Cameras</option>
               <option value="Spectral">Spectral</option>
               <option value="Ultrasonic / Acoustics">Ultrasonic</option>
               <option value="X-Ray">X-Ray</option>
-              <option value="Analytical Instruments">Analytical Instruments</option>
+              <option value="Analytical Instruments">Analytical</option>
             </select>
-            <select value={filterInterface} onChange={(e) => setFilterInterface(e.target.value)} className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-xs md:text-sm flex-1 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 truncate">
+            <select value={filterInterface} onChange={(e) => setFilterInterface(e.target.value)} className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-xs bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 min-w-0 max-w-[130px]">
               <option value="All">All Interfaces</option>
               <option value="Wi-Fi">Wi-Fi</option>
               <option value="Ethernet">Ethernet</option>
@@ -349,17 +349,17 @@ export default function IntegrateDevices() {
               <option value="USB">USB</option>
               <option value="REST API">REST API</option>
             </select>
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-xs md:text-sm flex-1 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 truncate">
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-xs bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 min-w-0 max-w-[120px]">
               <option value="All">All Statuses</option>
               <option value="Online">Online</option>
               <option value="Offline">Offline</option>
             </select>
-            <select value={filterProcess} onChange={(e) => setFilterProcess(e.target.value)} className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-xs md:text-sm flex-1 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 truncate">
+            <select value={filterProcess} onChange={(e) => setFilterProcess(e.target.value)} className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1.5 text-xs bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 min-w-0 max-w-[160px] truncate">
               {uniqueProcesses.map(p => <option key={p} value={p}>{p === 'All' ? 'All Processes' : p}</option>)}
             </select>
             <button
               onClick={() => setShowModal(true)}
-              className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs md:text-sm font-semibold flex items-center justify-center gap-1 hover:bg-blue-700 w-full md:w-auto shadow-sm transition-colors col-span-2 md:col-span-1"
+              className="ml-auto bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1 hover:bg-blue-700 shadow-sm transition-colors whitespace-nowrap"
             >
               <Plus size={14} /> Add Device
             </button>
@@ -427,23 +427,24 @@ export default function IntegrateDevices() {
       </div>
 
       {/* Monitoring & Health + Alerts */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-8 xl:items-start">
         <div className="xl:col-span-3 bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
           <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Monitoring & Instrument Health</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-4 border border-gray-100 dark:border-gray-800 rounded-lg p-4 bg-gray-50/30 dark:bg-gray-800/30">
+          <div className="grid grid-cols-4 md:grid-cols-8 gap-3 pb-0">
             <MetricBlock title="Signal Quality" value={`${stats.monitoring.signal_quality.value}%`} label={stats.monitoring.signal_quality.label} labelColor="text-green-600" />
             <MetricBlock title="Device Health" value={`${stats.monitoring.device_health.value}%`} label={stats.monitoring.device_health.label} labelColor="text-green-600" />
             <MetricBlock title="Temperature" value={`${stats.monitoring.temperature.value}°C`} label={stats.monitoring.temperature.label} labelColor="text-blue-500" />
             <MetricBlock title="Humidity" value={`${stats.monitoring.humidity.value}%`} label={stats.monitoring.humidity.label} labelColor="text-blue-500" />
             <MetricBlock title="Power/Battery" value={`${stats.monitoring.power_battery.value}%`} label={stats.monitoring.power_battery.label} labelColor="text-green-600" />
             <MetricBlock title="Uptime" value={`${stats.monitoring.uptime.value}%`} label={stats.monitoring.uptime.label} labelColor="text-gray-500 dark:text-gray-400" />
-            <div className="flex flex-col items-center justify-center border border-gray-100 dark:border-gray-700 rounded bg-white dark:bg-gray-800 p-2 text-center w-full min-w-0">
-              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Calibration Status</span>
-              <span className="text-lg font-bold text-gray-800 dark:text-gray-100">{stats.monitoring.calibration_status.due} / {stats.monitoring.calibration_status.total}</span>
-              <div className="h-10 w-10 mt-1 relative">
+            <div className="flex flex-col items-center justify-between text-center bg-gray-50 dark:bg-gray-800/60 px-2 py-3 rounded-lg border border-gray-100 dark:border-gray-700 w-full min-w-0">
+              <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 leading-tight">Calibration Status</span>
+              <span className="text-base font-bold text-gray-800 dark:text-gray-100 mt-1">{stats.monitoring.calibration_status.due} / {stats.monitoring.calibration_status.total}</span>
+              <span className="text-[10px] font-bold text-red-500 mt-0.5">Due</span>
+              <div className="h-8 w-8 mt-2 relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={[{ value: stats.monitoring.calibration_status.due }, { value: Math.max(stats.monitoring.calibration_status.total - stats.monitoring.calibration_status.due, 0) }]} innerRadius={12} outerRadius={18} dataKey="value" stroke="none">
+                    <Pie data={[{ value: stats.monitoring.calibration_status.due }, { value: Math.max(stats.monitoring.calibration_status.total - stats.monitoring.calibration_status.due, 0) }]} innerRadius={10} outerRadius={16} dataKey="value" stroke="none">
                       <Cell fill="#ef4444" />
                       <Cell fill="#6366f1" />
                     </Pie>
@@ -451,16 +452,12 @@ export default function IntegrateDevices() {
                 </ResponsiveContainer>
               </div>
             </div>
-            <div className="flex flex-col items-center justify-center border border-gray-100 dark:border-gray-700 rounded bg-white dark:bg-gray-800 p-2 text-center w-full min-w-0">
-              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Data Throughput</span>
-              <span className="text-lg font-bold text-gray-800 dark:text-gray-100">{stats.monitoring.data_throughput.value} {stats.monitoring.data_throughput.unit}</span>
-              <span className="text-[10px] text-blue-600 font-bold mb-1">{stats.monitoring.data_throughput.label}</span>
-              <div className="h-6 w-16">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={[{ v: stats.monitoring.data_throughput.value }]}>
-                    <Bar dataKey="v" fill="#3b82f6" />
-                  </BarChart>
-                </ResponsiveContainer>
+            <div className="flex flex-col items-center justify-between text-center bg-gray-50 dark:bg-gray-800/60 px-2 py-3 rounded-lg border border-gray-100 dark:border-gray-700 w-full min-w-0">
+              <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 leading-tight">Data Throughput</span>
+              <span className="text-base font-bold text-gray-800 dark:text-gray-100 mt-1">{stats.monitoring.data_throughput.value} {stats.monitoring.data_throughput.unit}</span>
+              <span className="text-[10px] font-bold text-blue-600 mt-0.5">{stats.monitoring.data_throughput.label}</span>
+              <div className="w-full mt-2 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-500 rounded-full" style={{ width: '60%' }}></div>
               </div>
             </div>
           </div>
@@ -1010,12 +1007,12 @@ function InterfaceCard({ icon, name, status, color }) {
 
 function MetricBlock({ title, value, label, labelColor }) {
   return (
-    <div className="flex flex-col items-center justify-center text-center bg-white dark:bg-gray-800 p-2 rounded border border-gray-100 dark:border-gray-700 w-full min-w-0">
-      <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 mb-1 line-clamp-1">{title}</span>
-      <span className="text-lg font-bold text-gray-800 dark:text-gray-100">{value}</span>
-      <span className={clsx("text-[10px] font-bold", labelColor)}>{label}</span>
-      <div className="w-full mt-1.5 h-1 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-        <div className="h-full bg-green-500" style={{ width: title === 'Temperature' ? '50%' : '80%' }}></div>
+    <div className="flex flex-col items-center justify-between text-center bg-gray-50 dark:bg-gray-800/60 px-2 py-3 rounded-lg border border-gray-100 dark:border-gray-700 w-full min-w-0">
+      <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 leading-tight text-center w-full">{title}</span>
+      <span className="text-base font-bold text-gray-800 dark:text-gray-100 mt-1">{value}</span>
+      <span className={clsx("text-[10px] font-bold mt-0.5", labelColor)}>{label}</span>
+      <div className="w-full mt-2 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="h-full bg-green-500 rounded-full" style={{ width: title === 'Temperature' ? '50%' : '80%' }}></div>
       </div>
     </div>
   )

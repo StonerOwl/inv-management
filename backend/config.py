@@ -11,8 +11,13 @@ load_dotenv()
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).parent
-UPLOAD_DIR = BASE_DIR / "uploads"
 DATA_DIR = BASE_DIR / "data"
+
+# UPLOAD_DIR: prefer an explicit env var (set to /app/uploads in Docker),
+# otherwise fall back to a sibling "uploads" folder next to this file.
+# Always resolved to an absolute path so stored file_path values are portable.
+_upload_env = os.getenv("UPLOAD_DIR", "").strip()
+UPLOAD_DIR = Path(_upload_env).resolve() if _upload_env else (BASE_DIR / "uploads").resolve()
 
 # Ensure directories exist at import time
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -29,10 +34,6 @@ OLLAMA_VISION_MODEL: str = os.getenv("OLLAMA_VISION_MODEL", "moondream:latest")
 OLLAMA_EMBEDDING_MODEL: str = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
 OLLAMA_TIMEOUT: int = int(os.getenv("OLLAMA_TIMEOUT", "180"))
 
-# ─── Directories ──────────────────────────────────────────────────────────────
-UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "uploads"))
-UPLOAD_DIR.mkdir(exist_ok=True, parents=True)
-
 # ─── Authentication (JWT) ─────────────────────────────────────────────────────
 # In production, set this to a strong random string in your .env file
 # e.g., openssl rand -hex 32
@@ -40,12 +41,12 @@ SECRET_KEY = os.getenv("SECRET_KEY", "supersecretkey_change_in_production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # 24 hours
 
-# ─── Ollama Configuration ──────────────────────────────────────────────────────
 # ─── Tesseract OCR ────────────────────────────────────────────────────────────
 TESSERACT_CMD: str = os.getenv(
     "TESSERACT_CMD",
     r"C:\Program Files\Tesseract-OCR\tesseract.exe",
 )
+
 # ─── Processing Thresholds ────────────────────────────────────────────────────
 OCR_CONFIDENCE_THRESHOLD: int = int(os.getenv("OCR_CONFIDENCE_THRESHOLD", "60"))
 EXTRACTION_CONFIDENCE_THRESHOLD: float = float(

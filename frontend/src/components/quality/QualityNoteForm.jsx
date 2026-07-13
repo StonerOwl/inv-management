@@ -91,8 +91,8 @@ export default function QualityNoteForm({ onSave, projectOptions = [], pwsItems 
   // Selected workflow object (for batch_id auto-fill)
   const selectedWorkflow = availableWorkflows.find(w => w.id === note.workflow_id);
 
-  // Stages assigned to those workflows
-  const stageIds = pwsAssignments.filter(a => projectWorkflowIds.includes(a.parent_id)).map(a => a.child_id);
+  // Stages assigned to the selected workflow only (not all workflows in the project)
+  const stageIds = pwsAssignments.filter(a => a.parent_id === note.workflow_id).map(a => a.child_id);
   const availableStages = pwsItems.filter(p => p.type === 'stage' && stageIds.includes(p.id));
 
   // Find the selected stage object to filter processes

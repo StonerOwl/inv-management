@@ -165,6 +165,8 @@ export const getDashboardData = () => api.get('/dashboard')
 export const createQualityNote = (data) => api.post('/quality/notes', data)
 export const listQualityNotes = (params) => api.get('/quality/notes', { params })
 export const approveQualityNote = (id) => api.put(`/quality/notes/${id}/approve`)
+export const deleteQualityNote = (id) => api.delete(`/quality/notes/${id}`)
+export const clearAllQualityNotes = () => api.delete('/quality/notes')
 export const getQualitySummary = () => api.get('/quality/summary')
 
 export const getDevices = () => api.get('/devices/')

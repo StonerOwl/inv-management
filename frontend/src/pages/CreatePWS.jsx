@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FolderPlus, GitCommit, GitBranch, XCircle, CheckCircle, ChevronRight, Plus, Settings2, Trash2, Pencil } from 'lucide-react';
+import { FolderPlus, GitCommit, GitBranch, XCircle, CheckCircle, ChevronRight, Plus, Settings2, Trash2, Pencil, CheckSquare, Square } from 'lucide-react';
 import clsx from 'clsx';
 import Barcode from 'react-barcode';
 import { getPWSItems, createPWSItem, updatePWSItem, deletePWSItem, getPWSAssignments, createPWSAssignment, deletePWSAssignment } from '../api/client';
@@ -42,6 +42,11 @@ export default function CreatePWS() {
   const [workflowToAssign, setWorkflowToAssign] = useState('');
   const [stageToAssign, setStageToAssign] = useState({}); // { workflowId: stageIdToAssign }
   const [processToAssign, setProcessToAssign] = useState({}); // { stageId: processIdToAssign }
+
+  // Bulk selection / delete mode
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Project ID and QR state
   const [projectIds, setProjectIds] = useState({}); // { projectId: 5-digit-id }
@@ -241,6 +246,50 @@ export default function CreatePWS() {
       alert('Failed to delete item. Please check the console.');
     }
   };
+  const toggleSelectMode = () => {
+    setSelectMode(prev => !prev);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelectId = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = (items) => {
+    const allIds = items.map(i => i.id);
+    const allSelected = allIds.every(id => selectedIds.has(id));
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (allSelected) {
+        allIds.forEach(id => next.delete(id));
+      } else {
+        allIds.forEach(id => next.add(id));
+      }
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`Delete ${selectedIds.size} item${selectedIds.size > 1 ? 's' : ''}? This cannot be undone.`)) return;
+    setIsDeleting(true);
+    try {
+      await Promise.all([...selectedIds].map(id => deletePWSItem(id)));
+      setCreatedItems(prev => prev.filter(item => !selectedIds.has(item.id)));
+      setSelectedIds(new Set());
+      setSelectMode(false);
+    } catch (err) {
+      console.error('Failed to bulk delete:', err);
+      alert('Some items could not be deleted. Please check the console.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const assignWorkflow = async (projectId) => {
     if (!workflowToAssign) return;
     try {
@@ -319,62 +368,94 @@ export default function CreatePWS() {
   const stages = createdItems.filter(i => i.type === 'stage');
   const processes = createdItems.filter(i => i.type === 'process');
 
-  const renderRecentlyCreated = (items, typeLabel) => (
-    <div className="flex flex-col gap-2">
-      <div className="group/col flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
-        <h4 className="text-xs font-bold text-gray-700 dark:text-gray-300 tracking-normal capitalize flex items-center gap-2">
-          <span className="text-primary-600 dark:text-primary-400">{getIcon(typeLabel, 14)}</span>
-          {typeLabel}s
-        </h4>
-        <button
-          onClick={() => handleOpenModal(typeLabel)}
-          title={`Create new ${typeLabel}`}
-          className="opacity-0 group-hover/col:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center rounded-full bg-primary-600 hover:bg-primary-700 text-white shadow-sm"
-        >
-          <Plus size={13} />
-        </button>
-      </div>
-      {items.length === 0 ? (
-        <div
-          onClick={() => handleOpenModal(typeLabel)}
-          className="text-xs text-gray-400 dark:text-gray-500 italic text-center py-4 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:border-primary-400 hover:text-primary-500 transition-colors"
-        >
-          No {typeLabel}s yet — click + to create
+  const renderRecentlyCreated = (items, typeLabel) => {
+    const allSelected = items.length > 0 && items.every(i => selectedIds.has(i.id));
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="group/col flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
+          <h4 className="text-xs font-bold text-gray-700 dark:text-gray-300 tracking-normal capitalize flex items-center gap-2">
+            {selectMode && items.length > 0 && (
+              <button
+                onClick={() => toggleSelectAll(items)}
+                className="text-primary-500 hover:text-primary-700 dark:text-primary-400"
+                title={allSelected ? 'Deselect all' : 'Select all'}
+              >
+                {allSelected ? <CheckSquare size={14} /> : <Square size={14} />}
+              </button>
+            )}
+            <span className="text-primary-600 dark:text-primary-400">{getIcon(typeLabel, 14)}</span>
+            {typeLabel}s
+          </h4>
+          {!selectMode && (
+            <button
+              onClick={() => handleOpenModal(typeLabel)}
+              title={`Create new ${typeLabel}`}
+              className="opacity-0 group-hover/col:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center rounded-full bg-primary-600 hover:bg-primary-700 text-white shadow-sm"
+            >
+              <Plus size={13} />
+            </button>
+          )}
         </div>
-      ) : (
-        items.map((item, idx) => (
-          <NoteTarget
-            key={item.id}
-            targetType={item.type}
-            targetId={item.id}
-            className={clsx("flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg group/item", idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900')}
+        {items.length === 0 ? (
+          <div
+            onClick={() => !selectMode && handleOpenModal(typeLabel)}
+            className="text-xs text-gray-400 dark:text-gray-500 italic text-center py-4 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:border-primary-400 hover:text-primary-500 transition-colors"
           >
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="text-primary-600 dark:text-primary-400 shrink-0">{getIcon(item.type, 16)}</div>
-              <div className="text-sm font-bold truncate" title={item.name}>{item.name}</div>
-            </div>
-            <div className="flex items-center gap-1 shrink-0 ml-2">
-              <button
-                onClick={(e) => handleEditItem(item, e)}
-                className="opacity-0 group-hover/item:opacity-100 text-primary-500 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-opacity p-1 rounded"
-                title={`Edit ${typeLabel}`}
+            No {typeLabel}s yet — click + to create
+          </div>
+        ) : (
+          items.map((item, idx) => {
+            const isSelected = selectedIds.has(item.id);
+            return (
+              <div
+                key={item.id}
+                onClick={() => selectMode && toggleSelectId(item.id)}
+                className={clsx(
+                  'flex items-center justify-between p-3 border rounded-lg group/item transition-colors',
+                  selectMode && 'cursor-pointer',
+                  isSelected
+                    ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20'
+                    : idx % 2 === 0 ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700' : 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700',
+                  selectMode && !isSelected && 'hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50/30 dark:hover:bg-red-900/10'
+                )}
               >
-                <Pencil size={13} />
-              </button>
-              <button
-                onClick={(e) => handleDeleteItem(item.id, e)}
-                className="opacity-0 group-hover/item:opacity-100 text-red-500 hover:text-red-700 transition-opacity p-1 rounded"
-                title={`Delete ${typeLabel}`}
-              >
-                <Trash2 size={13} />
-              </button>
-              <CheckCircle size={13} className="text-emerald-500 shrink-0" />
-            </div>
-          </NoteTarget>
-        ))
-      )}
-    </div>
-  );
+                <div className="flex items-center gap-2 min-w-0">
+                  {selectMode ? (
+                    <div className={clsx('shrink-0 w-4 h-4 flex items-center justify-center rounded border transition-colors', isSelected ? 'bg-red-500 border-red-500 text-white' : 'border-gray-300 dark:border-gray-600')}>
+                      {isSelected && <CheckCircle size={12} className="text-white" />}
+                    </div>
+                  ) : (
+                    <div className="text-primary-600 dark:text-primary-400 shrink-0">{getIcon(item.type, 16)}</div>
+                  )}
+                  <div className="text-sm font-bold truncate" title={item.name}>{item.name}</div>
+                </div>
+                {!selectMode && (
+                  <div className="flex items-center gap-1 shrink-0 ml-2">
+                    <button
+                      onClick={(e) => handleEditItem(item, e)}
+                      className="opacity-0 group-hover/item:opacity-100 text-primary-500 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-opacity p-1 rounded"
+                      title={`Edit ${typeLabel}`}
+                    >
+                      <Pencil size={13} />
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteItem(item.id, e)}
+                      className="opacity-0 group-hover/item:opacity-100 text-red-500 hover:text-red-700 transition-opacity p-1 rounded"
+                      title={`Delete ${typeLabel}`}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                    <CheckCircle size={13} className="text-emerald-500 shrink-0" />
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+    )
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col -m-8 p-8 relative">
@@ -582,6 +663,39 @@ export default function CreatePWS() {
 
         {viewMode === 'create' && (
           <div>
+            {/* Bulk action toolbar */}
+            <div className="flex items-center justify-between mb-6">
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
+                {selectMode
+                  ? selectedIds.size > 0
+                    ? `${selectedIds.size} item${selectedIds.size > 1 ? 's' : ''} selected`
+                    : 'Click items to select them'
+                  : `${createdItems.length} total items`}
+              </p>
+              <div className="flex items-center gap-3">
+                {selectMode && selectedIds.size > 0 && (
+                  <button
+                    onClick={handleBulkDelete}
+                    disabled={isDeleting}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-colors"
+                  >
+                    <Trash2 size={14} />
+                    {isDeleting ? 'Deleting...' : `Delete ${selectedIds.size} item${selectedIds.size > 1 ? 's' : ''}`}
+                  </button>
+                )}
+                <button
+                  onClick={toggleSelectMode}
+                  className={clsx(
+                    'flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg border transition-colors',
+                    selectMode
+                      ? 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                      : 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30'
+                  )}
+                >
+                  {selectMode ? <><XCircle size={14} /> Cancel</> : <><CheckSquare size={14} /> Select to Delete</>}
+                </button>
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {renderRecentlyCreated(projects, 'project')}
               {renderRecentlyCreated(workflows, 'workflow')}

@@ -84,6 +84,7 @@ export default function TrackTracePage() {
       current_workflow: projectAnalytics.workflows?.[0]?.name || 'Not started',
       invoices: projectAnalytics.invoices || [],
       inventoryItems: projectAnalytics.inventory_items || [],
+      qualityNotes: projectAnalytics.quality_notes || [],
     }
     : null
 

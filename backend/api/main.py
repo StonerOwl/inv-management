@@ -79,6 +79,10 @@ notes_uploads_dir = Path(__file__).parent.parent / "uploads" / "notes"
 notes_uploads_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/api/uploads/notes", StaticFiles(directory=str(notes_uploads_dir)), name="notes_uploads")
 
+quality_uploads_dir = Path(__file__).parent.parent / "uploads" / "quality"
+quality_uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/api/uploads/quality", StaticFiles(directory=str(quality_uploads_dir)), name="quality_uploads")
+
 frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
 if frontend_dist.exists():
     app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="static")

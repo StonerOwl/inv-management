@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from api.dependencies import get_db
 from db.models import PWSItem, PWSAssignment, Invoice, InvoiceProjectAssignment, InventoryItem, LineItem, StageItemLink
+from db.quality_models import QualityNote, QualityAttachment
 from core.activity_log import log_activity
 
 router = APIRouter(prefix="/pws", tags=["PWS Management"])
@@ -21,6 +22,7 @@ class PWSItemCreate(BaseModel):
     start_date: Optional[str] = None
     target_date: Optional[str] = None
     location: Optional[str] = None
+    allowed_image_types: Optional[List[str]] = None
 
 class PWSAssignmentCreate(BaseModel):
     parent_id: str
@@ -52,6 +54,7 @@ def get_all_invoice_assignments(db: Session = Depends(get_db)):
 
 @router.post("/items", response_model=Dict[str, Any])
 def create_pws_item(item: PWSItemCreate, db: Session = Depends(get_db)):
+    import json as _json
     db_item = PWSItem(
         id=item.id,
         type=item.type,
@@ -61,7 +64,8 @@ def create_pws_item(item: PWSItemCreate, db: Session = Depends(get_db)):
         category=item.category,
         start_date=item.start_date,
         target_date=item.target_date,
-        location=item.location
+        location=item.location,
+        allowed_image_types=_json.dumps(item.allowed_image_types) if item.allowed_image_types else None
     )
     
     if item.type == 'project':
@@ -114,9 +118,11 @@ class PWSItemUpdate(BaseModel):
     target_date: Optional[str] = None
     batch_id: Optional[str] = None
     project_code: Optional[str] = None
+    allowed_image_types: Optional[List[str]] = None
 
 @router.put("/items/{item_id}", response_model=Dict[str, Any])
 def update_pws_item(item_id: str, update: PWSItemUpdate, db: Session = Depends(get_db)):
+    import json as _json
     item = db.query(PWSItem).filter_by(id=item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -135,6 +141,8 @@ def update_pws_item(item_id: str, update: PWSItemUpdate, db: Session = Depends(g
         item.batch_id = update.batch_id
     if update.project_code is not None:
         item.project_code = update.project_code
+    if update.allowed_image_types is not None:
+        item.allowed_image_types = _json.dumps(update.allowed_image_types) if update.allowed_image_types else None
         
     db.commit()
     db.refresh(item)
@@ -331,11 +339,52 @@ def get_project_analytics(project_id: str, db: Session = Depends(get_db)):
         for item in inventory_items
     ]
 
+    # Fetch all quality notes for this project, with their attachments
+    # Notes store project_id as project_code (e.g. "PRSJ-001") OR as the PWSItem pk,
+    # so we match on both, plus project_name as a fallback.
+    from sqlalchemy import or_
+    quality_notes = (
+        db.query(QualityNote)
+        .filter(or_(
+            QualityNote.project_id == project_id,
+            QualityNote.project_id == project.project_code,
+            QualityNote.project_name == project.name,
+        ))
+        .order_by(QualityNote.created_at.desc())
+        .all()
+    )
+
+    quality_note_summaries = []
+    for note in quality_notes:
+        attachments = [
+            {
+                "id": a.id,
+                "evidence_type": a.evidence_type,
+                "file_path": a.file_path,
+                "file_name": a.file_name or (a.file_path.split("/")[-1] if a.file_path else None),
+                "file_type": a.file_type,
+            }
+            for a in (note.attachments or [])
+        ]
+        quality_note_summaries.append({
+            "id": note.id,
+            "batch_id": note.batch_id,
+            "workflow_stage": note.workflow_stage,
+            "process": note.process,
+            "note_type": note.note_type,
+            "status": note.status,
+            "severity": note.severity,
+            "observation": note.observation,
+            "created_at": note.created_at.isoformat() if note.created_at else None,
+            "attachments": attachments,
+        })
+
     return {
         "project": project.to_dict(),
         "workflows": workflow_details,
         "invoices": invoice_summaries,
         "inventory_items": inventory_summaries,
+        "quality_notes": quality_note_summaries,
     }
 
 

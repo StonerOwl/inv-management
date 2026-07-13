@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     Package, DollarSign, Layers, Search, RefreshCw,
     Loader2, ArrowUpRight, AlertCircle, CheckCircle,
-    FileText, Hash, TrendingUp, BarChart3
+    FileText, Hash, TrendingUp, BarChart3, ShoppingCart
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -10,7 +10,7 @@ import {
     PieChart, Pie, Cell
 } from 'recharts';
 import {
-    listInventoryItems, listInvoices, getInvoiceAssignments, getPWSItems, getDashboardData
+    listInventoryItems, listInvoices, getInvoiceAssignments, getPWSItems, getPOStats
 } from '../api/client';
 
 // ── Stat card (same pattern as DashboardPage) ──────────────────────────────
@@ -67,21 +67,24 @@ export default function DashboardInventory() {
     const [invoices, setInvoices] = useState([]);
     const [assignments, setAssignments] = useState([]);
     const [projects, setProjects] = useState([]);
+    const [poStats, setPoStats] = useState(null);
 
     const fetchAll = useCallback(async () => {
         setLoading(true);
         try {
-            const [itemsRes, invRes, assignRes, pwsRes] = await Promise.all([
+            const [itemsRes, invRes, assignRes, pwsRes, poRes] = await Promise.all([
                 listInventoryItems({ limit: 500 }),
                 listInvoices({ limit: 500 }),
                 getInvoiceAssignments(),
                 getPWSItems(),
+                getPOStats().catch(() => ({ data: null })),
             ]);
             setItems(itemsRes.data.items || []);
             setTotal(itemsRes.data.total || 0);
             setInvoices(invRes.data.items || []);
             setAssignments(assignRes.data || []);
             setProjects((pwsRes.data || []).filter(i => i.type === 'project'));
+            setPoStats(poRes.data);
         } catch (err) {
             console.error('DashboardInventory fetch error:', err);
         } finally {
@@ -96,7 +99,6 @@ export default function DashboardInventory() {
     const totalQty = items.reduce((s, i) => s + (parseFloat(i.quantity) || 0), 0);
     const totalValue = items.reduce((s, i) => s + (parseFloat(i.total_amount) || 0), 0);
     const assignedCount = items.filter(i => i.project_assignments?.length > 0).length;
-    const unassigned = items.length - assignedCount;
 
     const parsedCount = invoices.filter(i => i.status === 'processed' || i.status === 'needs_review').length;
     const registeredIds = new Set(assignments.map(a => a.invoice_id));
@@ -112,7 +114,7 @@ export default function DashboardInventory() {
             projectQtyMap[name] = (projectQtyMap[name] || 0) + (parseFloat(item.quantity) || 0);
         });
     });
-    if (unassigned > 0) projectQtyMap['Unassigned'] = unassigned;
+
 
     const barData = Object.entries(projectQtyMap)
         .sort((a, b) => b[1] - a[1])
@@ -172,17 +174,17 @@ export default function DashboardInventory() {
                 {/* ── Top stat cards ── */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatCard
-                        icon={Package}
-                        label="Total Items"
-                        value={loading ? '\u2014' : total.toLocaleString()}
-                        sub="Active items"
-                        loading={loading}
-                    />
-                    <StatCard
                         icon={Hash}
                         label="Total Stock"
                         value={loading ? '\u2014' : Math.round(totalQty).toLocaleString()}
                         sub="All units combined"
+                        loading={loading}
+                    />
+                    <StatCard
+                        icon={Package}
+                        label="Total Items"
+                        value={loading ? '\u2014' : total.toLocaleString()}
+                        sub="Active items"
                         loading={loading}
                     />
                     <StatCard
@@ -339,7 +341,7 @@ export default function DashboardInventory() {
                 {/* ── Status strip ── */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <StatusPill label="Assigned to Project" value={assignedCount} icon={CheckCircle} loading={loading} />
-                    <StatusPill label="Unassigned Items" value={unassigned} icon={AlertCircle} loading={loading} />
+                    <StatusPill label="Total Purchase Orders" value={poStats?.total ?? '\u2014'} icon={ShoppingCart} loading={loading} />
                     <StatusPill label="Registered Invoices" value={registeredCount} icon={FileText} loading={loading} />
                     <StatusPill label="Pending Registration" value={unregisteredCount} icon={TrendingUp} loading={loading} />
                 </div>
