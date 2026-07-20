@@ -365,13 +365,35 @@ class StageItemLink(Base):
         }
 
 
+class InvoiceGroup(Base):
+    __tablename__ = "invoice_groups"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False, index=True)
+    color = Column(String(30), nullable=False, default="gray")
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "color": self.color,
+            "description": self.description,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
 class InvoiceProjectAssignment(Base):
     __tablename__ = "invoice_project_assignments"
 
     id = Column(Integer, primary_key=True, index=True)
     invoice_id = Column(Integer, ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False, index=True)
     project_id = Column(String(50), ForeignKey("pws_items.id", ondelete="CASCADE"), nullable=False, index=True)
+    group_id = Column(Integer, ForeignKey("invoice_groups.id", ondelete="SET NULL"), nullable=True, index=True)
     created_at = Column(DateTime, server_default=func.now())
+
+    group = relationship("InvoiceGroup")
 
     __table_args__ = (
         UniqueConstraint("invoice_id", "project_id", name="uq_invoice_project_assignment"),
@@ -382,6 +404,9 @@ class InvoiceProjectAssignment(Base):
             "id": self.id,
             "invoice_id": self.invoice_id,
             "project_id": self.project_id,
+            "group_id": self.group_id,
+            "group_name": self.group.name if self.group else None,
+            "group_color": self.group.color if self.group else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
@@ -448,6 +473,8 @@ class InventoryItem(Base):
     unit_price = Column(Float, default=0.0)
     total_amount = Column(Float, default=0.0)
     hsn_code = Column(String(255), nullable=True)
+    tax_type = Column(String(50), nullable=True)
+    tax_amount = Column(Float, nullable=True)
     invoice_id = Column(Integer, ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False, index=True)
     invoice_number = Column(String(200), nullable=True)
     source_file_name = Column(String(500), nullable=True)
@@ -465,6 +492,8 @@ class InventoryItem(Base):
             "unit_price": self.unit_price,
             "total_amount": self.total_amount,
             "hsn_code": self.hsn_code,
+            "tax_type": self.tax_type,
+            "tax_amount": self.tax_amount,
             "invoice_id": self.invoice_id,
             "invoice_number": self.invoice_number,
             "source_file_name": self.source_file_name,

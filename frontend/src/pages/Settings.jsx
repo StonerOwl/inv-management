@@ -1,6 +1,7 @@
-import React from 'react';
-import { Settings2, Palette, Type, Maximize, PanelLeft, Zap, Info, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings2, Palette, Type, Maximize, PanelLeft, Zap, Info, Check, Layers, Plus, Trash2, Edit2 } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
+import { listGroups, createGroup, updateGroup, deleteGroup } from '../api/client';
 import clsx from 'clsx';
 
 export default function Settings() {
@@ -18,6 +19,60 @@ export default function Settings() {
     { id: 'rose', label: 'Danger Rose', hex: '#e11d48' },
   ];
 
+  const GROUP_COLORS = ['gray', 'red', 'yellow', 'green', 'blue', 'indigo', 'purple', 'pink'];
+
+  const [groups, setGroups] = useState([]);
+  const [newGroup, setNewGroup] = useState({ name: '', color: 'gray', description: '' });
+  const [editingGroup, setEditingGroup] = useState(null);
+
+  useEffect(() => {
+    fetchGroups();
+  }, []);
+
+  const fetchGroups = async () => {
+    try {
+      const { data } = await listGroups();
+      setGroups(data);
+    } catch (err) {
+      console.error("Failed to fetch groups", err);
+    }
+  };
+
+  const handleCreateGroup = async (e) => {
+    e.preventDefault();
+    if (!newGroup.name) return;
+    try {
+      await createGroup(newGroup);
+      setNewGroup({ name: '', color: 'gray', description: '' });
+      fetchGroups();
+    } catch (err) {
+      alert(err.response?.data?.detail || "Failed to create group");
+    }
+  };
+
+  const handleUpdateGroup = async (id, e) => {
+    e.preventDefault();
+    if (!editingGroup.name) return;
+    try {
+      await updateGroup(id, editingGroup);
+      setEditingGroup(null);
+      fetchGroups();
+    } catch (err) {
+      alert(err.response?.data?.detail || "Failed to update group");
+    }
+  };
+
+  const handleDeleteGroup = async (id) => {
+    if (window.confirm("Are you sure you want to delete this group? Linked invoices will have their group removed.")) {
+      try {
+        await deleteGroup(id);
+        fetchGroups();
+      } catch (err) {
+        alert("Failed to delete group");
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col p-8">
       <div className="max-w-4xl mx-auto w-full">
@@ -34,6 +89,105 @@ export default function Settings() {
         </div>
 
         <div className="space-y-8 pb-20">
+
+          {/* Invoice Groups */}
+          <div className="aiq-card p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <Layers className="text-primary-600 dark:text-primary-400" />
+              <h2 className="text-xl font-bold">Invoice Groups</h2>
+            </div>
+            <p className="text-gray-700 dark:text-gray-300 text-sm mb-6">Create groups to categorize invoices when registering them to projects.</p>
+            
+            <form onSubmit={handleCreateGroup} className="flex gap-4 mb-6 items-start">
+              <div className="flex-1 space-y-2">
+                <input
+                  type="text"
+                  placeholder="Group Name"
+                  value={newGroup.name}
+                  onChange={(e) => setNewGroup(prev => ({ ...prev, name: e.target.value }))}
+                  className="aiq-input w-full"
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Description (optional)"
+                  value={newGroup.description}
+                  onChange={(e) => setNewGroup(prev => ({ ...prev, description: e.target.value }))}
+                  className="aiq-input w-full"
+                />
+              </div>
+              <div className="w-32">
+                <select
+                  value={newGroup.color}
+                  onChange={(e) => setNewGroup(prev => ({ ...prev, color: e.target.value }))}
+                  className="aiq-input w-full"
+                >
+                  {GROUP_COLORS.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <button type="submit" className="aiq-btn-primary px-4 py-2 flex items-center gap-2 whitespace-nowrap h-[42px]">
+                <Plus size={16} /> Add Group
+              </button>
+            </form>
+
+            <div className="space-y-3">
+              {groups.length === 0 ? (
+                <p className="text-sm text-gray-500 italic">No groups created yet.</p>
+              ) : (
+                groups.map(group => (
+                  <div key={group.id} className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                    {editingGroup?.id === group.id ? (
+                      <form onSubmit={(e) => handleUpdateGroup(group.id, e)} className="flex flex-1 gap-4 items-center">
+                        <input
+                          type="text"
+                          value={editingGroup.name}
+                          onChange={(e) => setEditingGroup(prev => ({ ...prev, name: e.target.value }))}
+                          className="aiq-input flex-1"
+                          required
+                        />
+                        <input
+                          type="text"
+                          value={editingGroup.description || ''}
+                          onChange={(e) => setEditingGroup(prev => ({ ...prev, description: e.target.value }))}
+                          className="aiq-input flex-1"
+                          placeholder="Description"
+                        />
+                        <select
+                          value={editingGroup.color}
+                          onChange={(e) => setEditingGroup(prev => ({ ...prev, color: e.target.value }))}
+                          className="aiq-input w-32"
+                        >
+                          {GROUP_COLORS.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                        <div className="flex gap-2">
+                          <button type="submit" className="text-emerald-600 hover:text-emerald-700 font-bold text-sm">Save</button>
+                          <button type="button" onClick={() => setEditingGroup(null)} className="text-gray-500 hover:text-gray-700 font-bold text-sm">Cancel</button>
+                        </div>
+                      </form>
+                    ) : (
+                      <>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className={clsx("w-3 h-3 rounded-full", `bg-${group.color}-500`)} />
+                            <span className="font-bold text-gray-900 dark:text-gray-100">{group.name}</span>
+                          </div>
+                          {group.description && <p className="text-xs text-gray-500 mt-1">{group.description}</p>}
+                        </div>
+                        <div className="flex gap-3">
+                          <button onClick={() => setEditingGroup(group)} className="text-gray-400 hover:text-primary-600 transition-colors">
+                            <Edit2 size={16} />
+                          </button>
+                          <button onClick={() => handleDeleteGroup(group.id)} className="text-gray-400 hover:text-red-600 transition-colors">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
 
           {/* Theme Color */}
           <div className="aiq-card p-8">

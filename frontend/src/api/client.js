@@ -142,7 +142,7 @@ export const deletePWSItem = (id) => api.delete(`/pws/items/${id}`)
 export const getPWSAssignments = () => api.get('/pws/assignments')
 export const createPWSAssignment = (data) => api.post('/pws/assignments', data)
 export const deletePWSAssignment = (parentId, childId) => api.delete(`/pws/assignments/${parentId}/${childId}`)
-export const assignInvoiceToProject = (projectId, invoiceId, selectedLineItemIds = null) => api.post('/pws/invoice-project', { project_id: projectId, invoice_id: invoiceId, ...(selectedLineItemIds ? { selected_line_item_ids: selectedLineItemIds } : {}) })
+export const assignInvoiceToProject = (projectId, invoiceId, selectedLineItemIds = null, groupId = null) => api.post('/pws/invoice-project', { project_id: projectId, invoice_id: invoiceId, ...(selectedLineItemIds ? { selected_line_item_ids: selectedLineItemIds } : {}), ...(groupId ? { group_id: groupId } : {}) })
 export const getProjectAnalytics = (projectId) => api.get(`/pws/projects/${projectId}/analytics`)
 
 export const getInvoiceAssignments = () => api.get('/pws/invoice-project/all')
@@ -158,6 +158,10 @@ export const listInventoryItems = (params) => api.get('/inventory/items', { para
 export const getInventoryItem = (id) => api.get(`/inventory/items/${id}`)
 export const updateInventoryItem = (id, data) => api.put(`/inventory/items/${id}`, data)
 export const deleteInventoryItem = (id) => api.delete(`/inventory/items/${id}`)
+export const exportInventoryExcel = (params) => {
+  const query = new URLSearchParams(params || {}).toString()
+  return downloadBlob(`/inventory/export/excel${query ? '?' + query : ''}`, 'inventory_items.xlsx')
+}
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 export const getDashboardData = () => api.get('/dashboard')
@@ -208,5 +212,11 @@ export const getNotificationHistory = (params) => api.get('/monitoring/notificat
 
 export const completeStage = (stageId, completedBy) => api.post(`/pws/stages/${stageId}/complete`, { completed_by: completedBy })
 export const reopenStage = (stageId) => api.post(`/pws/stages/${stageId}/reopen`)
+
+// ── Groups ────────────────────────────────────────────────────────────────
+export const listGroups = () => api.get('/groups')
+export const createGroup = (data) => api.post('/groups', data)
+export const updateGroup = (id, data) => api.put(`/groups/${id}`, data)
+export const deleteGroup = (id) => api.delete(`/groups/${id}`)
 
 export default api

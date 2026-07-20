@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from db.database import init_db, seed_default_categories, seed_default_admin
-from api.routes import upload, invoices, stats, json_files, query, auth, products, categories, tracking, pws, notes, quality, inventory, devices, monitoring
+from api.routes import upload, invoices, stats, json_files, query, auth, products, categories, tracking, pws, notes, quality, inventory, devices, monitoring, groups
 from api.dependencies import get_current_active_user
 
 logging.basicConfig(
@@ -67,6 +67,7 @@ app.include_router(quality.router, prefix="/api", dependencies=[Depends(get_curr
 app.include_router(inventory.router, dependencies=[Depends(get_current_active_user)])
 app.include_router(devices.router, prefix="/api", dependencies=[Depends(get_current_active_user)])
 app.include_router(monitoring.router, prefix="/api", dependencies=[Depends(get_current_active_user)])
+app.include_router(groups.router, prefix="/api", dependencies=[Depends(get_current_active_user)])
 app.include_router(dashboard_router)
 
 

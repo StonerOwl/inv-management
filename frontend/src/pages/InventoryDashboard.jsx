@@ -3,9 +3,10 @@ import { useDropzone } from 'react-dropzone'
 import { Download, Trash2, Search, Filter, Plus, FileText, Upload as UploadIcon, AlertCircle, CheckCircle, Loader2, RefreshCw, Layers, Edit, Eye, XCircle, Clock, Package, Save, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext';
-import { listInvoices, getInvoice, deleteInvoice, updateInvoice, getPWSItems, getPWSAssignments, assignInvoiceToProject, listInventoryItems, updateInventoryItem, deleteInventoryItem, getInvoiceAssignments } from '../api/client'
+import { listInvoices, getInvoice, deleteInvoice, updateInvoice, getPWSItems, getPWSAssignments, assignInvoiceToProject, listInventoryItems, updateInventoryItem, deleteInventoryItem, getInvoiceAssignments, listGroups } from '../api/client'
 import { useUpload } from '../context/UploadContext'
 import NoteTarget from '../components/NoteTarget';
+import clsx from 'clsx';
 
 const TerminalLogs = ({ logs }) => {
   const endRef = useRef(null)
@@ -71,6 +72,8 @@ export default function InventoryDashboard() {
   const [pwsAssignments, setPwsAssignments] = useState([])
   const [invoiceAssignments, setInvoiceAssignments] = useState([])
   const [selectedProjectId, setSelectedProjectId] = useState('')
+  const [groups, setGroups] = useState([])
+  const [selectedGroupId, setSelectedGroupId] = useState('')
 
   // Edit expanded row state
   const [expandedRow, setExpandedRow] = useState(null)
@@ -100,17 +103,19 @@ export default function InventoryDashboard() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [invRes, pwsRes, assignRes, invAssignRes] = await Promise.all([
+      const [invRes, pwsRes, assignRes, invAssignRes, groupsRes] = await Promise.all([
         listInvoices({ limit: 100 }),
         getPWSItems(),
         getPWSAssignments(),
         getInvoiceAssignments(),
+        listGroups(),
       ])
       setInvoices(invRes.data.items || [])
       setTotal(invRes.data.total || 0)
       setPwsItems(pwsRes.data || [])
       setPwsAssignments(assignRes.data || [])
       setInvoiceAssignments(invAssignRes.data || [])
+      setGroups(groupsRes.data || [])
     } catch (err) {
       console.error(err)
     } finally {
@@ -191,7 +196,7 @@ export default function InventoryDashboard() {
   const handleRegisterSave = async () => {
     if (!selectedInvoice || !selectedProjectId) return
     try {
-      await assignInvoiceToProject(selectedProjectId, selectedInvoice.id, selectedLineItemIds)
+      await assignInvoiceToProject(selectedProjectId, selectedInvoice.id, selectedLineItemIds, selectedGroupId)
       alert("Invoice successfully registered to the selected project!")
       closeRegisterPopup()
       fetchData()
@@ -280,6 +285,7 @@ export default function InventoryDashboard() {
     setRegisterPopupOpen(true)
     setSelectedInvoice({ ...invoice, fileName: invoice.file_name || invoice.invoice_number || `INV-${invoice.id}` })
     setSelectedProjectId('')
+    setSelectedGroupId('')
     setSelectedLineItemIds([])
     setAlreadyRegistered(null)
 
@@ -321,6 +327,7 @@ export default function InventoryDashboard() {
     setRegisterPopupOpen(false)
     setSelectedInvoice(null)
     setSelectedProjectId('')
+    setSelectedGroupId('')
     setSelectedLineItemIds([])
     setAlreadyRegistered(null)
     setRegisterLoading(false)
@@ -739,9 +746,16 @@ export default function InventoryDashboard() {
                             {item.project_assignments?.length > 0 ? (
                               <div className="flex flex-col gap-1">
                                 {item.project_assignments.map((a, i) => (
-                                  <span key={i} className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 font-mono whitespace-nowrap">
-                                    {a.project_code || a.project_id}
-                                  </span>
+                                  <div key={i} className="flex gap-1 items-center flex-wrap">
+                                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 font-mono whitespace-nowrap">
+                                      {a.project_code || a.project_id}
+                                    </span>
+                                    {a.group_id && (
+                                      <span className={clsx("inline-flex items-center px-1.5 py-0.5 text-[9px] font-bold rounded border uppercase tracking-wider", `bg-${a.group_color}-50 text-${a.group_color}-700 border-${a.group_color}-200 dark:bg-${a.group_color}-900/30 dark:text-${a.group_color}-400 dark:border-${a.group_color}-800`)}>
+                                        {a.group_name}
+                                      </span>
+                                    )}
+                                  </div>
                                 ))}
                               </div>
                             ) : <span className="text-xs text-gray-400 italic">—</span>}
@@ -885,6 +899,22 @@ export default function InventoryDashboard() {
                     {projects.map(p => (
                       <option key={p.id} value={p.id}>
                         {p.name} {p.project_code ? `(ID: ${p.project_code}, Batch: ${p.batch_id || 'N/A'})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Assign Group (Optional)</label>
+                  <select
+                    value={selectedGroupId}
+                    onChange={(e) => setSelectedGroupId(e.target.value)}
+                    className="aiq-input appearance-none"
+                  >
+                    <option value="">-- No Group --</option>
+                    {groups.map(g => (
+                      <option key={g.id} value={g.id}>
+                        {g.name}
                       </option>
                     ))}
                   </select>

@@ -7,7 +7,7 @@ import { useNotes } from '../context/NotesContext';
 import NotesDrawer from './NotesDrawer';
 import { ErrorBoundary } from './ErrorBoundary';
 import clsx from 'clsx';
-import { Zap, Moon, Sun, Database, Layers, GitBranch, Home, Package, Search, Sparkles, HelpCircle, Settings as SettingsIcon, MessageSquare, ChevronRight, ShieldCheck, Folder, Smartphone, ScrollText, AlertTriangle, Bell, MonitorSmartphone } from 'lucide-react';
+import { Zap, Moon, Sun, Database, Layers, GitBranch, Home, Package, Search, Sparkles, HelpCircle, Settings as SettingsIcon, MessageSquare, ChevronRight, ShieldCheck, Folder, Smartphone, ScrollText, AlertTriangle, Bell, MonitorSmartphone, FileText } from 'lucide-react';
 
 const MAIN_TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard-overview' },
@@ -38,6 +38,7 @@ const SIDEBAR_OPTIONS = {
   ],
   'inventory': [
     { label: 'Inventory', path: '/inventory/dashboard', icon: Package },
+    { label: 'Reports', path: '/inventory/reports', icon: FileText },
   ],
   'settings': [
     { label: 'Preferences', path: '/settings', icon: SettingsIcon },

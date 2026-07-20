@@ -32,6 +32,7 @@ class PWSAssignmentCreate(BaseModel):
 class InvoiceProjectAssignmentCreate(BaseModel):
     invoice_id: int
     project_id: str
+    group_id: Optional[int] = None
     selected_line_item_ids: Optional[List[int]] = None
 
 
@@ -171,7 +172,11 @@ def assign_invoice_to_project(assign: InvoiceProjectAssignmentCreate, db: Sessio
     if existing:
         return existing.to_dict()
 
-    assignment = InvoiceProjectAssignment(invoice_id=assign.invoice_id, project_id=assign.project_id)
+    assignment = InvoiceProjectAssignment(
+        invoice_id=assign.invoice_id,
+        project_id=assign.project_id,
+        group_id=assign.group_id
+    )
     db.add(assignment)
 
     # ── Auto-create inventory items from the invoice's parsed line items ──
@@ -194,6 +199,8 @@ def assign_invoice_to_project(assign: InvoiceProjectAssignmentCreate, db: Sessio
                 unit_price=li.unit_price or 0.0,
                 total_amount=li.total_amount or 0.0,
                 hsn_code=li.hsn_code,
+                tax_type=li.tax_type,
+                tax_amount=li.tax_amount,
                 invoice_id=invoice.id,
                 invoice_number=invoice.invoice_number,
                 source_file_name=invoice.file_name,

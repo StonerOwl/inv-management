@@ -6,7 +6,7 @@ and can be viewed, edited, and deleted independently.
 from typing import Optional, Dict, Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import desc, or_
 from pydantic import BaseModel
 
@@ -29,6 +29,7 @@ def list_inventory_items(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     search: Optional[str] = None,
+    group_id: Optional[int] = None,
     db: Session = Depends(get_db),
 ):
     """List all inventory items with optional search and pagination."""
@@ -44,6 +45,10 @@ def list_inventory_items(
                 InventoryItem.notes.ilike(pattern),
             )
         )
+        
+    if group_id:
+        q = q.join(InvoiceProjectAssignment, InventoryItem.invoice_id == InvoiceProjectAssignment.invoice_id)\
+             .filter(InvoiceProjectAssignment.group_id == group_id)
 
     total = q.count()
     items = q.order_by(desc(InventoryItem.created_at)).offset(skip).limit(limit).all()
@@ -52,6 +57,7 @@ def list_inventory_items(
     invoice_ids = list({item.invoice_id for item in items})
     assignments = (
         db.query(InvoiceProjectAssignment)
+        .options(joinedload(InvoiceProjectAssignment.group))
         .filter(InvoiceProjectAssignment.invoice_id.in_(invoice_ids))
         .all()
     ) if invoice_ids else []
@@ -72,6 +78,9 @@ def list_inventory_items(
             "project_id": a.project_id,
             "project_code": pws.project_code if pws else None,
             "project_name": pws.name if pws else None,
+            "group_id": a.group_id,
+            "group_name": a.group.name if a.group else None,
+            "group_color": a.group.color if a.group else None,
         })
 
     def item_with_project(item):
@@ -88,7 +97,120 @@ def list_inventory_items(
 
 
 @router.get("/items/{item_id}", response_model=Dict[str, Any])
+@router.get("/items/{item_id}", response_model=Dict[str, Any])
 def get_inventory_item(item_id: int, db: Session = Depends(get_db)):
+    item = db.query(InventoryItem).filter(InventoryItem.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    assignments = db.query(InvoiceProjectAssignment)\
+        .options(joinedload(InvoiceProjectAssignment.group))\
+        .filter(InvoiceProjectAssignment.invoice_id == item.invoice_id).all()
+        
+    pws_ids = list({a.project_id for a in assignments})
+    pws_items = db.query(PWSItem).filter(PWSItem.id.in_(pws_ids)).all() if pws_ids else []
+    pws_map = {p.id: p for p in pws_items}
+
+    proj_list = []
+    for a in assignments:
+        pws = pws_map.get(a.project_id)
+        proj_list.append({
+            "project_id": a.project_id,
+            "project_code": pws.project_code if pws else None,
+            "project_name": pws.name if pws else None,
+            "group_id": a.group_id,
+            "group_name": a.group.name if a.group else None,
+            "group_color": a.group.color if a.group else None,
+        })
+        
+    d = item.to_dict()
+    d["project_assignments"] = proj_list
+    return d
+
+
+@router.get("/export/excel")
+def export_inventory_excel(
+    search: Optional[str] = None,
+    group_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    import io
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment
+    from fastapi.responses import StreamingResponse
+
+    q = db.query(InventoryItem)
+
+    if search:
+        pattern = f"%{search}%"
+        q = q.filter(
+            or_(
+                InventoryItem.item_name.ilike(pattern),
+                InventoryItem.invoice_number.ilike(pattern),
+                InventoryItem.source_file_name.ilike(pattern),
+                InventoryItem.notes.ilike(pattern),
+            )
+        )
+        
+    if group_id:
+        q = q.join(InvoiceProjectAssignment, InventoryItem.invoice_id == InvoiceProjectAssignment.invoice_id)\
+             .filter(InvoiceProjectAssignment.group_id == group_id)
+
+    items = q.order_by(desc(InventoryItem.created_at)).all()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Inventory Items"
+
+    headers = [
+        "ID", "Item Name", "Invoice Number", "Quantity", "Unit Price", "Total Amount", 
+        "HSN Code", "Tax Type", "Tax Amount", "Notes", "Source File"
+    ]
+    
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="3B82F6", end_color="3B82F6", fill_type="solid")
+    
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center")
+        
+    for row_num, item in enumerate(items, 2):
+        ws.cell(row=row_num, column=1, value=item.id)
+        ws.cell(row=row_num, column=2, value=item.item_name)
+        ws.cell(row=row_num, column=3, value=item.invoice_number)
+        ws.cell(row=row_num, column=4, value=item.quantity)
+        ws.cell(row=row_num, column=5, value=item.unit_price)
+        ws.cell(row=row_num, column=6, value=item.total_amount)
+        ws.cell(row=row_num, column=7, value=item.hsn_code)
+        ws.cell(row=row_num, column=8, value=item.tax_type)
+        ws.cell(row=row_num, column=9, value=item.tax_amount)
+        ws.cell(row=row_num, column=10, value=item.notes)
+        ws.cell(row=row_num, column=11, value=item.source_file_name)
+
+    # Auto-adjust column widths
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = (max_length + 2)
+        ws.column_dimensions[column].width = min(adjusted_width, 50)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=inventory_items.xlsx"}
+    )
     """Get a single inventory item by ID."""
     item = db.query(InventoryItem).filter(InventoryItem.id == item_id).first()
     if not item:

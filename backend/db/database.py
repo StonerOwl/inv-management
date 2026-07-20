@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 
 import config
-from db.models import Base, Category, User, Device
+from db.models import Base, Category, User, Device, InvoiceGroup
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +84,50 @@ def init_db() -> None:
             """))
             conn.commit()
             logger.info("Ensured inventory_items table exists")
+    except Exception:
+        pass
+
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS invoice_groups (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(100) UNIQUE NOT NULL,
+                    color VARCHAR(30) NOT NULL DEFAULT 'gray',
+                    description TEXT,
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            """))
+            conn.commit()
+            logger.info("Ensured invoice_groups table exists")
+    except Exception as e:
+        logger.warning(f"Failed to create invoice_groups table: {e}")
+
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE invoice_project_assignments ADD COLUMN group_id INTEGER REFERENCES invoice_groups(id) ON DELETE SET NULL;"))
+            conn.commit()
+            logger.info("Added group_id column to invoice_project_assignments")
+    except Exception:
+        pass
+
+    try:
+        with engine.connect() as conn:
+            # Check for tax_type in inventory_items
+            res = conn.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='inventory_items' AND column_name='tax_type'"))
+            if not res.fetchone():
+                conn.execute(text("ALTER TABLE inventory_items ADD COLUMN tax_type VARCHAR(50);"))
+            conn.commit()
+    except Exception:
+        pass
+        
+    try:
+        with engine.connect() as conn:
+            # Check for tax_amount in inventory_items
+            res = conn.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='inventory_items' AND column_name='tax_amount'"))
+            if not res.fetchone():
+                conn.execute(text("ALTER TABLE inventory_items ADD COLUMN tax_amount DOUBLE PRECISION;"))
+            conn.commit()
     except Exception:
         pass
 

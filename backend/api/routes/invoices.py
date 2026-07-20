@@ -7,7 +7,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 
 from db.database import get_db
@@ -47,6 +47,7 @@ def list_invoices(
     invoice_ids = [inv.id for inv in invoices]
     assignments = (
         db.query(InvoiceProjectAssignment)
+        .options(joinedload(InvoiceProjectAssignment.group))
         .filter(InvoiceProjectAssignment.invoice_id.in_(invoice_ids))
         .all()
     ) if invoice_ids else []
@@ -69,6 +70,9 @@ def list_invoices(
             "project_id": a.project_id,
             "project_code": pws.project_code if pws else None,
             "project_name": pws.name if pws else None,
+            "group_id": a.group_id,
+            "group_name": a.group.name if a.group else None,
+            "group_color": a.group.color if a.group else None,
         })
 
     return {

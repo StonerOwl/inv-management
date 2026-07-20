@@ -22,6 +22,7 @@ import ManageTracking from './pages/ManageTracking'
 import PlaceholderPage from './pages/PlaceholderPage'
 import RegisterInventory from './pages/RegisterInventory'
 import SearchInventory from './pages/SearchInventory'
+import InventoryReports from './pages/InventoryReports'
 import CreatePWS from './pages/CreatePWS'
 import ManageWorkflow from './pages/ManageWorkflow'
 import IntegrateDevices from './pages/IntegrateDevices'
@@ -65,6 +66,7 @@ export default function App() {
                     <Route path="/inventory/register/:id?" element={<Navigate to="/inventory/dashboard" replace />} />
                     <Route path="/inventory/search" element={<Navigate to="/inventory/dashboard" replace />} />
                     <Route path="/inventory/dashboard" element={<InventoryDashboard />} />
+                    <Route path="/inventory/reports" element={<InventoryReports />} />
 
                     <Route path="/tracking" element={<TrackingDashboard />} />
                     <Route path="/tracking/trace-inv" element={<TraceInventory />} />
