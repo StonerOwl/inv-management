@@ -706,41 +706,22 @@ export default function CreatePWS() {
         )}
 
         {viewMode === 'manage' && (
-          <div className="flex gap-8">
-            <div className="w-1/3 flex flex-col gap-4">
-              <h3 className="text-sm font-black tracking-normal text-gray-400 ">Select Project</h3>
-              <div className="flex flex-col gap-2">
-                {projects.length === 0 ? (
-                  <div className="p-8 border border-gray-200 dark:border-gray-700 border-dashed text-center text-gray-800 dark:text-gray-200 text-sm font-bold">
-                    No projects found.<br />Go to Create view first.
-                  </div>
-                ) : (
-                  projects.map(p => (
-                    <NoteTarget
-                      key={p.id}
-                      as="button"
-                      targetType="project"
-                      targetId={p.id}
-                      onClick={() => setSelectedProjectId(p.id)}
-                      className={clsx(
-                        "p-4 border text-left flex items-center justify-between transition-colors",
-                        selectedProjectId === p.id
-                          ? "border-primary-600 dark:border-primary-400 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400"
-                          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 text-gray-600 dark:text-gray-400"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <FolderPlus size={18} />
-                        <span className="font-bold">{p.name}</span>
-                      </div>
-                      <ChevronRight size={18} />
-                    </NoteTarget>
-                  ))
-                )}
-              </div>
+          <div className="flex flex-col gap-6">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 flex items-center gap-4">
+              <label className="text-sm font-black tracking-normal text-gray-500 uppercase shrink-0">Select Project</label>
+              <select
+                value={selectedProjectId || ''}
+                onChange={(e) => setSelectedProjectId(e.target.value)}
+                className="aiq-input flex-1 max-w-md text-base font-bold"
+              >
+                <option value="">-- Choose a Project --</option>
+                {projects.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
             </div>
 
-            <div className="w-2/3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-8 min-h-[500px]">
+            <div className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-8 min-h-[500px]">
               {!selectedProjectId ? (
                 <div className="h-full flex items-center justify-center text-gray-700 dark:text-gray-300 font-semibold tracking-normal">
                   Select a project to manage
