@@ -235,9 +235,7 @@ export default function AppLayout() {
         <div className={clsx("flex flex-1 overflow-hidden relative", settings.sidebarLayout === 'right' ? 'flex-row-reverse' : '')}>
           {showSidebar && (
             <aside className="w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shrink-0 overflow-y-auto flex flex-col py-6 z-10">
-              <div className="px-6 mb-4">
-                <p className="text-xs font-extrabold text-gray-800 dark:text-gray-200 uppercase tracking-wider">Navigation</p>
-              </div>
+
               <div className="flex flex-col gap-1 px-3">
                 {activeSidebarOptions.map((opt) => (
                   <NavLink
