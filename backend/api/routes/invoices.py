@@ -352,6 +352,48 @@ def update_invoice(invoice_id: int, updates: dict, db: Session = Depends(get_db)
     return inv.to_dict()
 
 
+@router.post("/{invoice_id}/reparse")
+async def reparse_invoice(invoice_id: int, db: Session = Depends(get_db)):
+    from pathlib import Path
+    from core.document_loader import load_document
+    from core.extractor import extract_invoice_fields
+    import config
+    
+    repo = InvoiceRepository(db)
+    inv = repo.get_invoice(invoice_id)
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+        
+    file_path = Path(inv.file_path)
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Invoice file not found on disk")
+        
+    # Load and extract again
+    doc_result = load_document(file_path)
+    if doc_result.error:
+        raise HTTPException(status_code=500, detail=f"Document load failed: {doc_result.error}")
+        
+    extracted = await extract_invoice_fields(doc_result.raw_text)
+    
+    # Prepare updates dictionary
+    updates = extracted.model_dump()
+    updates["raw_text"] = doc_result.raw_text[:50000]
+    updates["raw_json"] = extracted.model_dump_json()
+    updates["confidence_score"] = extracted.confidence_score
+    updates["line_items"] = [li.model_dump() for li in extracted.line_items] if extracted.line_items else []
+    
+    updated_inv = repo.update_invoice(invoice_id, updates)
+    if not updated_inv:
+        raise HTTPException(status_code=404, detail="Failed to update invoice")
+        
+    return {
+        **updated_inv.to_dict(),
+        "raw_text": updated_inv.raw_text,
+        "line_items": [li.to_dict() for li in updated_inv.line_items],
+        "taxes": [t.to_dict() for t in updated_inv.taxes],
+    }
+
+
 @router.delete("/{invoice_id}", dependencies=[Depends(get_current_admin)])
 def delete_invoice(invoice_id: int, db: Session = Depends(get_db)):
     repo = InvoiceRepository(db)

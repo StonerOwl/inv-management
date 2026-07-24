@@ -181,7 +181,8 @@ class InvoiceRepository:
         allowed = {
             "invoice_number", "invoice_date", "invoice_details",
             "gst_registration_no", "pan_no", "cin_no",
-            "status", "category",
+            "status", "category", "confidence_score",
+            "raw_text", "raw_json"
         }
         for key, val in updates.items():
             if key in allowed:

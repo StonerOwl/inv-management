@@ -75,7 +75,7 @@ async def extract_invoice_fields(
     Sends raw text to Ollama and returns a validated InvoiceExtracted object.
     """
     # Truncate raw text to a reasonable limit for small local models to avoid massive slowdowns
-    max_chars = 6000
+    max_chars = 15000
     text_for_llm = raw_text[:max_chars]
     if len(raw_text) > max_chars:
         logger.warning(f"Text truncated from {len(raw_text)} to {max_chars} chars for LLM")
@@ -93,7 +93,7 @@ async def extract_invoice_fields(
             format="json",
             options={
                 "temperature": 0.0,
-                "num_ctx": 4096
+                "num_ctx": 8192
             }
         )
         

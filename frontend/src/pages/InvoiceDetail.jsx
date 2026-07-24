@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getInvoice, updateInvoice, deleteInvoice } from '../api/client'
-import { ArrowLeft, Edit2, Save, Trash2, X, FileText, Package, Receipt, Link2 } from 'lucide-react'
+import { getInvoice, updateInvoice, deleteInvoice, reparseInvoice } from '../api/client'
+import { ArrowLeft, Edit2, Save, Trash2, X, FileText, Package, Receipt, Link2, RefreshCw } from 'lucide-react'
 import clsx from 'clsx'
 
 function Field({ label, value, editable, editKey, editValues, onChange }) {
@@ -45,6 +45,7 @@ export default function InvoiceDetail() {
   const [editing, setEditing] = useState(false)
   const [editValues, setEditValues] = useState({})
   const [saving, setSaving] = useState(false)
+  const [reparsing, setReparsing] = useState(false)
   const [showRaw, setShowRaw] = useState(false)
 
   useEffect(() => {
@@ -72,6 +73,20 @@ export default function InvoiceDetail() {
     if (!confirm('Delete this invoice from the database?')) return
     await deleteInvoice(id)
     navigate('/invoices')
+  }
+
+  const handleReparse = async () => {
+    if (!confirm('Are you sure you want to re-parse this invoice? This will override current extracted data.')) return
+    setReparsing(true)
+    try {
+      const { data } = await reparseInvoice(id)
+      setInvoice(prev => ({ ...prev, ...data }))
+      alert('Invoice successfully re-parsed!')
+    } catch (e) {
+      alert('Failed to re-parse invoice: ' + (e.response?.data?.detail || e.message))
+    } finally {
+      setReparsing(false)
+    }
   }
 
   const formatCurrency = (v) =>
@@ -128,6 +143,9 @@ export default function InvoiceDetail() {
               </>
             ) : (
               <>
+                <button onClick={handleReparse} disabled={reparsing} className="aiq-btn px-4 py-2.5 flex items-center gap-2 text-xs">
+                  <RefreshCw size={14} className={reparsing ? "animate-spin" : ""} /> {reparsing ? 'REPARSING...' : 'REPARSE'}
+                </button>
                 <button onClick={() => setEditing(true)} className="aiq-btn px-4 py-2.5 flex items-center gap-2 text-xs">
                   <Edit2 size={14} /> EDIT
                 </button>

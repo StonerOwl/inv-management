@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone'
 import { Download, Trash2, Search, Filter, Plus, FileText, Upload as UploadIcon, AlertCircle, CheckCircle, Loader2, RefreshCw, Layers, Edit, Eye, XCircle, Clock, Package, Save, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext';
-import { listInvoices, getInvoice, deleteInvoice, updateInvoice, getPWSItems, getPWSAssignments, assignInvoiceToProject, listInventoryItems, updateInventoryItem, deleteInventoryItem, getInvoiceAssignments, listGroups } from '../api/client'
+import { listInvoices, getInvoice, deleteInvoice, updateInvoice, getPWSItems, getPWSAssignments, assignInvoiceToProject, listInventoryItems, updateInventoryItem, deleteInventoryItem, getInvoiceAssignments, listGroups, reparseInvoice } from '../api/client'
 import { useUpload } from '../context/UploadContext'
 import NoteTarget from '../components/NoteTarget';
 import clsx from 'clsx';
@@ -62,6 +62,7 @@ export default function InventoryDashboard() {
   const [selectedLineItemIds, setSelectedLineItemIds] = useState([])
   const [registerLoading, setRegisterLoading] = useState(false)
   const [alreadyRegistered, setAlreadyRegistered] = useState(null)
+  const [reparsingId, setReparsingId] = useState(null)
 
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
@@ -146,6 +147,24 @@ export default function InventoryDashboard() {
     })
   }
 
+  const handleAddLineItem = () => {
+    setEditData(prev => ({
+      ...prev,
+      line_items: [
+        ...(prev.line_items || []),
+        { name: '', hsn_code: '', unit_price: 0, quantity: 1, net_amount: 0, tax_rate: 0, tax_type: '', tax_amount: 0, total_amount: 0 }
+      ]
+    }))
+  }
+
+  const handleRemoveLineItem = (index) => {
+    setEditData(prev => {
+      const newItems = [...(prev.line_items || [])]
+      newItems.splice(index, 1)
+      return { ...prev, line_items: newItems }
+    })
+  }
+
   const handleSaveEdit = async (id) => {
     try {
       await updateInvoice(id, {
@@ -175,6 +194,21 @@ export default function InventoryDashboard() {
       } catch (err) {
         console.error("Failed to delete invoice:", err)
       }
+    }
+  }
+
+  const handleReparse = async (id) => {
+    if (!window.confirm('Are you sure you want to re-parse this invoice? This will override current extracted data.')) return
+    setReparsingId(id)
+    try {
+      await reparseInvoice(id)
+      alert('Invoice successfully re-parsed!')
+      fetchData()
+      fetchInventoryItems(inventorySearch)
+    } catch (e) {
+      alert('Failed to re-parse invoice: ' + (e.response?.data?.detail || e.message))
+    } finally {
+      setReparsingId(null)
     }
   }
 
@@ -539,6 +573,9 @@ export default function InventoryDashboard() {
                         <NoteTarget as="td" targetType="invoice" targetId={item.id} className="py-4 px-6 flex items-center justify-end gap-3 text-gray-400 relative z-20">
                           <button onClick={() => handleToggleExpand(item)} className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors" title="View/Edit"><Eye size={18} strokeWidth={1.5} /></button>
                           <button onClick={() => handleDownload(item)} className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors" title="Download"><Download size={18} strokeWidth={1.5} /></button>
+                          <button onClick={() => handleReparse(item.id)} disabled={reparsingId === item.id} className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors disabled:opacity-50" title="Reparse">
+                            <RefreshCw size={18} strokeWidth={1.5} className={reparsingId === item.id ? "animate-spin" : ""} />
+                          </button>
                           <button onClick={() => handleDelete(item.id)} className="hover:text-red-500 dark:hover:text-red-400 transition-colors" title="Delete"><Trash2 size={18} strokeWidth={1.5} /></button>
                           <button
                             onClick={() => openRegisterPopup(item)}
@@ -600,27 +637,37 @@ export default function InventoryDashboard() {
                                   <table className="w-full text-left text-sm whitespace-nowrap">
                                     <thead>
                                       <tr className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-gray-800">
-                                        {['Description', 'HSN', 'Unit Price', 'Qty', 'Net Amt', 'Tax Rate', 'Tax Type', 'Tax Amt', 'Total Amt'].map(h => (
+                                        {['Description', 'HSN', 'Unit Price', 'Qty', 'Net Amt', 'Tax Rate', 'Tax Type', 'Tax Amt', 'Total Amt', ''].map(h => (
                                           <th key={h} className="px-2 py-2">{h}</th>
                                         ))}
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {(editData.line_items || []).map((li, index) => (
-                                        <tr key={index} className="border-b dark:border-gray-700">
+                                        <tr key={index} className="border-b dark:border-gray-700 hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
                                           <td className="p-1"><input type="text" className="w-32 border rounded px-1 py-1 text-xs" value={li.name || ''} onChange={(e) => handleLineItemChange(index, 'name', e.target.value)} /></td>
-                                          <td className="p-1"><input type="text" className="w-20 border rounded px-1 py-1 text-xs" value={li.hsn_code || ''} onChange={(e) => handleLineItemChange(index, 'hsn_code', e.target.value)} /></td>
+                                          <td className="p-1"><input type="text" className="w-16 border rounded px-1 py-1 text-xs" value={li.hsn_code || ''} onChange={(e) => handleLineItemChange(index, 'hsn_code', e.target.value)} /></td>
                                           <td className="p-1"><input type="number" className="w-20 border rounded px-1 py-1 text-xs" value={li.unit_price || ''} onChange={(e) => handleLineItemChange(index, 'unit_price', e.target.value)} /></td>
-                                          <td className="p-1"><input type="number" className="w-16 border rounded px-1 py-1 text-xs" value={li.quantity || ''} onChange={(e) => handleLineItemChange(index, 'quantity', e.target.value)} /></td>
+                                          <td className="p-1"><input type="number" className="w-14 border rounded px-1 py-1 text-xs" value={li.quantity || ''} onChange={(e) => handleLineItemChange(index, 'quantity', e.target.value)} /></td>
                                           <td className="p-1"><input type="number" className="w-20 border rounded px-1 py-1 text-xs" value={li.net_amount || ''} onChange={(e) => handleLineItemChange(index, 'net_amount', e.target.value)} /></td>
-                                          <td className="p-1"><input type="number" className="w-16 border rounded px-1 py-1 text-xs" value={li.tax_rate || ''} onChange={(e) => handleLineItemChange(index, 'tax_rate', e.target.value)} /></td>
-                                          <td className="p-1"><input type="text" className="w-20 border rounded px-1 py-1 text-xs" value={li.tax_type || ''} onChange={(e) => handleLineItemChange(index, 'tax_type', e.target.value)} /></td>
+                                          <td className="p-1"><input type="number" className="w-14 border rounded px-1 py-1 text-xs" value={li.tax_rate || ''} onChange={(e) => handleLineItemChange(index, 'tax_rate', e.target.value)} /></td>
+                                          <td className="p-1"><input type="text" className="w-16 border rounded px-1 py-1 text-xs" value={li.tax_type || ''} onChange={(e) => handleLineItemChange(index, 'tax_type', e.target.value)} /></td>
                                           <td className="p-1"><input type="number" className="w-20 border rounded px-1 py-1 text-xs" value={li.tax_amount || ''} onChange={(e) => handleLineItemChange(index, 'tax_amount', e.target.value)} /></td>
                                           <td className="p-1"><input type="number" className="w-20 border rounded px-1 py-1 text-xs" value={li.total_amount || ''} onChange={(e) => handleLineItemChange(index, 'total_amount', e.target.value)} /></td>
+                                          <td className="p-1 text-center">
+                                            <button onClick={() => handleRemoveLineItem(index)} className="text-red-400 hover:text-red-600 transition-colors">
+                                              <Trash2 size={14} />
+                                            </button>
+                                          </td>
                                         </tr>
                                       ))}
                                     </tbody>
                                   </table>
+                                </div>
+                                <div className="mt-3">
+                                  <button onClick={handleAddLineItem} className="text-xs font-semibold flex items-center gap-1.5 text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:hover:bg-primary-900/40 px-3 py-1.5 rounded transition-colors">
+                                    <Plus size={14} /> Add Line Item
+                                  </button>
                                 </div>
                               </div>
 

@@ -29,6 +29,7 @@ export const getUnmatchedInvoices = (params) => api.get('/invoices/unmatched', {
 export const getInvoice = (id) => api.get(`/invoices/${id}`)
 export const updateInvoice = (id, updates) => api.put(`/invoices/${id}`, updates)
 export const deleteInvoice = (id) => api.delete(`/invoices/${id}`)
+export const reparseInvoice = (id) => api.post(`/invoices/${id}/reparse`, {}, { timeout: 120000 })
 export const suggestPOs = (id) => api.get(`/invoices/${id}/suggest-po`)
 export const linkPO = (invoiceId, poId) => api.put(`/invoices/${invoiceId}/link-po?po_id=${poId}`)
 
