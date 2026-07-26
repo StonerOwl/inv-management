@@ -7,7 +7,7 @@ import { useNotes } from '../context/NotesContext';
 import NotesDrawer from './NotesDrawer';
 import { ErrorBoundary } from './ErrorBoundary';
 import clsx from 'clsx';
-import { Zap, Moon, Sun, Database, Layers, GitBranch, Home, Package, Search, Sparkles, HelpCircle, Settings as SettingsIcon, MessageSquare, ChevronRight, ShieldCheck, Folder, Smartphone, ScrollText, AlertTriangle, Bell, MonitorSmartphone, FileText } from 'lucide-react';
+import { Zap, Moon, Sun, Database, Layers, GitBranch, GitCommit, Settings2, Home, Package, Search, Sparkles, HelpCircle, Settings as SettingsIcon, MessageSquare, ChevronRight, ShieldCheck, Folder, Smartphone, ScrollText, AlertTriangle, Bell, MonitorSmartphone, FileText } from 'lucide-react';
 
 const MAIN_TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard-overview' },
@@ -30,6 +30,8 @@ const SIDEBAR_OPTIONS = {
   'app-management': [
     { label: 'Manage Project', path: '/app-management/create-pws', icon: Layers },
     { label: 'Manage Workflow', path: '/app-management/manage-workflow', icon: GitBranch },
+    { label: 'Manage Stage', path: '/app-management/manage-stage', icon: GitCommit },
+    { label: 'Manage Process', path: '/app-management/manage-process', icon: Settings2 },
     { label: 'Integrate Devices', path: '/app-management/integrate-devices', icon: Smartphone },
   ],
   'analytics': [

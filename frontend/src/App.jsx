@@ -25,6 +25,8 @@ import SearchInventory from './pages/SearchInventory'
 import InventoryReports from './pages/InventoryReports'
 import CreatePWS from './pages/CreatePWS'
 import ManageWorkflow from './pages/ManageWorkflow'
+import ManageStage from './pages/ManageStage'
+import ManageProcess from './pages/ManageProcess'
 import IntegrateDevices from './pages/IntegrateDevices'
 import MobilePairing from './pages/MobilePairing'
 import Settings from './pages/Settings'
@@ -78,6 +80,8 @@ export default function App() {
                     <Route path="/admin/create-pws" element={<ProtectedRoute requiredRole="admin"><CreatePWS /></ProtectedRoute>} />
                     <Route path="/app-management/create-pws" element={<ProtectedRoute requiredRole="admin"><CreatePWS /></ProtectedRoute>} />
                     <Route path="/app-management/manage-workflow" element={<ProtectedRoute requiredRole="admin"><ManageWorkflow /></ProtectedRoute>} />
+                    <Route path="/app-management/manage-stage" element={<ProtectedRoute requiredRole="admin"><ManageStage /></ProtectedRoute>} />
+                    <Route path="/app-management/manage-process" element={<ProtectedRoute requiredRole="admin"><ManageProcess /></ProtectedRoute>} />
                     <Route path="/app-management/integrate-devices" element={<ProtectedRoute requiredRole="admin"><IntegrateDevices /></ProtectedRoute>} />
 
                     <Route path="/invoices/:id" element={<InvoiceDetail />} />

@@ -279,18 +279,6 @@ export default function IntegrateDevices() {
         <StatCard icon={<AlertTriangle size={24} className="text-white" />} iconBg="bg-red-500" title="Data Sync Alerts" value={stats.top_cards.data_sync_alerts} sub={<span className="text-blue-600 hover:underline cursor-pointer">View all alerts →</span>} />
       </div>
 
-      {/* Category Tabs */}
-      <div className="flex items-center gap-1 md:gap-3 border-b border-gray-200 dark:border-gray-700 mb-6 text-[10px] lg:text-xs font-semibold text-gray-600 dark:text-gray-400 pb-2 w-full justify-between overflow-hidden">
-        {['All', 'Sensor Arrays', 'Cameras / Camera Arrays', 'Spectral', 'Ultrasonic / Acoustics', 'X-Ray', 'Analytical Instruments', 'Gateways & APIs'].map(cat => (
-          <span
-            key={cat}
-            onClick={() => setFilterCategory(cat)}
-            className={`cursor-pointer px-2 py-1 md:py-1.5 rounded-md transition-colors whitespace-nowrap ${filterCategory === cat ? 'bg-blue-600 text-white' : 'text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400'}`}
-          >
-            {cat === 'All' ? 'All Devices' : cat}
-          </span>
-        ))}
-      </div>
 
       {/* Category Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
@@ -319,6 +307,19 @@ export default function IntegrateDevices() {
             <FlowBlock icon={<FileText className="text-emerald-600 dark:text-emerald-400" size={22} />} title="Quality Report" desc="Insights, Alerts" />
           </div>
         </div>
+      </div>
+
+      {/* Category Tabs (Filters) */}
+      <div className="flex items-center gap-1 md:gap-3 mb-4 text-[10px] lg:text-xs font-semibold text-gray-600 dark:text-gray-400 w-full justify-between overflow-x-auto pb-1 hide-scrollbar">
+        {['All', 'Sensor Arrays', 'Cameras / Camera Arrays', 'Spectral', 'Ultrasonic / Acoustics', 'X-Ray', 'Analytical Instruments', 'Gateways & APIs'].map(cat => (
+          <span
+            key={cat}
+            onClick={() => setFilterCategory(cat)}
+            className={`cursor-pointer px-3 py-1.5 rounded-full transition-colors whitespace-nowrap border ${filterCategory === cat ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400'}`}
+          >
+            {cat === 'All' ? 'All Devices' : cat}
+          </span>
+        ))}
       </div>
 
       {/* Main Table */}
