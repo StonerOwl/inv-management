@@ -26,6 +26,9 @@ const SIDEBAR_OPTIONS = {
   ],
   'quality': [
     { label: 'Dashboard', path: '/quality' },
+    { label: 'Quality Parameter', path: '/quality/parameters' },
+    { label: 'Product Quality', path: '/quality/product' },
+    { label: 'Batch Quality', path: '/quality/batch' },
   ],
   'app-management': [
     { label: 'Manage Project', path: '/app-management/create-pws', icon: Layers },
