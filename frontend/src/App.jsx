@@ -33,6 +33,7 @@ import Settings from './pages/Settings'
 import HelpSupport from './pages/HelpSupport'
 import QualityManagement from './pages/QualityManagement'
 import QualityParametersPage from './pages/quality/QualityParametersPage'
+import ProductQualityPage from './pages/quality/ProductQualityPage'
 import { MonitoringLogs, MonitoringAlerts, MonitoringDevices, MonitoringNotifications } from './pages/Monitoring'
 import { AuthProvider } from './context/AuthContext'
 import { UploadProvider } from './context/UploadContext'
@@ -92,7 +93,7 @@ export default function App() {
 
                     <Route path="/quality" element={<QualityManagement />} />
                     <Route path="/quality/parameters" element={<QualityParametersPage />} />
-                    <Route path="/quality/product" element={<PlaceholderPage title="Product Quality" />} />
+                    <Route path="/quality/product" element={<ProductQualityPage />} />
                     <Route path="/quality/batch" element={<PlaceholderPage title="Batch Quality" />} />
 
                     <Route path="/ai-overview" element={<PlaceholderPage title="AI Overview" />} />

@@ -212,6 +212,9 @@ async def upload_quality_evidence(
 def list_quality_notes(
     status: Optional[str] = None,
     batch_id: Optional[str] = None,
+    project_id: Optional[str] = None,
+    workflow_stage: Optional[str] = None,
+    process: Optional[str] = None,
     pending_approval: bool = False,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -221,10 +224,28 @@ def list_quality_notes(
         query = query.filter(QualityNote.status == status)
     if batch_id:
         query = query.filter(QualityNote.batch_id == batch_id)
+    if project_id:
+        # Match on project_id column (may store PWSItem pk or project_code) or project_name
+        from sqlalchemy import or_
+        from db.models import PWSItem
+        project = db.query(PWSItem).filter_by(id=project_id, type="project").first()
+        if project:
+            query = query.filter(or_(
+                QualityNote.project_id == project_id,
+                QualityNote.project_id == project.project_code,
+                QualityNote.project_name == project.name,
+            ))
+        else:
+            query = query.filter(QualityNote.project_id == project_id)
+    if workflow_stage:
+        query = query.filter(QualityNote.workflow_stage == workflow_stage)
+    if process:
+        query = query.filter(QualityNote.process == process)
     if pending_approval:
         query = query.filter(QualityNote.requires_approval.is_(True), QualityNote.approved.is_(False))
     notes = query.order_by(QualityNote.created_at.desc()).all()
     return [n.to_dict() for n in notes]
+
 
 
 @router.put("/notes/{note_id}/approve", response_model=QualityNoteOut)
