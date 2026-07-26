@@ -155,17 +155,47 @@ export default function CreatePWS() {
     e.preventDefault();
     if (!name.trim()) return;
 
-    // Duplicate name check — scoped per entity type
+    // Scoped duplicate name checks
     const trimmedName = name.trim().toLowerCase();
-    const isDuplicate = createdItems.some(item =>
-      item.type === activeModal &&
-      item.name?.trim().toLowerCase() === trimmedName &&
-      (!editingItem || item.id !== editingItem.id)
-    );
+    let isDuplicate = false;
+    
+    if (activeModal === 'project') {
+      isDuplicate = createdItems.some(item => 
+        item.type === 'project' && 
+        item.name?.trim().toLowerCase() === trimmedName &&
+        (!editingItem || item.id !== editingItem.id)
+      );
+    } else if (activeModal === 'workflow' && linkToProjectId) {
+      const existingWfIds = projectWorkflows[linkToProjectId] || [];
+      isDuplicate = createdItems.some(item => 
+        item.type === 'workflow' &&
+        existingWfIds.includes(item.id) &&
+        item.name?.trim().toLowerCase() === trimmedName &&
+        (!editingItem || item.id !== editingItem.id)
+      );
+    } else if (activeModal === 'stage' && linkToWorkflowId) {
+      const existingStageIds = workflowStages[linkToWorkflowId] || [];
+      isDuplicate = createdItems.some(item => 
+        item.type === 'stage' &&
+        existingStageIds.includes(item.id) &&
+        item.name?.trim().toLowerCase() === trimmedName &&
+        (!editingItem || item.id !== editingItem.id)
+      );
+    } else if (activeModal === 'process' && linkToStageId) {
+      const existingProcessIds = stageProcesses[linkToStageId] || [];
+      isDuplicate = createdItems.some(item => 
+        item.type === 'process' &&
+        existingProcessIds.includes(item.id) &&
+        item.name?.trim().toLowerCase() === trimmedName &&
+        (!editingItem || item.id !== editingItem.id)
+      );
+    }
+
     if (isDuplicate) {
-      setModalError(`A ${activeModal} named "${name.trim()}" already exists. Please use a unique name.`);
+      setModalError(`A ${activeModal} named "${name.trim()}" already exists in this scope. Please use a unique name.`);
       return;
     }
+
     setModalError('');
 
     const itemData = {
