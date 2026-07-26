@@ -6,6 +6,7 @@ import WorkflowTimeline from './WorkflowTimeline'
 import AnalyticsCards from './AnalyticsCards'
 import StageProcessList from './StageProcessList'
 import AnalyticsCharts from './AnalyticsCharts'
+import ProjectDetailsExpanded from './ProjectDetailsExpanded'
 
 const NAV_TABS = [
   { id: 'overview', label: 'Overview' },
@@ -352,6 +353,8 @@ function WorkflowIcon() {
 
 function ProjectsOverview({ projects }) {
   const navigate = useNavigate();
+  const [expandedProjectId, setExpandedProjectId] = useState(null);
+  
   const liveProjects = projects.filter(p => {
     if (!p.start_date || !p.target_date) return false;
     const now = new Date();
@@ -424,20 +427,33 @@ function ProjectsOverview({ projects }) {
               </tr>
             ) : (
               liveProjects.map(p => (
-                <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
-                  <td className="py-4 px-6 font-semibold" title={p.name}>{p.name}</td>
-                  <td className="py-4 px-6 text-gray-700 dark:text-gray-300">{p.project_code || p.id}</td>
-                  <td className="py-4 px-6 text-gray-700 dark:text-gray-300">{p.start_date || '—'}</td>
-                  <td className="py-4 px-6 text-gray-700 dark:text-gray-300">{p.target_date || '—'}</td>
-                  <td className="py-4 px-6">
-                    <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-black tracking-wider rounded-md border border-emerald-200 dark:border-emerald-800">IN PROGRESS</span>
-                  </td>
-                  <td className="py-4 px-6 text-right">
-                    <button onClick={() => navigate("/app-management/create-pws", { state: { selectedProjectId: p.id, viewMode: "manage" } })} className="text-primary-600 hover:text-primary-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1 justify-end w-full">
-                      View <ChevronRight size={14} />
-                    </button>
-                  </td>
-                </tr>
+                <React.Fragment key={p.id}>
+                  <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
+                    <td className="py-4 px-6 font-semibold" title={p.name}>{p.name}</td>
+                    <td className="py-4 px-6 text-gray-700 dark:text-gray-300">{p.project_code || p.id}</td>
+                    <td className="py-4 px-6 text-gray-700 dark:text-gray-300">{p.start_date || '—'}</td>
+                    <td className="py-4 px-6 text-gray-700 dark:text-gray-300">{p.target_date || '—'}</td>
+                    <td className="py-4 px-6">
+                      <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-black tracking-wider rounded-md border border-emerald-200 dark:border-emerald-800">IN PROGRESS</span>
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <button 
+                        onClick={() => setExpandedProjectId(expandedProjectId === p.id ? null : p.id)} 
+                        className="text-primary-600 hover:text-primary-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1 justify-end w-full"
+                      >
+                        {expandedProjectId === p.id ? 'Close' : 'View'} 
+                        <ChevronRight size={14} className={`transform transition-transform ${expandedProjectId === p.id ? 'rotate-90' : ''}`} />
+                      </button>
+                    </td>
+                  </tr>
+                  {expandedProjectId === p.id && (
+                    <tr className="bg-gray-50/50 dark:bg-gray-900/20">
+                      <td colSpan={6} className="p-0 border-t border-gray-100 dark:border-gray-800">
+                        <ProjectDetailsExpanded projectId={p.id} project={p} />
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               ))
             )}
           </tbody>
