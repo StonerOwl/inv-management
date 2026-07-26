@@ -368,41 +368,53 @@ export default function CreatePWS() {
   const stages = createdItems.filter(i => i.type === 'stage');
   const processes = createdItems.filter(i => i.type === 'process');
 
-  const renderRecentlyCreated = (items, typeLabel) => {
+  const assignedWorkflowIds = new Set(Object.values(projectWorkflows).flat());
+  const assignedStageIds = new Set(Object.values(workflowStages).flat());
+  const assignedProcessIds = new Set(Object.values(stageProcesses).flat());
+
+  const unassignedWorkflows = workflows.filter(w => !assignedWorkflowIds.has(w.id));
+  const unassignedStages = stages.filter(s => !assignedStageIds.has(s.id));
+  const unassignedProcesses = processes.filter(p => !assignedProcessIds.has(p.id));
+
+  const renderRecentlyCreated = (items, typeLabel, hideHeader = false, hideEmpty = false) => {
     const allSelected = items.length > 0 && items.every(i => selectedIds.has(i.id));
     return (
       <div className="flex flex-col gap-2">
-        <div className="group/col flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
-          <h4 className="text-xs font-bold text-gray-700 dark:text-gray-300 tracking-normal capitalize flex items-center gap-2">
-            {selectMode && items.length > 0 && (
+        {!hideHeader && (
+          <div className="group/col flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
+            <h4 className="text-xs font-bold text-gray-700 dark:text-gray-300 tracking-normal capitalize flex items-center gap-2">
+              {selectMode && items.length > 0 && (
+                <button
+                  onClick={() => toggleSelectAll(items)}
+                  className="text-primary-500 hover:text-primary-700 dark:text-primary-400"
+                  title={allSelected ? 'Deselect all' : 'Select all'}
+                >
+                  {allSelected ? <CheckSquare size={14} /> : <Square size={14} />}
+                </button>
+              )}
+              <span className="text-primary-600 dark:text-primary-400">{getIcon(typeLabel, 14)}</span>
+              {typeLabel}s
+            </h4>
+            {!selectMode && (
               <button
-                onClick={() => toggleSelectAll(items)}
-                className="text-primary-500 hover:text-primary-700 dark:text-primary-400"
-                title={allSelected ? 'Deselect all' : 'Select all'}
+                onClick={() => handleOpenModal(typeLabel)}
+                title={`Create new ${typeLabel}`}
+                className="opacity-0 group-hover/col:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center rounded-full bg-primary-600 hover:bg-primary-700 text-white shadow-sm"
               >
-                {allSelected ? <CheckSquare size={14} /> : <Square size={14} />}
+                <Plus size={13} />
               </button>
             )}
-            <span className="text-primary-600 dark:text-primary-400">{getIcon(typeLabel, 14)}</span>
-            {typeLabel}s
-          </h4>
-          {!selectMode && (
-            <button
-              onClick={() => handleOpenModal(typeLabel)}
-              title={`Create new ${typeLabel}`}
-              className="opacity-0 group-hover/col:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center rounded-full bg-primary-600 hover:bg-primary-700 text-white shadow-sm"
-            >
-              <Plus size={13} />
-            </button>
-          )}
-        </div>
-        {items.length === 0 ? (
-          <div
-            onClick={() => !selectMode && handleOpenModal(typeLabel)}
-            className="text-xs text-gray-400 dark:text-gray-500 italic text-center py-4 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:border-primary-400 hover:text-primary-500 transition-colors"
-          >
-            No {typeLabel}s yet — click + to create
           </div>
+        )}
+        {items.length === 0 ? (
+          !hideEmpty && (
+            <div
+              onClick={() => !selectMode && handleOpenModal(typeLabel)}
+              className="text-xs text-gray-400 dark:text-gray-500 italic text-center py-4 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:border-primary-400 hover:text-primary-500 transition-colors"
+            >
+              No {typeLabel}s yet — click + to create
+            </div>
+          )
         ) : (
           items.map((item, idx) => {
             const isSelected = selectedIds.has(item.id);
@@ -696,11 +708,58 @@ export default function CreatePWS() {
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {renderRecentlyCreated(projects, 'project')}
-              {renderRecentlyCreated(workflows, 'workflow')}
-              {renderRecentlyCreated(stages, 'stage')}
-              {renderRecentlyCreated(processes, 'process')}
+            <div className="space-y-6">
+              {/* Single Global Header Row */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-2 border-b-2 border-gray-200 dark:border-gray-700 pb-2">
+                {['project', 'workflow', 'stage', 'process'].map(typeLabel => (
+                  <div key={typeLabel} className="group/col flex items-center justify-between">
+                    <h4 className="text-sm font-black text-gray-700 dark:text-gray-300 tracking-normal capitalize flex items-center gap-2">
+                      <span className="text-primary-600 dark:text-primary-400">{getIcon(typeLabel, 16)}</span>
+                      {typeLabel}s
+                    </h4>
+                    {!selectMode && (
+                      <button
+                        onClick={() => handleOpenModal(typeLabel)}
+                        title={`Create new ${typeLabel}`}
+                        className="opacity-0 group-hover/col:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center rounded-full bg-primary-600 hover:bg-primary-700 text-white shadow-sm"
+                      >
+                        <Plus size={13} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Unassigned Items */}
+              {(unassignedWorkflows.length > 0 || unassignedStages.length > 0 || unassignedProcesses.length > 0) && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-gray-200 dark:border-gray-800">
+                  <div className="hidden md:block pr-6">
+                  </div>
+                  {renderRecentlyCreated(unassignedWorkflows, 'workflow', true, true)}
+                  {renderRecentlyCreated(unassignedStages, 'stage', true, true)}
+                  {renderRecentlyCreated(unassignedProcesses, 'process', true, true)}
+                </div>
+              )}
+
+              {/* Assigned Items (by project) */}
+              <div className="space-y-6">
+                {projects.map(proj => {
+                  const projWorkflows = workflows.filter(w => projectWorkflows[proj.id]?.includes(w.id));
+                  const projStageIds = new Set(projWorkflows.flatMap(w => workflowStages[w.id] || []));
+                  const projStages = stages.filter(s => projStageIds.has(s.id));
+                  const projProcessIds = new Set(projStages.flatMap(s => stageProcesses[s.id] || []));
+                  const projProcesses = processes.filter(p => projProcessIds.has(p.id));
+
+                  return (
+                    <div key={proj.id} className="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-gray-200 dark:border-gray-800">
+                      {renderRecentlyCreated([proj], 'project', true, true)}
+                      {renderRecentlyCreated(projWorkflows, 'workflow', true, true)}
+                      {renderRecentlyCreated(projStages, 'stage', true, true)}
+                      {renderRecentlyCreated(projProcesses, 'process', true, true)}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </div>
         )}
