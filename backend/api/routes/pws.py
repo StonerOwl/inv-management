@@ -22,6 +22,7 @@ class PWSItemCreate(BaseModel):
     start_date: Optional[str] = None
     target_date: Optional[str] = None
     location: Optional[str] = None
+    description: Optional[str] = None
     allowed_image_types: Optional[List[str]] = None
 
 class PWSAssignmentCreate(BaseModel):
@@ -66,6 +67,7 @@ def create_pws_item(item: PWSItemCreate, db: Session = Depends(get_db)):
         start_date=item.start_date,
         target_date=item.target_date,
         location=item.location,
+        description=item.description,
         allowed_image_types=_json.dumps(item.allowed_image_types) if item.allowed_image_types else None
     )
     
@@ -119,6 +121,7 @@ class PWSItemUpdate(BaseModel):
     target_date: Optional[str] = None
     batch_id: Optional[str] = None
     project_code: Optional[str] = None
+    description: Optional[str] = None
     allowed_image_types: Optional[List[str]] = None
 
 @router.put("/items/{item_id}", response_model=Dict[str, Any])
@@ -142,6 +145,8 @@ def update_pws_item(item_id: str, update: PWSItemUpdate, db: Session = Depends(g
         item.batch_id = update.batch_id
     if update.project_code is not None:
         item.project_code = update.project_code
+    if update.description is not None:
+        item.description = update.description
     if update.allowed_image_types is not None:
         item.allowed_image_types = _json.dumps(update.allowed_image_types) if update.allowed_image_types else None
         

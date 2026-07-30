@@ -290,6 +290,7 @@ class PWSItem(Base):
     start_date = Column(String(50), nullable=True)
     target_date = Column(String(50), nullable=True)
     location = Column(String(200), nullable=True)
+    description = Column(Text, nullable=True)
     allowed_image_types = Column(Text, nullable=True)  # JSON-encoded list e.g. '["Visual","NIR"]'
     completed = Column(Boolean, default=False, nullable=False)
     completed_at = Column(DateTime, nullable=True)
@@ -313,6 +314,7 @@ class PWSItem(Base):
             "start_date": self.start_date,
             "target_date": self.target_date,
             "location": self.location,
+            "description": self.description,
             "allowed_image_types": parsed_types,
             "completed": self.completed,
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,

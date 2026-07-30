@@ -29,12 +29,20 @@ def init_db() -> None:
             conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
     Base.metadata.create_all(bind=engine)
     
-    # Run simple migrations for existing tables
     try:
         with engine.connect() as conn:
             conn.execute(text("ALTER TABLE product_catalog ADD COLUMN workflow_id INTEGER REFERENCES workflows(id)"))
             conn.commit()
             logger.info("Added workflow_id column to product_catalog")
+    except Exception:
+        # Expected if column already exists
+        pass
+
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE pws_items ADD COLUMN description TEXT"))
+            conn.commit()
+            logger.info("Added description column to pws_items")
     except Exception:
         # Expected if column already exists
         pass

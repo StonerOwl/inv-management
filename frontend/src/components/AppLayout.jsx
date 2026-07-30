@@ -35,6 +35,7 @@ const SIDEBAR_OPTIONS = {
     { label: 'Manage Workflow', path: '/app-management/manage-workflow', icon: GitBranch },
     { label: 'Manage Stage', path: '/app-management/manage-stage', icon: GitCommit },
     { label: 'Manage Process', path: '/app-management/manage-process', icon: Settings2 },
+    { label: 'Quality Parameters', path: '/app-management/quality-parameters', icon: ShieldCheck },
     { label: 'Integrate Devices', path: '/app-management/integrate-devices', icon: Smartphone },
   ],
   'analytics': [

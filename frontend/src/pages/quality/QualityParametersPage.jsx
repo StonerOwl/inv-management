@@ -17,7 +17,7 @@ function Field({ label, children }) {
   )
 }
 
-export default function QualityParametersPage() {
+export default function QualityParametersPage({ readOnly = false }) {
   const [loading, setLoading] = useState(true)
   const [pwsItems, setPwsItems] = useState([])
   const [pwsAssignments, setPwsAssignments] = useState([])
@@ -184,23 +184,27 @@ export default function QualityParametersPage() {
               ) : (
                 parameters.map((param, index) => (
                   <div key={param.id} className="group relative bg-gray-50 dark:bg-gray-800/30 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {!readOnly && (<div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button onClick={() => removeParameter(param.id)} className="text-red-500 hover:text-red-600 p-1 bg-red-50 dark:bg-red-900/20 rounded">
                         <Trash2 size={14} />
                       </button>
-                    </div>
+                    </div>)}
                     
                     <div className="text-xs font-bold text-primary-600 dark:text-primary-400 mb-3">Parameter {index + 1}</div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Field label="Parameter Name">
-                        <input 
+                        {readOnly ? (
+                          <div className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm rounded-lg opacity-80">{param.name || "N/A"}</div>
+                        ) : (
+                          <input 
                           type="text" 
                           placeholder="e.g. Max Temperature" 
                           className={inputCls} 
                           value={param.name}
                           onChange={e => updateParameter(param.id, 'name', e.target.value)}
                         />
+                        )}
                       </Field>
                       <Field 
                         label={
@@ -222,7 +226,10 @@ export default function QualityParametersPage() {
                       >
                         {(param.type === 'file') ? (
                           <div className="flex items-center gap-2">
-                            <input 
+                            {readOnly ? (
+                              <div className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm rounded-lg opacity-80 truncate">File uploaded</div>
+                            ) : (
+                              <input 
                               type="file" 
                               className="block w-full text-sm text-gray-500 dark:text-gray-400
                                 file:mr-4 file:py-2 file:px-4
@@ -233,16 +240,19 @@ export default function QualityParametersPage() {
                                 dark:file:bg-primary-900/30 dark:file:text-primary-400"
                               onChange={e => updateParameter(param.id, 'value', e.target.files[0])}
                             />
+                            )}
                           </div>
-                        ) : (
-                          <input 
+                        ) : readOnly ? (
+                              <div className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm rounded-lg opacity-80 truncate">{param.value || "N/A"}</div>
+                            ) : (
+                              <input 
                             type="text" 
                             placeholder="e.g. <= 50°C" 
                             className={inputCls} 
                             value={param.value}
                             onChange={e => updateParameter(param.id, 'value', e.target.value)}
                           />
-                        )}
+                            )}
                       </Field>
                     </div>
                   </div>
@@ -251,7 +261,7 @@ export default function QualityParametersPage() {
             </div>
           )}
 
-          {selections.processId && parameters.length > 0 && (
+          {(!readOnly && selections.processId && parameters.length > 0) && (
             <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800">
               <button className="w-full aiq-btn-primary flex justify-center items-center gap-2 py-3">
                 <Save size={16} /> Save Parameters

@@ -84,6 +84,7 @@ export default function App() {
                     <Route path="/app-management/manage-workflow" element={<ProtectedRoute requiredRole="admin"><ManageWorkflow /></ProtectedRoute>} />
                     <Route path="/app-management/manage-stage" element={<ProtectedRoute requiredRole="admin"><ManageStage /></ProtectedRoute>} />
                     <Route path="/app-management/manage-process" element={<ProtectedRoute requiredRole="admin"><ManageProcess /></ProtectedRoute>} />
+                    <Route path="/app-management/quality-parameters" element={<ProtectedRoute requiredRole="admin"><QualityParametersPage /></ProtectedRoute>} />
                     <Route path="/app-management/integrate-devices" element={<ProtectedRoute requiredRole="admin"><IntegrateDevices /></ProtectedRoute>} />
 
                     <Route path="/invoices/:id" element={<InvoiceDetail />} />
@@ -92,7 +93,7 @@ export default function App() {
                     <Route path="/analytics/farm-to-fork" element={<FarmToForkPage />} />
 
                     <Route path="/quality" element={<QualityManagement />} />
-                    <Route path="/quality/parameters" element={<QualityParametersPage />} />
+                    <Route path="/quality/parameters" element={<QualityParametersPage readOnly={true} />} />
                     <Route path="/quality/product" element={<ProductQualityPage />} />
                     <Route path="/quality/batch" element={<PlaceholderPage title="Batch Quality" />} />
 
