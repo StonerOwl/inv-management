@@ -24,6 +24,7 @@ import RegisterInventory from './pages/RegisterInventory'
 import SearchInventory from './pages/SearchInventory'
 import InventoryReports from './pages/InventoryReports'
 import CreatePWS from './pages/CreatePWS'
+import ManageProduct from './pages/ManageProduct'
 import ManageWorkflow from './pages/ManageWorkflow'
 import ManageStage from './pages/ManageStage'
 import ManageProcess from './pages/ManageProcess'
@@ -80,6 +81,7 @@ export default function App() {
 
                     <Route path="/users" element={<ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute>} />
                     <Route path="/admin/create-pws" element={<ProtectedRoute requiredRole="admin"><CreatePWS /></ProtectedRoute>} />
+                    <Route path="/app-management/manage-product" element={<ProtectedRoute requiredRole="admin"><ManageProduct /></ProtectedRoute>} />
                     <Route path="/app-management/create-pws" element={<ProtectedRoute requiredRole="admin"><CreatePWS /></ProtectedRoute>} />
                     <Route path="/app-management/manage-workflow" element={<ProtectedRoute requiredRole="admin"><ManageWorkflow /></ProtectedRoute>} />
                     <Route path="/app-management/manage-stage" element={<ProtectedRoute requiredRole="admin"><ManageStage /></ProtectedRoute>} />

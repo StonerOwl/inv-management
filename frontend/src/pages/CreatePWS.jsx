@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { FolderPlus, GitCommit, GitBranch, XCircle, CheckCircle, ChevronRight, Plus, Settings2, Trash2, Pencil, CheckSquare, Square } from 'lucide-react';
 import clsx from 'clsx';
 import Barcode from 'react-barcode';
-import { getPWSItems, createPWSItem, updatePWSItem, deletePWSItem, getPWSAssignments, createPWSAssignment, deletePWSAssignment } from '../api/client';
+import { getPWSItems, createPWSItem, updatePWSItem, deletePWSItem, getPWSAssignments, createPWSAssignment, deletePWSAssignment, listManagedProducts } from '../api/client';
 import NoteTarget from '../components/NoteTarget';
 
 export default function CreatePWS() {
@@ -17,6 +17,8 @@ export default function CreatePWS() {
   const [targetDate, setTargetDate] = useState('');
   const [batchId, setBatchId] = useState('');
   const [createdItems, setCreatedItems] = useState([]);
+  const [managedProducts, setManagedProducts] = useState([]);
+  const [selectedProductFilter, setSelectedProductFilter] = useState('');
   const [editingItem, setEditingItem] = useState(null);
   const [modalError, setModalError] = useState('');
 
@@ -53,12 +55,14 @@ export default function CreatePWS() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [{ data: items }, { data: assignments }] = await Promise.all([
+      const [{ data: items }, { data: assignments }, { data: mProducts }] = await Promise.all([
         getPWSItems(),
-        getPWSAssignments()
+        getPWSAssignments(),
+        listManagedProducts()
       ]);
 
       setCreatedItems(items || []);
+      setManagedProducts(mProducts?.items || []);
 
       // Load existing project codes
       const existingCodes = {};
@@ -154,6 +158,10 @@ export default function CreatePWS() {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!name.trim()) return;
+    if (activeModal === 'project' && !product) {
+      setModalError("Product is required for a project.");
+      return;
+    }
 
     // Scoped duplicate name checks
     const trimmedName = name.trim().toLowerCase();
@@ -393,7 +401,7 @@ export default function CreatePWS() {
     }
   };
 
-  const projects = createdItems.filter(i => i.type === 'project');
+  const projects = createdItems.filter(i => i.type === 'project' && (!selectedProductFilter || i.product === selectedProductFilter));
   const workflows = createdItems.filter(i => i.type === 'workflow');
   const stages = createdItems.filter(i => i.type === 'stage');
   const processes = createdItems.filter(i => i.type === 'process');
@@ -706,14 +714,26 @@ export default function CreatePWS() {
         {viewMode === 'create' && (
           <div>
             {/* Bulk action toolbar */}
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
-                {selectMode
-                  ? selectedIds.size > 0
-                    ? `${selectedIds.size} item${selectedIds.size > 1 ? 's' : ''} selected`
-                    : 'Click items to select them'
-                  : `${createdItems.length} total items`}
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+              <div className="flex items-center gap-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold">
+                  {selectMode
+                    ? selectedIds.size > 0
+                      ? `${selectedIds.size} item${selectedIds.size > 1 ? 's' : ''} selected`
+                      : 'Click items to select them'
+                    : `${projects.length + unassignedWorkflows.length + unassignedStages.length + unassignedProcesses.length} items shown`}
+                </p>
+                <select
+                  value={selectedProductFilter}
+                  onChange={(e) => setSelectedProductFilter(e.target.value)}
+                  className="aiq-input text-xs py-1.5 px-3 min-h-0 h-8"
+                >
+                  <option value="">All Products</option>
+                  {managedProducts.map(p => (
+                    <option key={p.id} value={p.name}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
               <div className="flex items-center gap-3">
                 {selectMode && selectedIds.size > 0 && (
                   <button
@@ -1227,8 +1247,13 @@ export default function CreatePWS() {
                 {activeModal === 'project' && (
                   <div className="grid grid-cols-2 gap-4 mb-8">
                     <div>
-                      <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Product</label>
-                      <input type="text" value={product} onChange={e => setProduct(e.target.value)} className="aiq-input" />
+                      <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Product *</label>
+                      <select required value={product} onChange={e => setProduct(e.target.value)} className="aiq-input">
+                        <option value="">— Select Product —</option>
+                        {managedProducts.map(p => (
+                          <option key={p.id} value={p.name}>{p.name}</option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="block text-xs font-bold tracking-normal text-gray-700 dark:text-gray-300 mb-2 uppercase">Category</label>

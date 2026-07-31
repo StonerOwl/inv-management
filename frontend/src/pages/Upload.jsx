@@ -29,7 +29,7 @@ function FileRow({ file, removed, onRemove }) {
 function TerminalLogs({ logs }) {
   const endRef = useRef(null)
   const containerRef = useRef(null)
-  const [autoScroll, setAutoScroll] = useState(true)
+  const [autoScroll, setAutoScroll] = useState(false)
 
   const handleScroll = () => {
     if (!containerRef.current) return

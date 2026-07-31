@@ -31,6 +31,7 @@ const SIDEBAR_OPTIONS = {
     { label: 'Batch Quality', path: '/quality/batch' },
   ],
   'app-management': [
+    { label: 'Manage Product', path: '/app-management/manage-product', icon: Package },
     { label: 'Manage Project', path: '/app-management/create-pws', icon: Layers },
     { label: 'Manage Workflow', path: '/app-management/manage-workflow', icon: GitBranch },
     { label: 'Manage Stage', path: '/app-management/manage-stage', icon: GitCommit },

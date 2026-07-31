@@ -112,6 +112,11 @@ export const createProduct = (data) => api.post('/products', data)
 export const updateProduct = (id, data) => api.put(`/products/${id}`, data)
 export const deleteProduct = (id) => api.delete(`/products/${id}`)
 
+export const listManagedProducts = (params) => api.get('/managed-products', { params })
+export const createManagedProduct = (data) => api.post('/managed-products', data)
+export const updateManagedProduct = (id, data) => api.put(`/managed-products/${id}`, data)
+export const deleteManagedProduct = (id) => api.delete(`/managed-products/${id}`)
+
 export const listCategories = () => api.get('/categories')
 export const createCategory = (data) => api.post('/categories', data)
 export const updateCategory = (id, data) => api.put(`/categories/${id}`, data)
