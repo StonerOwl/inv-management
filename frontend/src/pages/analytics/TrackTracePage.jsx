@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FolderPlus, Search, Filter, RefreshCw, Activity, ChevronRight, Package, Hash, DollarSign } from 'lucide-react'
+import { FolderPlus, Search, Filter, RefreshCw, Activity, ChevronRight, ChevronDown, Package, Hash, DollarSign } from 'lucide-react'
 import { getPWSItems, getProjectAnalytics, getDevices } from '../../api/client'
 import WorkflowTimeline from './WorkflowTimeline'
 import AnalyticsCards from './AnalyticsCards'
@@ -32,7 +32,11 @@ export default function TrackTracePage() {
       .then(([pwsRes, devicesRes]) => {
         const projectItems = (pwsRes.data || []).filter(item => item.type === 'project')
         setProjects(projectItems)
-        if (projectItems.length > 0) setSelectedProject(projectItems[0])
+        if (projectItems.length > 0) {
+          const savedId = localStorage.getItem('trackTraceSelectedProjectId')
+          const savedProject = projectItems.find(p => p.id === savedId)
+          setSelectedProject(savedProject || projectItems[0])
+        }
         setDevices(devicesRes.data || [])
       })
       .finally(() => setLoading(false))
@@ -56,6 +60,9 @@ export default function TrackTracePage() {
   const handleProjectChange = (e) => {
     const project = projects.find(item => item.id === e.target.value) || null
     setSelectedProject(project)
+    if (project) {
+      localStorage.setItem('trackTraceSelectedProjectId', project.id)
+    }
   }
 
   const timelineData = projectAnalytics
@@ -109,19 +116,24 @@ export default function TrackTracePage() {
 
           <div className="flex items-center gap-2 pb-1">
             <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Project</label>
-            <select
-              className="aiq-input appearance-none py-2 px-4 min-w-[220px]"
-              value={selectedProject?.id || ''}
-              onChange={handleProjectChange}
-            >
-              {projects.length === 0 ? (
-                <option value="">No projects created yet</option>
-              ) : (
-                projects.map(project => (
-                  <option key={project.id} value={project.id}>{project.name}</option>
-                ))
-              )}
-            </select>
+            <div className="relative">
+              <select
+                className="aiq-input appearance-none py-2 pl-4 pr-10 min-w-[220px]"
+                value={selectedProject?.id || ''}
+                onChange={handleProjectChange}
+              >
+                {projects.length === 0 ? (
+                  <option value="">No projects created yet</option>
+                ) : (
+                  projects.map(project => (
+                    <option key={project.id} value={project.id}>{project.name}</option>
+                  ))
+                )}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
+                <ChevronDown size={16} />
+              </div>
+            </div>
           </div>
         </div>
 

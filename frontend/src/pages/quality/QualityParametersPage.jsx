@@ -108,7 +108,7 @@ export default function QualityParametersPage({ readOnly = false }) {
         Define and manage quality parameters and standard thresholds across processes.
       </p>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="flex flex-col gap-6">
         
         {/* LEFT BOX: PWS Selection */}
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
@@ -119,7 +119,7 @@ export default function QualityParametersPage({ readOnly = false }) {
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Quality Parameter Settings</h2>
           </div>
 
-          <div className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
             <Field label="1. Select Project">
               <select className={inputCls} value={selections.projectId} onChange={e => handleSelect('projectId', e.target.value)}>
                 <option value="">-- Choose Project --</option>
@@ -149,7 +149,7 @@ export default function QualityParametersPage({ readOnly = false }) {
             </Field>
 
             {parameterId && (
-              <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 rounded-lg flex items-center justify-between">
+              <div className="md:col-span-4 mt-2 p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 rounded-lg flex items-center justify-between">
                 <div>
                   <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-500 mb-1">Generated Parameter ID</div>
                   <div className="text-lg font-mono font-bold text-gray-900 dark:text-gray-100">{parameterId}</div>
