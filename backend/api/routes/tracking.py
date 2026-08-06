@@ -15,6 +15,7 @@ from db.models import (
     ProductCatalog, Category, User,
 )
 from api.dependencies import get_current_active_user
+from core.activity_log import log_activity
 
 router = APIRouter(prefix="/api/tracking", tags=["Process Tracking"])
 
@@ -161,6 +162,13 @@ def toggle_process(
 
     db.commit()
     db.refresh(tracking)
+    
+    log_activity(
+        db, action="tracking_process_toggled", category="tracking", severity="info",
+        entity_type="invoice", entity_id=str(invoice_id), entity_name=invoice.invoice_number or invoice.file_name,
+        description=f"Process '{process.name}' marked {'complete' if data.completed else 'incomplete'}",
+        username=current_user.username
+    )
     return tracking.to_dict()
 
 
@@ -211,6 +219,14 @@ def toggle_workflow(
         updated.append(tracking)
 
     db.commit()
+    
+    log_activity(
+        db, action="tracking_workflow_toggled", category="tracking", severity="info",
+        entity_type="invoice", entity_id=str(invoice_id), entity_name=invoice.invoice_number or invoice.file_name,
+        description=f"Workflow '{workflow.name}' marked {'complete' if data.completed else 'incomplete'}",
+        username=current_user.username
+    )
+    
     return {
         "invoice_id": invoice_id,
         "workflow_id": workflow_id,
@@ -360,6 +376,13 @@ def reassign_tracking_category(
     invoice.tracking_category_override = data.category_name
     db.commit()
 
+    log_activity(
+        db, action="tracking_category_reassigned", category="tracking", severity="info",
+        entity_type="invoice", entity_id=str(invoice_id), entity_name=invoice.invoice_number or invoice.file_name,
+        description=f"Reassigned category from '{old_category}' to '{data.category_name}'",
+        username=current_user.username
+    )
+
     return {
         "invoice_id": invoice_id,
         "old_category": old_category,
@@ -386,6 +409,13 @@ def revert_tracking_category(
     invoice.tracking_category_override = None
     db.commit()
 
+    log_activity(
+        db, action="tracking_category_reverted", category="tracking", severity="info",
+        entity_type="invoice", entity_id=str(invoice_id), entity_name=invoice.invoice_number or invoice.file_name,
+        description=f"Reverted category from '{old_override}'",
+        username=current_user.username
+    )
+
     original = None
     return {
         "invoice_id": invoice_id,
@@ -406,16 +436,23 @@ def reset_tracking(
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
 
-    deleted = db.query(InvoiceProcessTracking).filter(
+    deleted_count = db.query(InvoiceProcessTracking).filter(
         InvoiceProcessTracking.invoice_id == invoice_id,
     ).delete()
 
     db.commit()
 
+    log_activity(
+        db, action="tracking_reset", category="tracking", severity="warning",
+        entity_type="invoice", entity_id=str(invoice_id), entity_name=invoice.invoice_number or invoice.file_name,
+        description=f"Reset all tracking progress (cleared {deleted_count} steps)",
+        username=current_user.username
+    )
+
     return {
         "invoice_id": invoice_id,
-        "deleted_records": deleted,
-        "message": f"Tracking reset: {deleted} records deleted",
+        "deleted_records": deleted_count,
+        "message": f"Tracking reset: {deleted_count} records deleted",
     }
 
 

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from db.database import get_db
 from db.models import ManagedProduct, User
 from api.dependencies import get_current_active_user, get_current_admin
+from core.activity_log import log_activity
 
 router = APIRouter(prefix="/api/managed-products", tags=["Managed Products"])
 
@@ -62,6 +63,14 @@ def create_managed_product(
     db.add(product)
     db.commit()
     db.refresh(product)
+    
+    log_activity(
+        db, action="managed_product_created", category="managed_product", severity="info",
+        entity_type="managed_product", entity_id=str(product.id), entity_name=product.name,
+        description=f"Managed product created: {product.name}",
+        username=current_user.username
+    )
+    
     return product.to_dict()
 
 
@@ -130,6 +139,14 @@ def update_managed_product(
 
     db.commit()
     db.refresh(product)
+    
+    log_activity(
+        db, action="managed_product_updated", category="managed_product", severity="info",
+        entity_type="managed_product", entity_id=str(product.id), entity_name=product.name,
+        description=f"Managed product updated: {product.name}",
+        username=current_user.username
+    )
+    
     return product.to_dict()
 
 
@@ -146,4 +163,12 @@ def delete_managed_product(
 
     db.delete(product)
     db.commit()
+    
+    log_activity(
+        db, action="managed_product_deleted", category="managed_product", severity="warning",
+        entity_type="managed_product", entity_id=str(product_id), entity_name=product.name,
+        description=f"Managed product deleted: {product.name}",
+        username=current_user.username
+    )
+    
     return {"message": f"Product '{product.name}' deleted"}

@@ -11,16 +11,21 @@ from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile,
 from fastapi.responses import JSONResponse
 
 import config
+from sqlalchemy.orm import Session
 from api.background_tasks import create_job, get_job, list_jobs, process_batch
-from api.dependencies import check_upload_permission, get_current_active_user
+from api.dependencies import check_upload_permission, get_current_active_user, get_db
+from core.activity_log import log_activity
+from db.models import User
 
 router = APIRouter(prefix="/api/upload", tags=["upload"])
 
 
-@router.post("", dependencies=[Depends(check_upload_permission)])
+@router.post("")
 async def upload_invoices(
     background_tasks: BackgroundTasks,
     files: Annotated[list[UploadFile], File(description="Invoice files (PDF/JPG/PNG)")],
+    current_user: User = Depends(check_upload_permission),
+    db: Session = Depends(get_db)
 ):
     """
     Accept one or more invoice files, save to disk, and start a background job.
@@ -67,6 +72,12 @@ async def upload_invoices(
     # Register job and start async processing
     create_job_with_id(job_id, saved_paths)
     background_tasks.add_task(process_batch, job_id, saved_paths)
+
+    log_activity(
+        db, action="files_uploaded", category="upload", severity="info",
+        description=f"Uploaded {len(saved_paths)} files (batch job ID: {job_id})",
+        username=current_user.username
+    )
 
     return JSONResponse(
         status_code=202,

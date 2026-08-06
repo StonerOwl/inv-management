@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from db.database import get_db
 from db.models import ProductCatalog, User
 from api.dependencies import get_current_active_user, get_current_admin
+from core.activity_log import log_activity
 
 router = APIRouter(prefix="/api/products", tags=["Product Catalog"])
 
@@ -76,6 +77,14 @@ def create_product(
     db.add(product)
     db.commit()
     db.refresh(product)
+
+    log_activity(
+        db, action="product_created", category="product", severity="info",
+        entity_type="product", entity_id=str(product.id), entity_name=product.item_name,
+        description=f"Product created: {product.item_name} ({product.item_code})",
+        username=current_user.username
+    )
+
     return product.to_dict()
 
 
@@ -157,6 +166,14 @@ def update_product(
 
     db.commit()
     db.refresh(product)
+    
+    log_activity(
+        db, action="product_updated", category="product", severity="info",
+        entity_type="product", entity_id=str(product.id), entity_name=product.item_name,
+        description=f"Product updated: {product.item_name}",
+        username=current_user.username
+    )
+    
     return product.to_dict()
 
 
@@ -173,4 +190,12 @@ def delete_product(
 
     db.delete(product)
     db.commit()
+    
+    log_activity(
+        db, action="product_deleted", category="product", severity="warning",
+        entity_type="product", entity_id=str(product_id), entity_name=product.item_name,
+        description=f"Product deleted: {product.item_name}",
+        username=current_user.username
+    )
+    
     return {"message": f"Product '{product.item_name}' deleted"}

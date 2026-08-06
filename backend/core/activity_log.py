@@ -29,18 +29,77 @@ logger = logging.getLogger(__name__)
 # Single source of truth for what shows up in the notification subscription
 # UI. Keys are what get_activity()/notify_event() pass as `action`.
 EVENT_TYPES: dict[str, str] = {
+    # Auth
+    "user_login": "User login",
+    "user_login_failed": "Failed login attempt",
+    "user_created": "User created",
+    "user_updated": "User updated",
+    
+    # Devices
     "device_created": "Device added",
     "device_updated": "Device updated",
     "device_deleted": "Device removed",
     "device_note_added": "Device note added",
+    
+    # PWS
     "project_created": "Project created",
     "workflow_created": "Workflow created",
     "stage_created": "Stage created",
     "process_created": "Process created",
-    "invoice_uploaded": "Invoice uploaded",
-    "invoice_linked_to_project": "Invoice linked to a project",
-    "inventory_item_linked": "Inventory item linked to a stage",
     "stage_completed": "Stage marked complete",
+    
+    # Invoices & Uploads
+    "files_uploaded": "Files uploaded",
+    "invoice_uploaded": "Invoice uploaded",
+    "invoice_created": "Manual invoice created",
+    "invoice_updated": "Invoice updated",
+    "invoice_deleted": "Invoice deleted",
+    "invoice_reparsed": "Invoice reparsed",
+    "invoice_linked_to_project": "Invoice linked to a project",
+    
+    # Inventory
+    "inventory_item_linked": "Inventory item linked to a stage",
+    "inventory_item_updated": "Inventory item updated",
+    "inventory_item_deleted": "Inventory item deleted",
+    
+    # Quality
+    "quality_note_created": "Quality note created",
+    "quality_note_approved": "Quality note approved",
+    "quality_note_deleted": "Quality note deleted",
+    "quality_notes_cleared": "All quality notes cleared",
+    
+    # Tracking
+    "tracking_process_toggled": "Tracking process toggled",
+    "tracking_workflow_toggled": "Tracking workflow toggled",
+    "tracking_category_reassigned": "Tracking category reassigned",
+    "tracking_reset": "Tracking reset",
+    "tracking_note_added": "Tracking note added",
+    
+    # Products
+    "product_created": "Product created",
+    "product_updated": "Product updated",
+    "product_deleted": "Product deleted",
+    
+    # Managed Products
+    "managed_product_created": "Managed product created",
+    "managed_product_updated": "Managed product updated",
+    "managed_product_deleted": "Managed product deleted",
+    
+    # Groups
+    "group_created": "Group created",
+    "group_updated": "Group updated",
+    "group_deleted": "Group deleted",
+    
+    # Categories
+    "category_created": "Category created",
+    "category_updated": "Category updated",
+    "category_deleted": "Category deleted",
+    "category_workflow_created": "Category workflow created",
+    "category_workflow_updated": "Category workflow updated",
+    "category_workflow_deleted": "Category workflow deleted",
+    "category_process_created": "Category process created",
+    "category_process_updated": "Category process updated",
+    "category_process_deleted": "Category process deleted",
 }
 
 

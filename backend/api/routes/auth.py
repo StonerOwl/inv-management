@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_admin, get_current_active_user
 from core.security import create_access_token, get_password_hash, verify_password
+from core.activity_log import log_activity
 from db.database import get_db
 from db.models import User
 
@@ -48,15 +49,33 @@ def login_for_access_token(
     """
     user = db.query(User).filter(User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
+        log_activity(
+            db, action="user_login_failed", category="auth", severity="warning",
+            entity_type="user", entity_name=form_data.username,
+            description=f"Failed login attempt for username: {form_data.username}",
+            username=form_data.username
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     if not user.is_active:
+        log_activity(
+            db, action="user_login_failed", category="auth", severity="warning",
+            entity_type="user", entity_id=str(user.id), entity_name=user.username,
+            description=f"Failed login attempt: inactive user {user.username}",
+            username=user.username
+        )
         raise HTTPException(status_code=400, detail="Inactive user")
 
     access_token = create_access_token(subject=user.id)
+    log_activity(
+        db, action="user_login", category="auth", severity="info",
+        entity_type="user", entity_id=str(user.id), entity_name=user.username,
+        description=f"User {user.username} logged in successfully.",
+        username=user.username
+    )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -103,6 +122,13 @@ def create_user(
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+    
+    log_activity(
+        db, action="user_created", category="auth", severity="info",
+        entity_type="user", entity_id=str(db_user.id), entity_name=db_user.username,
+        description=f"New user created: {db_user.username} (role: {db_user.role})",
+        username=current_admin.username
+    )
     return db_user
 
 
@@ -127,4 +153,11 @@ def update_user(
     user.is_active = user_in.is_active
     db.commit()
     db.refresh(user)
+    
+    log_activity(
+        db, action="user_updated", category="auth", severity="info",
+        entity_type="user", entity_id=str(user.id), entity_name=user.username,
+        description=f"User {user.username} updated (role: {user.role}, active: {user.is_active})",
+        username=current_admin.username
+    )
     return user

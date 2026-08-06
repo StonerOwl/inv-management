@@ -3,8 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from api.dependencies import get_db
-from db.models import InvoiceGroup, InvoiceProjectAssignment
+from api.dependencies import get_db, get_current_active_user
+from db.models import InvoiceGroup, InvoiceProjectAssignment, User
+from core.activity_log import log_activity
 
 router = APIRouter(prefix="/groups", tags=["Invoice Groups"])
 
@@ -24,7 +25,11 @@ def list_groups(db: Session = Depends(get_db)):
     return [group.to_dict() for group in groups]
 
 @router.post("", response_model=Dict[str, Any])
-def create_group(data: GroupCreate, db: Session = Depends(get_db)):
+def create_group(
+    data: GroupCreate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     existing = db.query(InvoiceGroup).filter(InvoiceGroup.name == data.name).first()
     if existing:
         raise HTTPException(status_code=400, detail="Group with this name already exists")
@@ -37,10 +42,23 @@ def create_group(data: GroupCreate, db: Session = Depends(get_db)):
     db.add(group)
     db.commit()
     db.refresh(group)
+    
+    log_activity(
+        db, action="group_created", category="group", severity="info",
+        entity_type="group", entity_id=str(group.id), entity_name=group.name,
+        description=f"Group created: {group.name}",
+        username=current_user.username
+    )
+    
     return group.to_dict()
 
 @router.put("/{group_id}", response_model=Dict[str, Any])
-def update_group(group_id: int, data: GroupUpdate, db: Session = Depends(get_db)):
+def update_group(
+    group_id: int, 
+    data: GroupUpdate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     group = db.query(InvoiceGroup).filter(InvoiceGroup.id == group_id).first()
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
@@ -59,10 +77,22 @@ def update_group(group_id: int, data: GroupUpdate, db: Session = Depends(get_db)
         
     db.commit()
     db.refresh(group)
+    
+    log_activity(
+        db, action="group_updated", category="group", severity="info",
+        entity_type="group", entity_id=str(group.id), entity_name=group.name,
+        description=f"Group updated: {group.name}",
+        username=current_user.username
+    )
+    
     return group.to_dict()
 
 @router.delete("/{group_id}")
-def delete_group(group_id: int, db: Session = Depends(get_db)):
+def delete_group(
+    group_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     group = db.query(InvoiceGroup).filter(InvoiceGroup.id == group_id).first()
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
@@ -70,4 +100,12 @@ def delete_group(group_id: int, db: Session = Depends(get_db)):
     # The ON DELETE SET NULL handles setting group_id to NULL on existing assignments
     db.delete(group)
     db.commit()
+    
+    log_activity(
+        db, action="group_deleted", category="group", severity="warning",
+        entity_type="group", entity_id=str(group_id), entity_name=group.name,
+        description=f"Group deleted: {group.name}",
+        username=current_user.username
+    )
+    
     return {"message": "Group deleted successfully"}

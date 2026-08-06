@@ -12,8 +12,9 @@ from sqlalchemy import or_
 
 from db.database import get_db
 from db.repository import InvoiceRepository
-from api.dependencies import get_current_admin
-from db.models import InvoiceProjectAssignment, PWSItem
+from api.dependencies import get_current_admin, get_current_active_user
+from core.activity_log import log_activity
+from db.models import InvoiceProjectAssignment, PWSItem, User
 from pydantic import BaseModel
 import uuid
 
@@ -151,7 +152,8 @@ def advanced_search_invoices(
 @router.post("/manual")
 def create_manual_invoice(
     data: ManualInvoiceCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
 ):
     from db.models import Invoice, LineItem
     # Create the manual invoice
@@ -183,6 +185,13 @@ def create_manual_invoice(
     db.add(line_item)
     db.commit()
     db.refresh(new_invoice)
+    
+    log_activity(
+        db, action="invoice_created", category="invoice", severity="info",
+        entity_type="invoice", entity_id=str(new_invoice.id), entity_name=new_invoice.invoice_number,
+        description=f"Manual invoice created: {new_invoice.invoice_number}",
+        username=current_user.username
+    )
     
     return new_invoice.to_dict()
 
@@ -344,16 +353,32 @@ def get_invoice(invoice_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{invoice_id}")
-def update_invoice(invoice_id: int, updates: dict, db: Session = Depends(get_db)):
+def update_invoice(
+    invoice_id: int, 
+    updates: dict, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     repo = InvoiceRepository(db)
     inv = repo.update_invoice(invoice_id, updates)
     if not inv:
         raise HTTPException(status_code=404, detail="Invoice not found")
+        
+    log_activity(
+        db, action="invoice_updated", category="invoice", severity="info",
+        entity_type="invoice", entity_id=str(inv.id), entity_name=inv.invoice_number or inv.file_name,
+        description=f"Invoice updated: {inv.invoice_number or inv.file_name}",
+        username=current_user.username
+    )
     return inv.to_dict()
 
 
 @router.post("/{invoice_id}/reparse")
-async def reparse_invoice(invoice_id: int, db: Session = Depends(get_db)):
+async def reparse_invoice(
+    invoice_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     from pathlib import Path
     from core.document_loader import load_document
     from core.extractor import extract_invoice_fields
@@ -386,6 +411,13 @@ async def reparse_invoice(invoice_id: int, db: Session = Depends(get_db)):
     if not updated_inv:
         raise HTTPException(status_code=404, detail="Failed to update invoice")
         
+    log_activity(
+        db, action="invoice_reparsed", category="invoice", severity="info",
+        entity_type="invoice", entity_id=str(updated_inv.id), entity_name=updated_inv.invoice_number or updated_inv.file_name,
+        description=f"Invoice reparsed via AI: {updated_inv.invoice_number or updated_inv.file_name}",
+        username=current_user.username
+    )
+        
     return {
         **updated_inv.to_dict(),
         "raw_text": updated_inv.raw_text,
@@ -394,10 +426,21 @@ async def reparse_invoice(invoice_id: int, db: Session = Depends(get_db)):
     }
 
 
-@router.delete("/{invoice_id}", dependencies=[Depends(get_current_admin)])
-def delete_invoice(invoice_id: int, db: Session = Depends(get_db)):
+@router.delete("/{invoice_id}")
+def delete_invoice(
+    invoice_id: int, 
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin)
+):
     repo = InvoiceRepository(db)
     ok = repo.delete_invoice(invoice_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Invoice not found")
+        
+    log_activity(
+        db, action="invoice_deleted", category="invoice", severity="warning",
+        entity_type="invoice", entity_id=str(invoice_id),
+        description=f"Invoice ID {invoice_id} deleted",
+        username=current_admin.username
+    )
     return {"message": "Deleted"}

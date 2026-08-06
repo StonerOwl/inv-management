@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from db.database import get_db
 from db.models import Category, Workflow, WorkflowProcess, ProductCatalog, User
 from api.dependencies import get_current_active_user
+from core.activity_log import log_activity
 
 router = APIRouter(prefix="/api/categories", tags=["Categories & Workflows"])
 
@@ -76,6 +77,14 @@ def create_category(
     db.add(cat)
     db.commit()
     db.refresh(cat)
+    
+    log_activity(
+        db, action="category_created", category="category", severity="info",
+        entity_type="category", entity_id=str(cat.id), entity_name=cat.name,
+        description=f"Category created: {cat.name}",
+        username=current_user.username
+    )
+    
     return cat.to_dict()
 
 
@@ -107,6 +116,14 @@ def update_category(
 
     db.commit()
     db.refresh(cat)
+    
+    log_activity(
+        db, action="category_updated", category="category", severity="info",
+        entity_type="category", entity_id=str(cat.id), entity_name=cat.name,
+        description=f"Category updated: {cat.name}",
+        username=current_user.username
+    )
+    
     return cat.to_dict()
 
 
@@ -130,6 +147,14 @@ def delete_category(
 
     db.delete(cat)
     db.commit()
+    
+    log_activity(
+        db, action="category_deleted", category="category", severity="warning",
+        entity_type="category", entity_id=str(category_id), entity_name=cat.name,
+        description=f"Category deleted: {cat.name}",
+        username=current_user.username
+    )
+    
     return {"message": f"Category '{cat.name}' deleted"}
 
 
@@ -156,6 +181,14 @@ def create_workflow(
     db.add(wf)
     db.commit()
     db.refresh(wf)
+    
+    log_activity(
+        db, action="category_workflow_created", category="workflow", severity="info",
+        entity_type="workflow", entity_id=str(wf.id), entity_name=wf.name,
+        description=f"Workflow '{wf.name}' created in category {category_id}",
+        username=current_user.username
+    )
+    
     return wf.to_dict()
 
 
@@ -181,6 +214,14 @@ def update_workflow(
 
     db.commit()
     db.refresh(wf)
+    
+    log_activity(
+        db, action="category_workflow_updated", category="workflow", severity="info",
+        entity_type="workflow", entity_id=str(wf.id), entity_name=wf.name,
+        description=f"Workflow '{wf.name}' updated",
+        username=current_user.username
+    )
+    
     return wf.to_dict()
 
 
@@ -205,6 +246,14 @@ def delete_workflow(
 
     db.delete(wf)
     db.commit()
+    
+    log_activity(
+        db, action="category_workflow_deleted", category="workflow", severity="warning",
+        entity_type="workflow", entity_id=str(workflow_id), entity_name=wf.name,
+        description=f"Workflow '{wf.name}' deleted",
+        username=current_user.username
+    )
+    
     return {"message": f"Workflow '{wf.name}' deleted"}
 
 
@@ -239,6 +288,14 @@ def create_process(
     db.add(proc)
     db.commit()
     db.refresh(proc)
+    
+    log_activity(
+        db, action="category_process_created", category="workflow", severity="info",
+        entity_type="process", entity_id=str(proc.id), entity_name=proc.name,
+        description=f"Process '{proc.name}' added to workflow {workflow_id}",
+        username=current_user.username
+    )
+    
     return proc.to_dict()
 
 
@@ -273,6 +330,14 @@ def update_process(
 
     db.commit()
     db.refresh(proc)
+    
+    log_activity(
+        db, action="category_process_updated", category="workflow", severity="info",
+        entity_type="process", entity_id=str(proc.id), entity_name=proc.name,
+        description=f"Process '{proc.name}' updated",
+        username=current_user.username
+    )
+    
     return proc.to_dict()
 
 
@@ -294,4 +359,12 @@ def delete_process(
 
     db.delete(proc)
     db.commit()
+    
+    log_activity(
+        db, action="category_process_deleted", category="workflow", severity="warning",
+        entity_type="process", entity_id=str(process_id), entity_name=proc.name,
+        description=f"Process '{proc.name}' deleted",
+        username=current_user.username
+    )
+    
     return {"message": f"Process '{proc.name}' deleted"}

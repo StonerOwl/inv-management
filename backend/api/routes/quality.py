@@ -19,6 +19,7 @@ from db.database import get_db
 from db.models import User
 from db.quality_models import QualityAttachment, QualityNote
 from api.dependencies import get_current_active_user, get_current_admin
+from core.activity_log import log_activity
 
 router = APIRouter(prefix="/quality", tags=["quality"])
 QUALITY_UPLOAD_DIR = config.UPLOAD_DIR / "quality"
@@ -135,6 +136,14 @@ def create_quality_note(
     db.add(note)
     db.commit()
     db.refresh(note)
+    
+    log_severity = "warning" if note.severity == "Critical" else "info"
+    log_activity(
+        db, action="quality_note_created", category="quality", severity=log_severity,
+        entity_type="quality_note", entity_id=str(note.id), entity_name=note.project_name or note.batch_id,
+        description=f"Quality note created (severity: {note.severity}): {note.observation[:50]}...",
+        username=current_user.username
+    )
     return note.to_dict()
 
 
@@ -261,6 +270,13 @@ def approve_quality_note(
     note.status = "Resolved"
     db.commit()
     db.refresh(note)
+    
+    log_activity(
+        db, action="quality_note_approved", category="quality", severity="success",
+        entity_type="quality_note", entity_id=str(note.id), entity_name=note.project_name or note.batch_id,
+        description=f"Quality note approved and resolved",
+        username=current_user.username
+    )
     return note.to_dict()
 
 
@@ -280,6 +296,13 @@ def delete_quality_note(
 
     db.delete(note)
     db.commit()
+    
+    log_activity(
+        db, action="quality_note_deleted", category="quality", severity="warning",
+        entity_type="quality_note", entity_id=str(note_id),
+        description=f"Quality note ID {note_id} deleted",
+        username=current_user.username
+    )
     return {"status": "success", "deleted_id": note_id}
 
 
@@ -302,6 +325,12 @@ def clear_all_quality_notes(
     db.query(QualityAttachment).delete()
     db.query(QualityNote).delete()
     db.commit()
+    
+    log_activity(
+        db, action="quality_notes_cleared", category="quality", severity="warning",
+        description=f"All quality notes ({count}) and attachments were cleared from the database.",
+        username=current_user.username
+    )
     return {"status": "success", "deleted_count": count}
 
 

@@ -11,7 +11,9 @@ from sqlalchemy import desc, or_
 from pydantic import BaseModel
 
 from db.database import get_db
-from db.models import InventoryItem, InvoiceProjectAssignment, PWSItem
+from db.models import InventoryItem, InvoiceProjectAssignment, PWSItem, User
+from api.dependencies import get_current_active_user
+from core.activity_log import log_activity
 
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
 
@@ -223,6 +225,7 @@ def update_inventory_item(
     item_id: int,
     update: InventoryItemUpdate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ):
     """Update an inventory item's name, notes, or quantities."""
     item = db.query(InventoryItem).filter(InventoryItem.id == item_id).first()
@@ -242,11 +245,23 @@ def update_inventory_item(
 
     db.commit()
     db.refresh(item)
+    
+    log_activity(
+        db, action="inventory_item_updated", category="inventory", severity="info",
+        entity_type="inventory_item", entity_id=str(item.id), entity_name=item.item_name,
+        description=f"Inventory item updated: {item.item_name}",
+        username=current_user.username
+    )
+    
     return item.to_dict()
 
 
 @router.delete("/items/{item_id}")
-def delete_inventory_item(item_id: int, db: Session = Depends(get_db)):
+def delete_inventory_item(
+    item_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
     """Delete an inventory item."""
     item = db.query(InventoryItem).filter(InventoryItem.id == item_id).first()
     if not item:
@@ -254,4 +269,12 @@ def delete_inventory_item(item_id: int, db: Session = Depends(get_db)):
 
     db.delete(item)
     db.commit()
+    
+    log_activity(
+        db, action="inventory_item_deleted", category="inventory", severity="warning",
+        entity_type="inventory_item", entity_id=str(item_id), entity_name=item.item_name,
+        description=f"Inventory item deleted: {item.item_name}",
+        username=current_user.username
+    )
+    
     return {"message": "Inventory item deleted"}
