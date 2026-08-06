@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import Barcode from 'react-barcode'
+import ClickableBarcode from '../ClickableBarcode'
 import { Printer } from 'lucide-react'
 
 export default function BatchIdentityCard({
@@ -83,14 +83,14 @@ export default function BatchIdentityCard({
             <p className="print-label text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-2">
               Project ID
             </p>
-            <Barcode value={projectId || 'N/A'} format="CODE128" height={56} width={1.4} fontSize={11} margin={4} />
+            <ClickableBarcode value={projectId || 'N/A'} format="CODE128" height={56} width={1.4} fontSize={11} margin={4} label="Project ID" />
           </div>
 
           <div className="print-col flex flex-col items-center bg-white rounded-lg p-3">
             <p className="print-label text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-2">
               Batch ID
             </p>
-            <Barcode value={batchId || 'N/A'} format="CODE128" height={56} width={1.4} fontSize={11} margin={4} />
+            <ClickableBarcode value={batchId || 'N/A'} format="CODE128" height={56} width={1.4} fontSize={11} margin={4} label="Batch ID" />
           </div>
         </div>
       </div>

@@ -5,7 +5,7 @@ import {
   Download, Loader2, Package, GitBranch, GitCommit, Settings2, 
   Hash, Calendar, Tag, FileText, CheckCircle 
 } from 'lucide-react';
-import Barcode from 'react-barcode';
+import ClickableBarcode from '../../components/ClickableBarcode';
 
 export default function ProjectDetailsExpanded({ projectId, project }) {
   const [data, setData] = useState(null);
@@ -128,7 +128,7 @@ export default function ProjectDetailsExpanded({ projectId, project }) {
           <div className="flex flex-col gap-6 flex-1">
             <div className="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shrink-0 w-max max-w-full overflow-hidden">
               <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">Project ID</div>
-              <Barcode value={p.project_code || p.id} format="CODE128" height={52} width={1.3} fontSize={10} margin={2} background="transparent" />
+              <ClickableBarcode value={p.project_code || p.id} format="CODE128" height={52} width={1.3} fontSize={10} margin={2} background="transparent" label="Project ID" />
             </div>
 
             {workflows.some(w => w.batch_id) && (
@@ -136,7 +136,7 @@ export default function ProjectDetailsExpanded({ projectId, project }) {
                 {workflows.map(wf => wf.batch_id && (
                   <div key={wf.id} className="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shrink-0 max-w-full overflow-hidden">
                     <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 truncate" title={`Batch ID (${wf.name})`}>Batch ID ({wf.name})</div>
-                    <Barcode value={wf.batch_id} format="CODE128" height={52} width={1.3} fontSize={10} margin={2} background="transparent" />
+                    <ClickableBarcode value={wf.batch_id} format="CODE128" height={52} width={1.3} fontSize={10} margin={2} background="transparent" label="Batch ID" />
                   </div>
                 ))}
               </div>

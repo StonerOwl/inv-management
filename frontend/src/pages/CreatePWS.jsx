@@ -2,13 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { FolderPlus, GitCommit, GitBranch, XCircle, CheckCircle, ChevronRight, Plus, Settings2, Trash2, Pencil, CheckSquare, Square } from 'lucide-react';
 import clsx from 'clsx';
-import Barcode from 'react-barcode';
+import ClickableBarcode from '../components/ClickableBarcode';
 import { getPWSItems, createPWSItem, updatePWSItem, deletePWSItem, getPWSAssignments, createPWSAssignment, deletePWSAssignment, listManagedProducts } from '../api/client';
 import NoteTarget from '../components/NoteTarget';
 
 export default function CreatePWS() {
   const location = useLocation();
-  const [viewMode, setViewMode] = useState(location.state?.viewMode || 'tree');
+  const [viewMode, setViewMode] = useState(location.state?.viewMode || 'create');
   const [activeModal, setActiveModal] = useState(null);
   const [name, setName] = useState('');
   const [product, setProduct] = useState('');
@@ -229,7 +229,7 @@ export default function CreatePWS() {
       } else {
         itemData.id = `pws_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
         const { data } = await createPWSItem(itemData);
-        setCreatedItems((prev) => [data, ...prev]);
+        setCreatedItems((prev) => [...prev, data]);
 
         // Auto-assign based on link selections
         if (activeModal === 'workflow' && linkToProjectId) {
@@ -523,14 +523,6 @@ export default function CreatePWS() {
           </div>
 
           <div className="flex gap-4">
-            {viewMode !== 'tree' && (
-              <button
-                onClick={() => setViewMode('tree')}
-                className="aiq-btn-ghost flex items-center gap-2"
-              >
-                Back to Tree
-              </button>
-            )}
             {viewMode !== 'create' && (
               <button
                 onClick={() => setViewMode('create')}
@@ -550,166 +542,7 @@ export default function CreatePWS() {
           </div>
         </div>
 
-        {viewMode === 'tree' && (
-          <div className="space-y-4">
-            {projects.length === 0 ? (
-              <div className="text-center py-12 text-gray-500 font-bold border-2 border-dashed border-gray-200 dark:border-gray-700">
-                No projects found. Click "Create" to get started.
-              </div>
-            ) : (
-              projects.map(p => {
-                let isLive = false;
-                if (p.start_date && p.target_date) {
-                  const now = new Date();
-                  const start = new Date(p.start_date);
-                  const target = new Date(p.target_date);
-                  if (now >= start && now <= target) {
-                    isLive = true;
-                  }
-                }
-                return (
-                  <details key={p.id} className="group aiq-card overflow-hidden mb-4" open>
-                    <summary className="p-4 font-bold text-lg text-gray-900 dark:text-gray-100 flex justify-between items-center cursor-pointer outline-none select-none hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open:border-gray-100 dark:group-open:border-gray-800">
-                      <div className="flex items-center gap-3">
-                        <ChevronRight size={20} className="group-open:rotate-90 transition-transform text-gray-400" />
-                        <FolderPlus size={20} className="text-primary-600 dark:text-primary-400" /> {p.name}
-                      </div>
-                      <div className="flex items-center gap-3 text-xs tracking-wider">
-                        <span className={clsx("px-3 py-1 rounded-full font-bold", isLive ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700")}>
-                          {isLive ? "LIVE" : "FINISHED"}
-                        </span>
-                        {p.project_code && (
-                          <span className="bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 px-3 py-1 border border-primary-200 dark:border-primary-800">
-                            ID: {p.project_code}
-                          </span>
-                        )}
 
-                      </div>
-                    </summary>
-
-                    <div className="p-6 bg-gray-50/50 dark:bg-gray-900/20">
-                      {/* Meta info row */}
-                      {(p.product || projectWorkflows[p.id]?.length > 0 || p.category || p.start_date || p.target_date) && (
-                        <div className="mb-5 bg-white dark:bg-gray-800/80 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex flex-wrap gap-x-10 gap-y-3 text-sm">
-                          {p.product && <div><span className="text-gray-500 dark:text-gray-400 text-[10px] block mb-0.5 uppercase font-bold tracking-wider">Product</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.product}</span></div>}
-                          {projectWorkflows[p.id]?.length > 0 && (
-                            <div>
-                              <span className="text-gray-500 dark:text-gray-400 text-[10px] block mb-0.5 uppercase font-bold tracking-wider">Work Order / Workflow</span>
-                              <span className="font-semibold text-gray-900 dark:text-gray-100">
-                                {projectWorkflows[p.id].map(wId => workflows.find(w => w.id === wId)?.name).filter(Boolean).join(', ')}
-                              </span>
-                            </div>
-                          )}
-                          {p.category && <div><span className="text-gray-500 dark:text-gray-400 text-[10px] block mb-0.5 uppercase font-bold tracking-wider">Category</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.category}</span></div>}
-                          {p.start_date && <div><span className="text-gray-500 dark:text-gray-400 text-[10px] block mb-0.5 uppercase font-bold tracking-wider">Start Date</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.start_date}</span></div>}
-                          {p.target_date && <div><span className="text-gray-500 dark:text-gray-400 text-[10px] block mb-0.5 uppercase font-bold tracking-wider">Target Date</span><span className="font-semibold text-gray-900 dark:text-gray-100">{p.target_date}</span></div>}
-                        </div>
-                      )}
-
-                      {/* Two-column: tree left, QR panel right */}
-                      <div className="flex gap-5 items-start">
-
-                        {/* Left: workflow tree */}
-                        <div className="flex-1 min-w-0 pl-4 space-y-4 border-l-2 border-gray-200 dark:border-gray-700">
-                          {(projectWorkflows[p.id] || []).map(wId => {
-                            const wf = workflows.find(w => w.id === wId);
-                            if (!wf) return null;
-                            return (
-                              <details key={wId} className="group/wf" open>
-                                <summary className="py-2 font-bold text-lg text-gray-800 dark:text-gray-200 flex items-center gap-3 cursor-pointer outline-none select-none hover:text-primary-600 transition-colors list-none [&::-webkit-details-marker]:hidden relative">
-                                  <div className="absolute -left-[18px] top-1/2 w-4 h-0.5 bg-gray-200 dark:bg-gray-700"></div>
-                                  <ChevronRight size={18} className="group-open/wf:rotate-90 transition-transform text-gray-400" />
-                                  <GitBranch size={18} className="text-primary-500 dark:text-primary-400" /> {wf.name} {wf.batch_id && <span className="ml-3 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-2 py-0.5 text-xs rounded border border-gray-200 dark:border-gray-700 font-mono">BATCH: {wf.batch_id}</span>}
-                                </summary>
-
-                                <div className="pl-8">
-                                  <div className="pl-4 space-y-3 border-l-2 border-gray-100 dark:border-gray-800">
-                                    {(workflowStages[wId] || []).map(sId => {
-                                      const st = stages.find(s => s.id === sId);
-                                      if (!st) return null;
-                                      return (
-                                        <details key={sId} className="group/st" open>
-                                          <summary className="py-1.5 font-semibold text-md text-gray-700 dark:text-gray-300 flex items-center gap-3 cursor-pointer outline-none select-none hover:text-primary-600 transition-colors list-none [&::-webkit-details-marker]:hidden relative">
-                                            <div className="absolute -left-[18px] top-1/2 w-4 h-0.5 bg-gray-100 dark:bg-gray-800"></div>
-                                            <ChevronRight size={16} className="group-open/st:rotate-90 transition-transform text-gray-400" />
-                                            <GitCommit size={16} className="text-primary-500 dark:text-primary-400" /> {st.name}
-                                          </summary>
-
-                                          <div className="pl-8 py-2">
-                                            <div className="pl-4 space-y-2 border-l border-dashed border-gray-200 dark:border-gray-700">
-                                              {(stageProcesses[sId] || []).length === 0 ? (
-                                                <div className="text-xs text-gray-400 italic relative flex items-center">
-                                                  <div className="absolute -left-[17px] top-1/2 w-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-                                                  No processes
-                                                </div>
-                                              ) : (
-                                                (stageProcesses[sId] || []).map(procId => {
-                                                  const proc = processes.find(pr => pr.id === procId);
-                                                  if (!proc) return null;
-                                                  return (
-                                                    <div key={procId} className="text-sm font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2 relative">
-                                                      <div className="absolute -left-[17px] top-1/2 w-4 h-px bg-gray-200 dark:bg-gray-700"></div>
-                                                      <Settings2 size={14} className="text-primary-400 dark:text-primary-500" /> {proc.name}
-                                                    </div>
-                                                  )
-                                                })
-                                              )}
-                                            </div>
-                                          </div>
-                                        </details>
-                                      )
-                                    })}
-                                  </div>
-                                </div>
-                              </details>
-                            )
-                          })}
-                        </div>
-
-                        {/* Right: Barcode / ID panel */}
-                        {p.project_code && (
-                          <div className="shrink-0 w-[220px] flex flex-col gap-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">Identifiers</p>
-
-                            {/* Project ID card */}
-                            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 flex flex-col items-center gap-2 shadow-sm hover:border-primary-300 dark:hover:border-primary-700 transition-colors">
-                              <div className="w-full flex items-center justify-between mb-1">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Project ID</span>
-                                <span className="w-2 h-2 rounded-full bg-primary-500 dark:bg-primary-400"></span>
-                              </div>
-                              <div className="bg-white rounded p-1 w-full flex justify-center">
-                                <Barcode value={p.project_code} format="CODE128" height={48} width={1.2} fontSize={9} margin={2} />
-                              </div>
-                            </div>
-
-                            {/* Batch ID cards */}
-                            {(projectWorkflows[p.id] || []).map(wId => {
-                              const wf = workflows.find(w => w.id === wId);
-                              if (!wf || !wf.batch_id) return null;
-                              return (
-                                <div key={wf.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 flex flex-col items-center gap-2 shadow-sm hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors">
-                                  <div className="w-full flex items-center justify-between mb-1">
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Batch ID</span>
-                                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                  </div>
-                                  <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate w-full text-center">{wf.name}</p>
-                                  <div className="bg-white rounded p-1 w-full flex justify-center">
-                                    <Barcode value={wf.batch_id} format="CODE128" height={48} width={1.2} fontSize={9} margin={2} />
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                      </div>
-                    </div>
-                  </details>
-                )
-              })
-            )}
-          </div>
-        )}
 
         {viewMode === 'create' && (
           <div>
@@ -782,12 +615,67 @@ export default function CreatePWS() {
 
               {/* Unassigned Items */}
               {(unassignedWorkflows.length > 0 || unassignedStages.length > 0 || unassignedProcesses.length > 0) && (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-gray-200 dark:border-gray-800">
-                  <div className="hidden md:block pr-6">
-                  </div>
-                  {renderRecentlyCreated(unassignedWorkflows, 'workflow', true, true)}
-                  {renderRecentlyCreated(unassignedStages, 'stage', true, true)}
-                  {renderRecentlyCreated(unassignedProcesses, 'process', true, true)}
+                <div className="space-y-6 pb-6 border-b border-gray-200 dark:border-gray-800">
+                  <h3 className="text-sm font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 mt-4 border-b border-gray-100 dark:border-gray-800 pb-2">Unassigned Hierarchies</h3>
+                  
+                  {unassignedWorkflows.map(wf => {
+                    const wfStages = stages.filter(s => workflowStages[wf.id]?.includes(s.id));
+                    return (
+                      <div key={wf.id} className="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-gray-100 dark:border-gray-800">
+                        <div className="hidden md:block md:col-span-1 pr-6"></div>
+                        <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+                           <div className="md:col-span-1">
+                             {renderRecentlyCreated([wf], 'workflow', true, true)}
+                           </div>
+                           <div className="md:col-span-2 flex flex-col gap-6">
+                             {wfStages.length === 0 ? (
+                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                 <div className="md:col-span-1">{renderRecentlyCreated([], 'stage', true, false)}</div>
+                               </div>
+                             ) : wfStages.map(st => {
+                               const stProcesses = processes.filter(p => stageProcesses[st.id]?.includes(p.id));
+                               return (
+                                 <div key={st.id} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                   <div className="md:col-span-1">
+                                     {renderRecentlyCreated([st], 'stage', true, true)}
+                                   </div>
+                                   <div className="md:col-span-1 flex flex-col gap-2">
+                                     {renderRecentlyCreated(stProcesses, 'process', true, stProcesses.length > 0)}
+                                   </div>
+                                 </div>
+                               )
+                             })}
+                           </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                  {unassignedStages.map(st => {
+                    const stProcesses = processes.filter(p => stageProcesses[st.id]?.includes(p.id));
+                    return (
+                      <div key={st.id} className="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-gray-100 dark:border-gray-800">
+                        <div className="hidden md:block md:col-span-2 pr-6"></div>
+                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                           <div className="md:col-span-1">
+                             {renderRecentlyCreated([st], 'stage', true, true)}
+                           </div>
+                           <div className="md:col-span-1 flex flex-col gap-2">
+                             {renderRecentlyCreated(stProcesses, 'process', true, stProcesses.length > 0)}
+                           </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                  {unassignedProcesses.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                      <div className="hidden md:block md:col-span-3 pr-6"></div>
+                      <div className="md:col-span-1 flex flex-col gap-2">
+                        {renderRecentlyCreated(unassignedProcesses, 'process', true, true)}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -795,17 +683,59 @@ export default function CreatePWS() {
               <div className="space-y-6">
                 {projects.map(proj => {
                   const projWorkflows = workflows.filter(w => projectWorkflows[proj.id]?.includes(w.id));
-                  const projStageIds = new Set(projWorkflows.flatMap(w => workflowStages[w.id] || []));
-                  const projStages = stages.filter(s => projStageIds.has(s.id));
-                  const projProcessIds = new Set(projStages.flatMap(s => stageProcesses[s.id] || []));
-                  const projProcesses = processes.filter(p => projProcessIds.has(p.id));
-
                   return (
                     <div key={proj.id} className="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-gray-200 dark:border-gray-800">
-                      {renderRecentlyCreated([proj], 'project', true, true)}
-                      {renderRecentlyCreated(projWorkflows, 'workflow', true, true)}
-                      {renderRecentlyCreated(projStages, 'stage', true, true)}
-                      {renderRecentlyCreated(projProcesses, 'process', true, true)}
+                      <div className="md:col-span-1">
+                        {renderRecentlyCreated([proj], 'project', true, true)}
+                      </div>
+                      
+                      <div className="md:col-span-3 flex flex-col gap-6">
+                        {projWorkflows.length === 0 ? (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="md:col-span-1">{renderRecentlyCreated([], 'workflow', true, false)}</div>
+                          </div>
+                        ) : projWorkflows.map(wf => {
+                          const wfStages = stages.filter(s => workflowStages[wf.id]?.includes(s.id));
+                          return (
+                            <div key={wf.id} className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+                              {/* Workflow to stages connector */}
+                              <div className="absolute left-6 top-12 bottom-0 w-px bg-gray-200 dark:bg-gray-800 -z-10 hidden md:block"></div>
+                              
+                              <div className="md:col-span-1 relative">
+                                {renderRecentlyCreated([wf], 'workflow', true, true)}
+                              </div>
+                              
+                              <div className="md:col-span-2 flex flex-col gap-6">
+                                {wfStages.length === 0 ? (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="md:col-span-1">{renderRecentlyCreated([], 'stage', true, false)}</div>
+                                  </div>
+                                ) : wfStages.map(st => {
+                                  const stProcesses = processes.filter(p => stageProcesses[st.id]?.includes(p.id));
+                                  return (
+                                    <div key={st.id} className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+                                      {/* Stage to processes connector */}
+                                      <div className="absolute left-6 top-12 bottom-0 w-px bg-gray-200 dark:bg-gray-800 -z-10 hidden md:block"></div>
+                                      
+                                      <div className="md:col-span-1 relative">
+                                        {/* Connector line from workflow */}
+                                        <div className="absolute -left-6 top-6 w-4 h-px bg-gray-200 dark:bg-gray-800 -z-10 hidden md:block"></div>
+                                        {renderRecentlyCreated([st], 'stage', true, true)}
+                                      </div>
+                                      
+                                      <div className="md:col-span-1 flex flex-col gap-2 relative">
+                                        {/* Connector line from stage */}
+                                        <div className="absolute -left-6 top-6 w-4 h-px bg-gray-200 dark:bg-gray-800 -z-10 hidden md:block"></div>
+                                        {renderRecentlyCreated(stProcesses, 'process', true, stProcesses.length > 0)}
+                                      </div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   )
                 })}
@@ -894,7 +824,7 @@ export default function CreatePWS() {
                               <div className="flex flex-col gap-4">
                                 <div className="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shrink-0">
                                   <div className="text-xs text-gray-700 dark:text-gray-300 mb-1">Project ID</div>
-                                  <Barcode value={p.project_code} format="CODE128" height={52} width={1.3} fontSize={10} margin={2} />
+                                  <ClickableBarcode value={p.project_code} format="CODE128" height={52} width={1.3} fontSize={10} margin={2} label="Project ID" />
                                 </div>
                               </div>
 
@@ -905,7 +835,7 @@ export default function CreatePWS() {
                                   return (
                                     <div key={wf.id} className="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shrink-0">
                                       <div className="text-xs text-gray-700 dark:text-gray-300 mb-1 truncate" title={`Batch ID (${wf.name})`}>Batch ID ({wf.name})</div>
-                                      <Barcode value={wf.batch_id} format="CODE128" height={52} width={1.3} fontSize={10} margin={2} />
+                                      <ClickableBarcode value={wf.batch_id} format="CODE128" height={52} width={1.3} fontSize={10} margin={2} label="Batch ID" />
                                     </div>
                                   );
                                 })}
