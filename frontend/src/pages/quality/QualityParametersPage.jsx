@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { ShieldCheck, Plus, Trash2, Settings2, Save } from 'lucide-react'
-import { getPWSItems, getPWSAssignments } from '../../api/client'
+import { getPWSItems, getPWSAssignments, getDevices } from '../../api/client'
 
 const inputCls = 'w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-primary-600 transition-colors rounded-lg'
 
 function Field({ label, children }) {
   return (
     <label className="block">
-      <span className="flex items-center justify-between mb-1.5">
-        <span className="text-[11px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+      <span className="flex items-center justify-between mb-1.5 w-full">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 w-full block">
           {label}
         </span>
       </span>
@@ -21,6 +21,7 @@ export default function QualityParametersPage({ readOnly = false }) {
   const [loading, setLoading] = useState(true)
   const [pwsItems, setPwsItems] = useState([])
   const [pwsAssignments, setPwsAssignments] = useState([])
+  const [devices, setDevices] = useState([])
 
   const [selections, setSelections] = useState({
     projectId: '',
@@ -37,13 +38,15 @@ export default function QualityParametersPage({ readOnly = false }) {
     let cancelled = false
     async function load() {
       try {
-        const [itemsRes, assignsRes] = await Promise.all([
+        const [itemsRes, assignsRes, devicesRes] = await Promise.all([
           getPWSItems().catch(() => ({ data: [] })),
-          getPWSAssignments().catch(() => ({ data: [] }))
+          getPWSAssignments().catch(() => ({ data: [] })),
+          getDevices().catch(() => ({ data: [] }))
         ])
         if (cancelled) return
         setPwsItems(itemsRes.data || [])
         setPwsAssignments(assignsRes.data || [])
+        setDevices(devicesRes.data || [])
       } catch (err) {
         console.warn('Failed to fetch PWS data', err)
       } finally {
@@ -220,6 +223,7 @@ export default function QualityParametersPage({ readOnly = false }) {
                             >
                               <option value="text">Text / Number</option>
                               <option value="file">File Upload</option>
+                              <option value="device">Device Data</option>
                             </select>
                           </div>
                         }
@@ -240,6 +244,25 @@ export default function QualityParametersPage({ readOnly = false }) {
                                 dark:file:bg-primary-900/30 dark:file:text-primary-400"
                               onChange={e => updateParameter(param.id, 'value', e.target.files[0])}
                             />
+                            )}
+                          </div>
+                        ) : (param.type === 'device') ? (
+                          <div className="flex items-center gap-2">
+                            {readOnly ? (
+                              <div className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm rounded-lg opacity-80 truncate">
+                                {devices.find(d => d.id === param.value)?.name || param.value || "No device selected"}
+                              </div>
+                            ) : (
+                              <select 
+                                className={inputCls}
+                                value={param.value}
+                                onChange={e => updateParameter(param.id, 'value', e.target.value)}
+                              >
+                                <option value="">-- Select Device --</option>
+                                {devices.map(d => (
+                                  <option key={d.id} value={d.id}>{d.name} ({d.device_type})</option>
+                                ))}
+                              </select>
                             )}
                           </div>
                         ) : readOnly ? (

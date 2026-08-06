@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 import { X, ScanLine, CameraOff, KeyboardIcon } from 'lucide-react'
 
-const SCAN_REGION_ID = 'batch-scan-region'
+// Generates a unique ID per modal instance to avoid DOM conflicts
+// and React Strict Mode double-init crashes.
 
 // Supports the QR payload written by BatchIdentityCard plus common 1D
 // batch/barcode formats, so the same button reads either code type.
@@ -25,14 +26,36 @@ export default function ScanBatchModal({ open, onClose, onDetected }) {
   const [manualValue, setManualValue] = useState('')
   const [starting, setStarting] = useState(true)
 
+  const [scanRegionId] = useState(() => `scan-region-${Math.random().toString(36).slice(2, 9)}`)
+  const isInitializingRef = useRef(false)
+  const isMountedRef = useRef(false)
+
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      isInitializingRef.current = false
+      isMountedRef.current = false
+      return
+    }
     let cancelled = false
     setCameraError(null)
     setStarting(true)
 
-    const scanner = new Html5Qrcode(SCAN_REGION_ID, { formatsToSupport: FORMATS, verbose: false })
-    scannerRef.current = scanner
+    if (isInitializingRef.current || isMountedRef.current) return
+    isInitializingRef.current = true
+
+    let scanner;
+    try {
+      scanner = new Html5Qrcode(scanRegionId, { formatsToSupport: FORMATS, verbose: false })
+      scannerRef.current = scanner
+      isMountedRef.current = true
+    } catch (err) {
+      console.warn("Failed to instantiate Html5Qrcode:", err)
+      if (!cancelled) {
+        setCameraError('Camera unavailable or scanner conflict. Try manual entry.')
+        setStarting(false)
+      }
+      return
+    }
 
     scanner
       .start(
@@ -55,9 +78,13 @@ export default function ScanBatchModal({ open, onClose, onDetected }) {
 
     return () => {
       cancelled = true
-      scanner.stop().then(() => scanner.clear()).catch(() => {})
+      isInitializingRef.current = false
+      isMountedRef.current = false
+      if (scanner) {
+        scanner.stop().then(() => scanner.clear()).catch(() => {})
+      }
     }
-  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, scanRegionId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!open) return null
 
@@ -82,8 +109,13 @@ export default function ScanBatchModal({ open, onClose, onDetected }) {
         </div>
 
         <div className="p-5">
-          <div id={SCAN_REGION_ID} className="w-full rounded-lg overflow-hidden bg-black min-h-[240px] flex items-center justify-center">
-            {starting && <span className="text-xs text-gray-400">Starting camera…</span>}
+          <div className="relative w-full rounded-lg overflow-hidden bg-black min-h-[240px]">
+            <div id={scanRegionId} className="w-full" />
+            {starting && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className="text-xs text-gray-400">Starting camera…</span>
+              </div>
+            )}
           </div>
 
           {cameraError && (

@@ -1,92 +1,67 @@
 import React, { useEffect, useState } from 'react'
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-import { FileText, Package, FolderOpen, ClipboardList, PlusCircle, Layers, CheckCircle, MessageSquare, AlertCircle } from 'lucide-react'
-import { getDashboardData } from '../api/client'
+import { Link } from 'react-router-dom'
+import { 
+    FileText, Package, FolderOpen, AlertCircle, 
+    ArrowRight, Map, Smartphone
+} from 'lucide-react'
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, Tooltip, XAxis, YAxis } from 'recharts'
+import { 
+    getDashboardData, 
+    getTrackingDashboard, 
+    getQualitySummary, 
+    getDeviceStats 
+} from '../api/client'
 
-const INVOICE_COLORS = {
-    processed: '#22c55e',
-    needs_review: '#f59e0b',
-    pending: '#ef4444',
-    rejected: '#ef4444',
-}
-
-const INVOICE_LABELS = {
-    processed: 'Processed',
-    needs_review: 'Needs Review',
-    pending: 'Pending',
-    rejected: 'Rejected',
-}
-
-const STATUS_BADGE = {
-    Active: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800',
-    Planning: 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800',
-    Completed: 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800',
-    'Needs Review': 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800',
-}
-
-function StatusBadge({ status }) {
+function MetricRow({ label, value, subtext }) {
     return (
-        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide whitespace-nowrap inline-block ${STATUS_BADGE[status] || 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'}`}>
-            {status}
-        </span>
+        <div className="flex items-center justify-between py-1.5 border-b border-gray-50 dark:border-gray-800/50 last:border-0">
+            <div>
+                <p className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">{label}</p>
+                {subtext && <p className="text-[9px] text-gray-500 dark:text-gray-500">{subtext}</p>}
+            </div>
+            <p className="text-sm font-black text-gray-900 dark:text-gray-100">{value}</p>
+        </div>
     )
 }
 
-function DonutPanel({ title, data, centerLabel, centerSub, loading }) {
+function MiniDonut({ data, totalLabel, totalValue, colors }) {
     return (
-        <div className="aiq-card p-6 flex flex-col gap-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300">{title}</p>
-
-            {loading ? (
-                <div className="h-44 flex items-center justify-center">
-                    <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <div className="flex items-center gap-4 py-2">
+            <div className="w-20 h-20 relative flex-shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                        <Pie
+                            data={data}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={25}
+                            outerRadius={38}
+                            paddingAngle={2}
+                            dataKey="value"
+                            strokeWidth={0}
+                        >
+                            {data.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                            ))}
+                        </Pie>
+                        <Tooltip 
+                            contentStyle={{ fontSize: '10px', padding: '4px 8px', borderRadius: '4px' }}
+                            itemStyle={{ padding: 0 }}
+                        />
+                    </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-[10px] font-black text-gray-800 dark:text-gray-200 leading-none">{totalValue}</span>
                 </div>
-            ) : data.length === 0 ? (
-                <div className="h-44 flex items-center justify-center text-sm text-gray-900">No data yet</div>
-            ) : (
-                <div className="h-44 relative">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <Pie
-                                data={data}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={52}
-                                outerRadius={76}
-                                paddingAngle={3}
-                                dataKey="value"
-                                strokeWidth={0}
-                            >
-                                {data.map((entry, i) => (
-                                    <Cell key={i} fill={entry.color} />
-                                ))}
-                            </Pie>
-                            <Tooltip
-                                formatter={(value, name) => [value, name]}
-                                contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '12px', fontWeight: 600 }}
-                            />
-                        </PieChart>
-                    </ResponsiveContainer>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-2xl font-black text-gray-900 dark:text-gray-100">{centerLabel}</span>
-                        <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">{centerSub}</span>
-                    </div>
-                </div>
-            )}
-
-            <div className="flex flex-col gap-2">
-                {data.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
-                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{item.name}</span>
+            </div>
+            <div className="flex-1 flex flex-col justify-center gap-1">
+                {data.map((entry, i) => (
+                    <div key={i} className="flex items-center justify-between text-[10px]">
+                        <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors[i % colors.length] }} />
+                            <span className="font-semibold text-gray-600 dark:text-gray-400">{entry.name}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-gray-900 dark:text-gray-100">{item.value.toLocaleString()}</span>
-                            <span className="text-[10px] font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded-full border border-gray-200 dark:border-gray-700">
-                                {item.total > 0 ? `${Math.round((item.value / item.total) * 100)}%` : '0%'}
-                            </span>
-                        </div>
+                        <span className="font-bold text-gray-900 dark:text-gray-100">{entry.value}</span>
                     </div>
                 ))}
             </div>
@@ -94,227 +69,248 @@ function DonutPanel({ title, data, centerLabel, centerSub, loading }) {
     )
 }
 
+function MiniBarChart({ data, colors }) {
+    return (
+        <div className="h-28 w-full mt-2">
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data} layout="vertical" margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
+                    <XAxis type="number" hide />
+                    <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6b7280', fontWeight: 600 }} />
+                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ fontSize: '10px', padding: '4px 8px', borderRadius: '4px' }} />
+                    <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={12}>
+                        {data.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                        ))}
+                    </Bar>
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+    )
+}
+
+function ModuleCard({ title, subtitle, icon: Icon, link, linkText, colorHex, children, loading }) {
+    return (
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm flex flex-col h-full overflow-hidden transition-shadow hover:shadow-md relative">
+            <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: colorHex }} />
+            
+            <div className="p-5 flex-1 flex flex-col">
+                <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-800">
+                            <Icon size={18} style={{ color: colorHex }} />
+                        </div>
+                        <div>
+                            <h2 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-gray-100">{title}</h2>
+                            <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex-1 flex flex-col justify-center min-h-[160px]">
+                    {loading ? (
+                        <div className="flex items-center justify-center h-full">
+                            <div className="w-5 h-5 border-2 border-gray-200 dark:border-gray-700 rounded-full animate-spin" style={{ borderTopColor: colorHex }} />
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-1 h-full">
+                            {children}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="px-5 py-3.5 bg-gray-50/50 dark:bg-gray-800/30 border-t border-gray-100 dark:border-gray-800 mt-auto">
+                <Link to={link} className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide transition-opacity hover:opacity-70" style={{ color: colorHex }}>
+                    {linkText} <ArrowRight size={13} className="ml-1" />
+                </Link>
+            </div>
+        </div>
+    )
+}
+
 export default function DashboardPage() {
-    const [data, setData] = useState(null)
     const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
+    const [dashData, setDashData] = useState(null)
+    const [trackingData, setTrackingData] = useState(null)
+    const [qualityData, setQualityData] = useState(null)
+    const [deviceData, setDeviceData] = useState(null)
 
     useEffect(() => {
-        getDashboardData()
-            .then(res => setData(res.data))
-            .catch(() => setError('Failed to load dashboard data.'))
-            .finally(() => setLoading(false))
+        Promise.allSettled([
+            getDashboardData(),
+            getTrackingDashboard(),
+            getQualitySummary(),
+            getDeviceStats()
+        ]).then(([dashRes, trackRes, qualRes, devRes]) => {
+            if (dashRes.status === 'fulfilled') setDashData(dashRes.value.data)
+            if (trackRes.status === 'fulfilled') setTrackingData(trackRes.value.data)
+            if (qualRes.status === 'fulfilled') setQualityData(qualRes.value.data)
+            if (devRes.status === 'fulfilled') setDeviceData(devRes.value.data)
+        }).finally(() => {
+            setLoading(false)
+        })
     }, [])
 
-    // ── Derived data ────────────────────────────────────────────────────────────
-    const totalInvoices = data?.invoices?.total ?? 0
-    const invoiceByStatus = data?.invoices?.by_status ?? {}
-    const totalLineItems = data?.inventory?.total_line_items ?? 0
-    const pws = data?.pws ?? {}
-    const totalNotes = data?.notes?.total ?? 0
-    const projectOverview = data?.project_overview ?? []
-
-    const summaryCards = [
-        {
-            label: 'Invoices',
-            value: totalInvoices.toLocaleString(),
-            sub: `${invoiceByStatus.needs_review ?? 0} need review`,
-            icon: FileText,
-            iconBg: 'bg-blue-50 dark:bg-blue-900/30',
-            iconColor: 'text-blue-600 dark:text-blue-400',
-            border: 'border-blue-100 dark:border-blue-800',
-        },
-        {
-            label: 'Inventory Items',
-            value: totalLineItems.toLocaleString(),
-            sub: 'Total line items across invoices',
-            icon: Package,
-            iconBg: 'bg-indigo-50 dark:bg-indigo-900/30',
-            iconColor: 'text-indigo-600 dark:text-indigo-400',
-            border: 'border-indigo-100 dark:border-indigo-800',
-        },
-        {
-            label: 'Active Projects',
-            value: (pws.project ?? 0).toLocaleString(),
-            sub: `${pws.workflow ?? 0} workflows · ${pws.stage ?? 0} stages`,
-            icon: FolderOpen,
-            iconBg: 'bg-emerald-50 dark:bg-emerald-900/30',
-            iconColor: 'text-emerald-600 dark:text-emerald-400',
-            border: 'border-emerald-100 dark:border-emerald-800',
-        },
-        {
-            label: 'Quality Notes',
-            value: totalNotes.toLocaleString(),
-            sub: 'Across all stages & inventory',
-            icon: AlertCircle,
-            iconBg: 'bg-violet-50 dark:bg-violet-900/30',
-            iconColor: 'text-violet-600 dark:text-violet-400',
-            border: 'border-violet-100 dark:border-violet-800',
-        },
+    // -- Derived Data for Charts --
+    const invoicesTotal = dashData?.invoices?.total ?? 0
+    const invoicesData = [
+        { name: 'Processed', value: dashData?.invoices?.by_status?.processed ?? 0 },
+        { name: 'Needs Review', value: dashData?.invoices?.by_status?.needs_review ?? 0 },
+        { name: 'Pending', value: dashData?.invoices?.by_status?.pending ?? 0 }
     ]
 
-    const invoiceDonutData = Object.entries(invoiceByStatus).map(([status, count]) => ({
-        name: INVOICE_LABELS[status] || status,
-        value: count,
-        color: INVOICE_COLORS[status] || '#9ca3af',
-        total: totalInvoices,
-    }))
-
-    const inventoryDonutData = [
-        { name: 'Allocated', value: Math.floor(totalLineItems * 0.45) || 45, color: '#3b82f6', total: totalLineItems || 100 },
-        { name: 'Available', value: Math.floor(totalLineItems * 0.35) || 35, color: '#22c55e', total: totalLineItems || 100 },
-        { name: 'Reserved', value: totalLineItems - Math.floor(totalLineItems * 0.45) - Math.floor(totalLineItems * 0.35) || 20, color: '#f59e0b', total: totalLineItems || 100 },
+    const inventoryTotal = dashData?.inventory?.total_line_items ?? 0
+    const alloc = Math.floor(inventoryTotal * 0.45)
+    const avail = Math.floor(inventoryTotal * 0.35)
+    const resrv = inventoryTotal - alloc - avail
+    const inventoryData = [
+        { name: 'Allocated', value: alloc },
+        { name: 'Available', value: avail },
+        { name: 'Reserved', value: resrv }
     ]
 
-    const pwsActivityItems = [
-        { label: 'New Projects', value: pws.project ?? 0, icon: PlusCircle },
-        { label: 'Batches Created', value: pws.workflow ?? 0, icon: Layers },
-        { label: 'Batches Completed', value: pws.stage ?? 0, icon: CheckCircle },
-        { label: 'Quality Notes Added', value: totalNotes, icon: MessageSquare },
+    const pwsData = [
+        { name: 'Projects', value: dashData?.pws?.project ?? 0 },
+        { name: 'Workflows', value: dashData?.pws?.workflow ?? 0 },
+        { name: 'Stages', value: dashData?.pws?.stage ?? 0 }
+    ]
+
+    const qualityTotal = qualityData?.total_notes ?? 0
+    const qualityDonut = [
+        { name: 'Critical', value: qualityData?.notes_by_severity?.Critical ?? 0 },
+        { name: 'High', value: qualityData?.notes_by_severity?.High ?? 0 },
+        { name: 'Medium/Low', value: (qualityData?.notes_by_severity?.Medium ?? 0) + (qualityData?.notes_by_severity?.Low ?? 0) }
+    ]
+
+    const trackingTotalInvoices = trackingData?.total_invoices ?? 0
+    const trackingCategories = Object.entries(trackingData?.categories ?? {})
+        .map(([name, count]) => ({ name: name || 'Uncat', value: count }))
+        .sort((a,b) => b.value - a.value)
+        .slice(0, 3)
+
+    const devicesTotal = deviceData?.top_cards?.total_devices ?? 0
+    const devicesOnline = deviceData?.top_cards?.online ?? 0
+    const deviceDonut = [
+        { name: 'Online', value: devicesOnline },
+        { name: 'Offline', value: devicesTotal - devicesOnline }
     ]
 
     return (
-        <div className="flex flex-col gap-0 w-full">
-
-            <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 pt-6 pb-5 sticky top-0 z-20 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-widest text-primary-600 dark:text-primary-400 mb-1">Overview</p>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Dashboard</h1>
+        <div className="flex flex-col w-full min-h-full bg-gray-50/30 dark:bg-gray-900/10">
+            {/* Header */}
+            <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-8 pt-8 pb-6 sticky top-0 z-20 shadow-sm">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-primary-600 dark:text-primary-400 mb-1.5">Command Center</p>
+                <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">System Overview</h1>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-2 max-w-2xl">
+                    A high-level overview of all core modules. Select any module to view detailed analytics and manage its resources.
+                </p>
             </div>
 
-            {error ? (
-                <div className="m-6 p-6 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 text-sm text-red-700 dark:text-red-400 font-semibold">{error}</div>
-            ) : (
-                <div className="flex flex-col gap-8 px-6 py-8 pb-16">
-
-                    {/* ── Summary Cards ── */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        {summaryCards.map(card => {
-                            const Icon = card.icon
-                            return (
-                                <div key={card.label} className="aiq-card p-5 flex flex-col gap-4">
-                                    <div className={`w-10 h-10 rounded-lg border ${card.border} ${card.iconBg} flex items-center justify-center`}>
-                                        {loading
-                                            ? <div className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
-                                            : <Icon size={18} className={card.iconColor} />
-                                        }
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300">{card.label}</p>
-                                        {loading
-                                            ? <div className="h-8 w-16 rounded bg-gray-200 dark:bg-gray-700 animate-pulse mt-1" />
-                                            : <p className="text-3xl font-black text-gray-900 dark:text-gray-100 mt-1">{card.value}</p>
-                                        }
-                                        <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mt-1">{card.sub}</p>
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
-
-                    {/* ── Charts + PWS Activity ── */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-                        <DonutPanel
-                            title="Invoice Status Breakdown"
-                            data={invoiceDonutData}
-                            centerLabel={totalInvoices.toLocaleString()}
-                            centerSub="Total"
-                            loading={loading}
-                        />
-
-                        {/* Inventory Summary */}
-                        <DonutPanel
-                            title="Inventory Summary"
-                            data={inventoryDonutData}
-                            centerLabel={totalLineItems.toLocaleString()}
-                            centerSub="Total Items"
-                            loading={loading}
-                        />
-
-                        {/* PWS Activity */}
-                        <div className="aiq-card p-6 flex flex-col gap-4">
-                            <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300">Project Structure</p>
-                                <p className="text-[10px] text-gray-700 dark:text-gray-300 mt-0.5">Total entities in the system</p>
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                {pwsActivityItems.map(item => {
-                                    const Icon = item.icon
-                                    return (
-                                        <div key={item.label} className="flex items-center gap-3 py-3 border-b border-gray-100 dark:border-gray-800 last:border-0">
-                                            <Icon size={18} className="text-gray-800 dark:text-gray-200" />
-                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex-1">{item.label}</p>
-                                            {loading
-                                                ? <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
-                                                : <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{item.value}</p>
-                                            }
-                                        </div>
-                                    )
-                                })}
-                            </div>
+            <div className="p-8 pb-20">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    
+                    {/* 1. Invoice AI */}
+                    <ModuleCard 
+                        title="Smart Invoices" 
+                        subtitle="Automated document processing"
+                        icon={FileText} 
+                        link="/inventory/dashboard" 
+                        linkText="Go to Invoice Dashboard"
+                        colorHex="#3b82f6" // blue-500
+                        loading={loading}
+                    >
+                        <MiniDonut data={invoicesData} totalValue={invoicesTotal} colors={['#22c55e', '#f59e0b', '#ef4444']} />
+                        <div className="mt-auto">
+                            <MetricRow label="Total Processed" value={(dashData?.invoices?.total ?? 0).toLocaleString()} />
                         </div>
-                    </div>
+                    </ModuleCard>
 
-                    {/* ── Project Overview Table ── */}
-                    <div className="aiq-card overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 flex items-center justify-center">
-                                <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18M10 3v18M14 3v18" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Project / Inventory Overview</h2>
-                                <p className="text-xs text-gray-700 dark:text-gray-300 mt-0.5">All projects and their linked invoice data</p>
-                            </div>
-                            <span className="ml-auto text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-0.5 rounded-full border border-blue-100 dark:border-blue-800">
-                                {projectOverview.length} projects
-                            </span>
+                    {/* 2. Inventory */}
+                    <ModuleCard 
+                        title="Inventory" 
+                        subtitle="Centralized stock management"
+                        icon={Package} 
+                        link="/inventory/dashboard" 
+                        linkText="Manage Inventory"
+                        colorHex="#8b5cf6" // violet-500
+                        loading={loading}
+                    >
+                        <MiniDonut data={inventoryData} totalValue={inventoryTotal} colors={['#8b5cf6', '#22c55e', '#f59e0b']} />
+                        <div className="mt-auto">
+                            <MetricRow label="Total Line Items" value={(dashData?.inventory?.total_line_items ?? 0).toLocaleString()} />
                         </div>
+                    </ModuleCard>
 
-                        {loading ? (
-                            <div className="flex justify-center items-center h-32">
-                                <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                            </div>
-                        ) : projectOverview.length === 0 ? (
-                            <div className="p-10 text-center text-sm text-gray-700 dark:text-gray-300">
-                                No projects created yet. Create projects in Application Management to see them here.
-                            </div>
+                    {/* 3. PWS / Projects */}
+                    <ModuleCard 
+                        title="Projects & Hierarchy" 
+                        subtitle="App structural management"
+                        icon={FolderOpen} 
+                        link="/app-management/view-hierarchy" 
+                        linkText="View Hierarchy"
+                        colorHex="#10b981" // emerald-500
+                        loading={loading}
+                    >
+                        <MiniBarChart data={pwsData} colors={['#10b981', '#34d399', '#6ee7b7']} />
+                        <div className="mt-auto">
+                            <MetricRow label="Active Projects" value={(dashData?.pws?.project ?? 0).toLocaleString()} />
+                        </div>
+                    </ModuleCard>
+
+                    {/* 4. Tracking & Logistics */}
+                    <ModuleCard 
+                        title="Logistics Tracking" 
+                        subtitle="Live supply chain tracking"
+                        icon={Map} 
+                        link="/analytics" 
+                        linkText="Go to Track & Trace"
+                        colorHex="#f59e0b" // amber-500
+                        loading={loading}
+                    >
+                        {trackingCategories.length > 0 ? (
+                            <MiniBarChart data={trackingCategories} colors={['#f59e0b', '#fbbf24', '#fcd34d']} />
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-                                            {['Project/Batch ID', 'Project Name', 'Product', 'Total Qty', 'Allocated', 'Available', 'Status', 'Updated On'].map(col => (
-                                                <th key={col} className="table-head">
-                                                    {col}
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                                        {projectOverview.map((row, idx) => (
-                                            <tr key={idx} className="table-row">
-                                                <td className="table-cell font-mono text-xs font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">{row.batch_id}</td>
-                                                <td className="table-cell font-bold text-gray-900 dark:text-gray-100 whitespace-nowrap">{row.project_name}</td>
-                                                <td className="table-cell text-gray-700 dark:text-gray-300 whitespace-nowrap">{row.product}</td>
-                                                <td className="table-cell font-semibold text-gray-900 dark:text-gray-100">{row.total_qty || 0}</td>
-                                                <td className="table-cell font-semibold text-gray-900 dark:text-gray-100">{Math.floor((row.total_qty || 0) * 0.6)}</td>
-                                                <td className="table-cell font-semibold text-gray-900 dark:text-gray-100">{Math.floor((row.total_qty || 0) * 0.4)}</td>
-                                                <td className="table-cell whitespace-nowrap"><StatusBadge status={row.status} /></td>
-                                                <td className="table-cell text-gray-700 dark:text-gray-300 text-xs whitespace-nowrap">
-                                                    {row.updated_on !== 'N/A' && !isNaN(new Date(row.updated_on).getTime()) ? new Date(row.updated_on).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : row.updated_on}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <div className="h-28 flex items-center justify-center text-xs text-gray-400">No active tracking categories</div>
                         )}
-                    </div>
+                        <div className="mt-auto">
+                            <MetricRow label="Total Tracked Cost" value={`₹${(trackingData?.total_cost ?? 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`} />
+                            <MetricRow label="Tracked Invoices" value={trackingTotalInvoices.toLocaleString()} />
+                        </div>
+                    </ModuleCard>
 
+                    {/* 5. Quality Management */}
+                    <ModuleCard 
+                        title="Quality Control" 
+                        subtitle="Inspections and quality metrics"
+                        icon={AlertCircle} 
+                        link="/quality" 
+                        linkText="Quality Dashboard"
+                        colorHex="#ef4444" // red-500
+                        loading={loading}
+                    >
+                        <MiniDonut data={qualityDonut} totalValue={qualityTotal} colors={['#ef4444', '#f97316', '#eab308']} />
+                        <div className="mt-auto">
+                            <MetricRow label="Recent Inspections" value={(qualityData?.recent_scans ?? 0).toLocaleString()} subtext="Within the last 7 days" />
+                        </div>
+                    </ModuleCard>
+
+                    {/* 6. Devices & Monitoring */}
+                    <ModuleCard 
+                        title="Device Integrations" 
+                        subtitle="IoT hardware monitoring"
+                        icon={Smartphone} 
+                        link="/app-management/integrate-devices" 
+                        linkText="Manage Devices"
+                        colorHex="#06b6d4" // cyan-500
+                        loading={loading}
+                    >
+                        <MiniDonut data={deviceDonut} totalValue={devicesTotal} colors={['#06b6d4', '#94a3b8']} />
+                        <div className="mt-auto">
+                            <MetricRow label="Alerts & Warnings" value={(deviceData?.top_cards?.data_sync_alerts ?? 0).toLocaleString()} />
+                        </div>
+                    </ModuleCard>
                 </div>
-            )}
+            </div>
         </div>
     )
 }

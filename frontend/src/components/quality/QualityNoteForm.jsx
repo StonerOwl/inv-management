@@ -176,12 +176,46 @@ export default function QualityNoteForm({ onSave, projectOptions = [], pwsItems 
       return
     }
 
-    const { batchId, projectId, projectName, workflowStage } = parseBatchScan(raw)
+    let { batchId, projectId, projectName, workflowStage } = parseBatchScan(raw)
+    let workflowId = ''
+
+    // 1. Try to see if batchId matches a known workflow to auto-populate the rest of the hierarchy
+    if (batchId) {
+      const allWorkflows = pwsItems.filter(p => p.type === 'workflow')
+      const foundWf = allWorkflows.find(w => w.batch_id === batchId || w.name === batchId || w.id === batchId)
+      if (foundWf) {
+        workflowId = foundWf.id
+        batchId = foundWf.batch_id || foundWf.name
+        // If we don't have project info, grab it from the workflow's parent
+        if (!projectId || !projectName) {
+          const assignment = pwsAssignments.find(a => a.child_id === foundWf.id)
+          if (assignment) {
+            const parentProj = projects.find(p => p.id === assignment.parent_id)
+            if (parentProj) {
+              projectId = parentProj.project_code || parentProj.id
+              projectName = parentProj.name
+            }
+          }
+        }
+      }
+    }
+
+    // 2. If it wasn't a workflow, maybe the raw string is actually just a project ID?
+    if (batchId && !workflowId && !projectId && !projectName) {
+      const foundProject = projects.find(p => p.project_code === batchId || p.name === batchId || p.id === batchId)
+      if (foundProject) {
+        projectId = foundProject.project_code || foundProject.id
+        projectName = foundProject.name
+        batchId = '' // It was a project, not a batch!
+      }
+    }
+
     setNote((n) => ({
       ...n,
       batch_id: batchId || n.batch_id,
       project_id: projectId || n.project_id,
-      project_name: n.project_name || projectName || n.project_name,
+      project_name: projectName || n.project_name,
+      workflow_id: workflowId || n.workflow_id,
       workflow_stage: workflowStage || n.workflow_stage,
     }))
   }
